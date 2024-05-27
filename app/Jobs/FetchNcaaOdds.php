@@ -9,7 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use App\Events\OddsFetched;
+use App\Events\NcaaOddsFetched;
 
 class FetchNcaaOdds implements ShouldQueue
 {
@@ -30,10 +30,9 @@ class FetchNcaaOdds implements ShouldQueue
         // Fetch the odds
         $odds = $this->ncaaOddsService->getOdds($sport, $markets);
 
-        // Log the fetched odds
-        Log::info('Fetched NCAAF Odds: ' . json_encode($odds));
+        Log::info('Fetched NCAA Odds: ' . json_encode($odds));
 
-        // Dispatch an event to store the odds
-        event(new OddsFetched($odds));
+        // Dispatch event
+        event(new NcaaOddsFetched($odds));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NcaaOddsFetched;
 use App\Events\OddsFetched;
 use App\Models\NcaaTeam;
 use App\Services\NcaaOddsService;
@@ -23,8 +24,7 @@ class NcaaController extends Controller
         $sport = 'americanfootball_ncaaf';
         $markets = 'h2h,spreads,totals';
 
-        FetchNcaaOdds::dispatch($this->ncaaOddsService);
-
+        // Fetch the odds data directly
         $odds = $this->ncaaOddsService->getOdds($sport, $markets);
 
         // Check for error in the response
@@ -35,7 +35,17 @@ class NcaaController extends Controller
             ]);
         }
 
-        OddsFetched::dispatch($odds);
+        // Ensure teams exist in the database
+        foreach ($odds as $eventData) {
+            $this->ensureTeamExists($eventData['home_team']);
+            $this->ensureTeamExists($eventData['away_team']);
+        }
+
+        // Dispatch the job to fetch NCAA odds
+        FetchNcaaOdds::dispatch($this->ncaaOddsService);
+
+        // Dispatch the event to store the odds
+        NcaaOddsFetched::dispatch($odds);
 
         Log::info("Odds API Response for {$sport}: " . json_encode($odds));
 
@@ -49,5 +59,10 @@ class NcaaController extends Controller
 
         // Return the view with the teams data
         return view('ncaa.teams', compact('teams'));
+    }
+
+    private function ensureTeamExists($teamName)
+    {
+        NcaaTeam::firstOrCreate(['name' => $teamName]);
     }
 }
