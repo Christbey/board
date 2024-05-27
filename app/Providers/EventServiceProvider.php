@@ -2,15 +2,12 @@
 
 namespace App\Providers;
 
-use App\Events\OddsFetched;
+use App\Events\NflOddsFetched;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
 use App\Events\TaskDeleted;
 use App\Listeners\StoreNflOdds;
-use App\Listeners\StoreOdds;
 use App\Listeners\TaskEventListeners;
-use App\Models\Odds;
-use App\Observers\OddsObserver;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -25,14 +22,13 @@ class EventServiceProvider extends ServiceProvider
         TaskDeleted::class => [
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
-        OddsFetched::class => [
+        NflOddsFetched::class => [
             StoreNflOdds::class,
         ],
     ];
 
     public function boot()
     {
-        Odds::observe(OddsObserver::class);
 
         parent::boot();
     }

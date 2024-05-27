@@ -9,23 +9,30 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use App\Events\OddsFetched;
+use App\Events\NflOddsFetched;
 
 class FetchNflOdds implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle(NflOddsService $nflOddsService)
+    protected $nflOddsService;
+
+    public function __construct(NflOddsService $nflOddsService)
+    {
+        $this->nflOddsService = $nflOddsService;
+    }
+
+    public function handle()
     {
         $sport = 'americanfootball_nfl';
         $markets = 'h2h,spreads,totals';
 
         // Fetch the odds
-        $odds = $nflOddsService->getOdds($sport, $markets);
+        $odds = $this->nflOddsService->getOdds($sport, $markets);
 
         Log::info('Fetched NFL Odds: ' . json_encode($odds));
 
         // Dispatch event
-        event(new OddsFetched($odds));
+        event(new NflOddsFetched($odds));
     }
 }

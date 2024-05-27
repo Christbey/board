@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OddsFetched;
+use App\Events\NflOddsFetched;
+use App\Jobs\FetchNflOdds;
 use App\Models\NflTeam;
 use App\Services\NflOddsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\FetchNflOdds;
 
 class NflController extends Controller
 {
@@ -38,7 +38,7 @@ class NflController extends Controller
         }
 
         // Dispatch the event to store the odds
-        OddsFetched::dispatch($odds);
+        NflOddsFetched::dispatch($odds);
 
         Log::info("Odds API Response for {$sport}: " . json_encode($odds));
 

@@ -2,14 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Odds;
-use App\Observers\OddsObserver;
-use Illuminate\Support\ServiceProvider;
 use App\Services\NflOddsService;
 use App\Services\NcaaOddsService;
 use App\Services\MlbOddsService;
 use App\Services\NbaOddsService;
-use App\Services\OddsApiService;
+use App\Services\OddsService;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,31 +19,27 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton(NflOddsService::class, function ($app) {
-            return new NflOddsService(new OddsApiService);
+            return new NflOddsService(new OddsService);
         });
 
         $this->app->singleton(NcaaOddsService::class, function ($app) {
-            return new NcaaOddsService(new OddsApiService);
+            return new NcaaOddsService(new OddsService);
         });
 
         $this->app->singleton(MlbOddsService::class, function ($app) {
-            return new MlbOddsService(new OddsApiService);
+            return new MlbOddsService(new OddsService);
         });
 
         $this->app->singleton(NbaOddsService::class, function ($app) {
-            return new NbaOddsService(new OddsApiService);
+            return new NbaOddsService(new OddsService);
         });
     }
 
-
-
-/**
+    /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
-        Odds::observe(OddsObserver::class);
-
-        //
+        // Other bootstrapping logic
     }
 }

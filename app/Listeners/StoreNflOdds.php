@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\OddsFetched;
+use App\Events\NflOddsFetched;
 use App\Models\NflOdds;
 use App\Models\NflOddsHistory;
 use App\Models\NflTeam;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class StoreNflOdds
 {
-    public function handle(OddsFetched $event)
+    public function handle(NflOddsFetched $event)
     {
         Log::info('StoreNflOdds listener triggered.');
 
