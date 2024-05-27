@@ -5,3 +5,40 @@
 [x-cloak] {
     display: none;
 }
+
+/* Sidebar */
+  #sidebar {
+            transition: transform 0.3s ease, margin-left 0.3s ease;
+            width: 250px;
+        }
+
+        #sidebar.closed {
+            transform: translateX(-250px);
+        }
+
+        #mainContent {
+            transition: margin-left 0.3s ease;
+        }
+
+        #mainContent.closed {
+            margin-left: 0;
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar {
+                transform: translateX(0);
+            }
+
+            #mainContent {
+                margin-left: 0px;
+            }
+
+            #sidebar.closed {
+                transform: translateX(-250px);
+            }
+
+            #mainContent.closed {
+                margin-left: -250px;
+            }
+        }
+

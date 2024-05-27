@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'oddsapi' => [
+        'key' => env('ODDS_API_KEY'),
+        'base_url' => env('ODDS_API_BASE_URL'),
+    ],
+
+
 
 ];
