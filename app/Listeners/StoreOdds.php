@@ -3,77 +3,43 @@
 namespace App\Listeners;
 
 use App\Events\OddsFetched;
-use App\Models\MlbOdds;
-use App\Models\NflOdds;
-use App\Models\NcaaOdds;
-use App\Models\NbaOdds;
 use App\Models\NflTeam;
-use App\Models\MlbTeam;
 use App\Models\NcaaTeam;
-use App\Models\NbaTeam;
+use App\Models\Odds;
+use App\Models\OddsHistory;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class StoreOdds
 {
     public function handle(OddsFetched $event)
     {
         foreach ($event->odds as $eventData) {
-            $teamModel = $this->getTeamModel($eventData['sport_key']);
-            $oddsModel = $this->getOddsModel($eventData['sport_key']);
+            $homeTeam = $this->getTeamBySport($eventData['sport_key'], $eventData['home_team']);
+            $awayTeam = $this->getTeamBySport($eventData['sport_key'], $eventData['away_team']);
 
-            $homeTeam = $this->getOrCreateTeam($teamModel, $eventData['home_team']);
-            $awayTeam = $this->getOrCreateTeam($teamModel, $eventData['away_team']);
+            if (!$homeTeam || !$awayTeam) {
+                continue; // Skip if teams are not found
+            }
 
             foreach ($eventData['bookmakers'] as $bookmaker) {
                 if ($bookmaker['key'] !== 'draftkings') {
-                    continue;
+                    continue; // Skip other bookmakers
                 }
 
                 $data = $this->prepareOddsData($eventData, $bookmaker, $homeTeam, $awayTeam);
-                $this->storeOdds($oddsModel, $data);
+                $this->storeOddsAndHistory($eventData['id'], $data);
             }
         }
     }
 
-    private function getTeamModel($sportKey)
+    private function getTeamBySport($sportKey, $teamName)
     {
-        switch ($sportKey) {
-            case 'americanfootball_nfl':
-                return NflTeam::class;
-            case 'baseball_mlb':
-                return MlbTeam::class;
-            case 'americanfootball_ncaaf':
-                return NcaaTeam::class;
-            case 'basketball_nba':
-                return NbaTeam::class;
-            default:
-                throw new \Exception("Unknown sport key: {$sportKey}");
+        if ($sportKey === 'americanfootball_nfl') {
+            return NflTeam::where('name', $teamName)->first();
+        } elseif ($sportKey === 'americanfootball_ncaaf') {
+            return NcaaTeam::where('name', $teamName)->first();
         }
-    }
-
-    private function getOddsModel($sportKey)
-    {
-        switch ($sportKey) {
-            case 'americanfootball_nfl':
-                return NflOdds::class;
-            case 'baseball_mlb':
-                return MlbOdds::class;
-            case 'americanfootball_ncaaf':
-                return NcaaOdds::class;
-            case 'basketball_nba':
-                return NbaOdds::class;
-            default:
-                throw new \Exception("Unknown sport key: {$sportKey}");
-        }
-    }
-
-    private function getOrCreateTeam($teamModel, $teamName)
-    {
-        return $teamModel::firstOrCreate(['name' => $teamName], [
-            'name' => $teamName,
-            // Add other default values if needed
-        ]);
+        return null;
     }
 
     private function prepareOddsData($event, $bookmaker, $homeTeam, $awayTeam)
@@ -91,40 +57,93 @@ class StoreOdds
 
         foreach ($bookmaker['markets'] as $market) {
             foreach ($market['outcomes'] as $outcome) {
-                if ($market['key'] == 'h2h') {
-                    if ($outcome['name'] == $event['home_team']) {
-                        $data['h2h_home_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == $event['away_team']) {
-                        $data['h2h_away_price'] = $outcome['price'];
-                    }
-                } elseif ($market['key'] == 'spreads') {
-                    if ($outcome['name'] == $event['home_team']) {
-                        $data['spread_home_point'] = $outcome['point'] ?? 0;
-                        $data['spread_home_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == $event['away_team']) {
-                        $data['spread_away_point'] = $outcome['point'] ?? 0;
-                        $data['spread_away_price'] = $outcome['price'];
-                    }
-                } elseif ($market['key'] == 'totals') {
-                    if ($outcome['name'] == 'Over') {
-                        $data['total_over_point'] = $outcome['point'] ?? 0;
-                        $data['total_over_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == 'Under') {
-                        $data['total_under_point'] = $outcome['point'] ?? 0;
-                        $data['total_under_price'] = $outcome['price'];
-                    }
-                }
+                $this->processMarketData($market, $outcome, $event, $data);
             }
         }
 
         return $data;
     }
 
-    private function storeOdds($oddsModel, $data)
+    private function processMarketData($market, $outcome, $event, &$data)
     {
-        $oddsModel::updateOrCreate(
-            ['event_id' => $data['event_id'], 'bookmaker_key' => $data['bookmaker_key']],
+        if ($market['key'] == 'h2h') {
+            $this->processH2HMarket($outcome, $event, $data);
+        } elseif ($market['key'] == 'spreads') {
+            $this->processSpreadMarket($outcome, $event, $data);
+        } elseif ($market['key'] == 'totals') {
+            $this->processTotalMarket($outcome, $data);
+        }
+    }
+
+    private function processH2HMarket($outcome, $event, &$data)
+    {
+        if ($outcome['name'] == $event['home_team']) {
+            $data['h2h_home_price'] = $outcome['price'];
+        } elseif ($outcome['name'] == $event['away_team']) {
+            $data['h2h_away_price'] = $outcome['price'];
+        }
+    }
+
+    private function processSpreadMarket($outcome, $event, &$data)
+    {
+        if ($outcome['name'] == $event['home_team']) {
+            $data['spread_home_point'] = $outcome['point'] ?? 0;
+            $data['spread_home_price'] = $outcome['price'];
+        } elseif ($outcome['name'] == $event['away_team']) {
+            $data['spread_away_point'] = $outcome['point'] ?? 0;
+            $data['spread_away_price'] = $outcome['price'];
+        }
+    }
+
+    private function processTotalMarket($outcome, &$data)
+    {
+        if ($outcome['name'] == 'Over') {
+            $data['total_over_point'] = $outcome['point'] ?? 0;
+            $data['total_over_price'] = $outcome['price'];
+        } elseif ($outcome['name'] == 'Under') {
+            $data['total_under_point'] = $outcome['point'] ?? 0;
+            $data['total_under_price'] = $outcome['price'];
+        }
+    }
+
+    private function storeOddsAndHistory($eventId, $data)
+    {
+        $latestOdds = Odds::updateOrCreate(
+            ['event_id' => $eventId],
             $data
         );
+
+        $latestHistory = OddsHistory::where('odds_id', $latestOdds->id)->latest()->first();
+
+        if ($this->hasOddsChanged($latestHistory, $latestOdds)) {
+            OddsHistory::create([
+                'odds_id' => $latestOdds->id,
+                'h2h_home_price' => $latestOdds->h2h_home_price,
+                'h2h_away_price' => $latestOdds->h2h_away_price,
+                'spread_home_point' => $latestOdds->spread_home_point,
+                'spread_away_point' => $latestOdds->spread_away_point,
+                'spread_home_price' => $latestOdds->spread_home_price,
+                'spread_away_price' => $latestOdds->spread_away_price,
+                'total_over_point' => $latestOdds->total_over_point,
+                'total_under_point' => $latestOdds->total_under_point,
+                'total_over_price' => $latestOdds->total_over_price,
+                'total_under_price' => $latestOdds->total_under_price,
+            ]);
+        }
+    }
+
+    private function hasOddsChanged($latestHistory, $latestOdds)
+    {
+        return !$latestHistory ||
+            $latestHistory->h2h_home_price != $latestOdds->h2h_home_price ||
+            $latestHistory->h2h_away_price != $latestOdds->h2h_away_price ||
+            $latestHistory->spread_home_point != $latestOdds->spread_home_point ||
+            $latestHistory->spread_away_point != $latestOdds->spread_away_point ||
+            $latestHistory->spread_home_price != $latestOdds->spread_home_price ||
+            $latestHistory->spread_away_price != $latestOdds->spread_away_price ||
+            $latestHistory->total_over_point != $latestOdds->total_over_point ||
+            $latestHistory->total_under_point != $latestOdds->total_under_point ||
+            $latestHistory->total_over_price != $latestOdds->total_over_price ||
+            $latestHistory->total_under_price != $latestOdds->total_under_price;
     }
 }

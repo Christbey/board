@@ -6,6 +6,7 @@ use App\Events\OddsFetched;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
 use App\Events\TaskDeleted;
+use App\Listeners\StoreNflOdds;
 use App\Listeners\StoreOdds;
 use App\Listeners\TaskEventListeners;
 use App\Models\Odds;
@@ -25,7 +26,7 @@ class EventServiceProvider extends ServiceProvider
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
         OddsFetched::class => [
-            StoreOdds::class,
+            StoreNflOdds::class,
         ],
     ];
 

@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OddsFetched;
 use App\Models\NflTeam;
 use App\Services\NflOddsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Events\OddsFetched;
+use App\Jobs\FetchNflOdds;
 
 class NflController extends Controller
 {
@@ -22,32 +23,28 @@ class NflController extends Controller
         $sport = 'americanfootball_nfl';
         $markets = 'h2h,spreads,totals';
 
+        // Dispatch the job to fetch NFL odds
+        FetchNflOdds::dispatch($this->nflOddsService);
 
-            $odds = $this->nflOddsService->getOdds($sport, $markets);
+        // Fetch the odds data directly
+        $odds = $this->nflOddsService->getOdds($sport, $markets);
 
-            // Check for error in the response
-            if (isset($odds['error_code'])) {
-                return view('errors.quota', [
-                    'message' => $odds['message'],
-                    'details_url' => $odds['details_url'],
-                ]);
-            }
-
-            Log::info("Odds API Response for {$sport}: " . json_encode($odds));
-
-            // Dispatch the event to store odds
-            event(new OddsFetched($odds));
-
-            return view('nfl.odds', compact('odds', 'sport'));
-
-        } /*catch (\Exception $e) {
-            Log::error('An error occurred: ' . $e->getMessage());
-
+        // Check for error in the response
+        if (isset($odds['error_code'])) {
             return view('errors.quota', [
-                'message' => 'An unexpected error occurred.',
-                'details_url' => 'https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits',
+                'message' => $odds['message'],
+                'details_url' => $odds['details_url'],
             ]);
-        }*/
+        }
+
+        // Dispatch the event to store the odds
+        OddsFetched::dispatch($odds);
+
+        Log::info("Odds API Response for {$sport}: " . json_encode($odds));
+
+        return view('nfl.odds', compact('odds', 'sport'));
+    }
+
     public function index()
     {
         // Fetch all NFL teams
