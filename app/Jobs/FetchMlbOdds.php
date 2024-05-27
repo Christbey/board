@@ -1,5 +1,4 @@
 <?php
-// app/Jobs/FetchMlbOdds.php
 
 namespace App\Jobs;
 
@@ -10,6 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use App\Events\MlbOddsFetched;
 
 class FetchMlbOdds implements ShouldQueue
 {
@@ -32,6 +32,7 @@ class FetchMlbOdds implements ShouldQueue
 
         Log::info('Fetched MLB Odds: ' . json_encode($odds));
 
-        event(new \App\Events\OddsFetched($odds));
+        // Dispatch event
+        event(new MlbOddsFetched($odds));
     }
 }
