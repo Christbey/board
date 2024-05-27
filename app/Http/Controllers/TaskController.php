@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TaskCreated;
+use App\Events\TaskUpdated;
+use App\Events\TaskDeleted;
 use App\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -9,10 +12,6 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    public function __construct()
-    {
-    }
-
     public function index(Request $request)
     {
         $timezone = 'America/Chicago'; // CST
@@ -37,7 +36,7 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        Task::create([
+        $task = Task::create([
             'task' => $validated['task'],
             'user_id' => Auth::id(),
             'completed' => $request->has('completed'),
@@ -48,6 +47,9 @@ class TaskController extends Controller
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
+
+        // Dispatch the TaskCreated event
+        event(new TaskCreated($task));
 
         return redirect()->route('tasks.index')->with('status', 'Task created successfully!');
     }
@@ -73,12 +75,18 @@ class TaskController extends Controller
             'updated_at' => Carbon::now(),
         ]);
 
+        // Dispatch the TaskUpdated event
+        event(new TaskUpdated($task));
+
         return redirect()->route('tasks.index')->with('status', 'Task updated successfully!');
     }
 
     public function destroy(Task $task)
     {
         $task->delete();
+
+        // Dispatch the TaskDeleted event
+        event(new TaskDeleted($task));
 
         return redirect()->route('tasks.index')->with('status', 'Task deleted successfully!');
     }
