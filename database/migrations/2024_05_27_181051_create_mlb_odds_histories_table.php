@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('total_over_price', 8, 2)->nullable();
             $table->decimal('total_under_price', 8, 2)->nullable();
             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
 
             $table->foreign('odds_id')->references('id')->on('mlb_odds')->onDelete('cascade');
         });

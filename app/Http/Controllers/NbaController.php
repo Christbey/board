@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OddsFetched;
+use App\Events\NbaOddsFetched;
 use App\Models\NbaTeam;
 use App\Services\NbaOddsService;
 use Illuminate\Http\Request;
@@ -35,11 +35,11 @@ class NbaController extends Controller
             ]);
         }
 
-        OddsFetched::dispatch($odds);
+        NbaOddsFetched::dispatch($odds);
 
         Log::info("Odds API Response for {$sport}: " . json_encode($odds));
 
-        return view('odds.show', compact('odds', 'sport'));
+        return view('nba.odds', compact('odds', 'sport'));
     }
 
     public function index()

@@ -91,5 +91,4 @@
         </div>
     </div>
     <!-- Debugging Section -->
-    <pre>{{ print_r($odds) }}</pre>
 </x-app-layout>

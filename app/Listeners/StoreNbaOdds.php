@@ -2,42 +2,37 @@
 
 namespace App\Listeners;
 
-use App\Events\MlbOddsFetched;
-use App\Models\MlbOdds;
-use App\Models\MlbOddsHistory;
-use App\Models\MlbTeam;
+use App\Events\NbaOddsFetched;
+use App\Models\NbaOdds;
+use App\Models\NbaOddsHistory;
+use App\Models\NbaTeam;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-class StoreMlbOdds
+class StoreNbaOdds
 {
-    public function handle(MlbOddsFetched $event)
+    public function handle(NbaOddsFetched $event)
     {
-        Log::info('StoreMlbOdds listener triggered.');
+        Log::info('StoreNbaOdds listener triggered.');
 
         foreach ($event->odds as $eventData) {
-            $homeTeam = MlbTeam::firstOrCreate(['name' => $eventData['home_team']]);
-            $awayTeam = MlbTeam::firstOrCreate(['name' => $eventData['away_team']]);
+            $homeTeam = NbaTeam::firstOrCreate(['name' => $eventData['home_team']]);
+            $awayTeam = NbaTeam::firstOrCreate(['name' => $eventData['away_team']]);
 
             if (!$homeTeam || !$awayTeam) {
                 Log::warning("Teams not found: Home - {$eventData['home_team']}, Away - {$eventData['away_team']}");
                 continue; // Skip if teams are not found
             }
 
-            // Check if the game is live or pre-match
-            $commenceTime = Carbon::parse($eventData['commence_time'])->setTimezone('America/Chicago');
-            $currentTime = Carbon::now('America/Chicago');
-            $isLive = $commenceTime->lessThanOrEqualTo($currentTime);
-
             foreach ($eventData['bookmakers'] as $bookmaker) {
                 if ($bookmaker['key'] !== 'draftkings') {
                     continue; // Skip other bookmakers
                 }
 
-                $data = $this->prepareOddsData($eventData, $bookmaker, $homeTeam, $awayTeam, $isLive);
+                $data = $this->prepareOddsData($eventData, $bookmaker, $homeTeam, $awayTeam);
                 Log::info('Prepared odds data:', $data);
 
-                $existingOdds = MlbOdds::where('event_id', $data['event_id'])
+                $existingOdds = NbaOdds::where('event_id', $data['event_id'])
                     ->where('bookmaker_key', $data['bookmaker_key'])
                     ->first();
 
@@ -57,9 +52,10 @@ class StoreMlbOdds
         }
     }
 
-    private function prepareOddsData($event, $bookmaker, $homeTeam, $awayTeam, $isLive)
+    private function prepareOddsData($event, $bookmaker, $homeTeam, $awayTeam)
     {
         $commenceTime = Carbon::parse($event['commence_time'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s');
+        $isLive = Carbon::now()->greaterThanOrEqualTo($commenceTime);
         $data = [
             'event_id' => $event['id'],
             'sport_title' => $event['sport_title'],
@@ -68,7 +64,7 @@ class StoreMlbOdds
             'away_team_id' => $awayTeam->id,
             'bookmaker_key' => $bookmaker['key'],
             'commence_time' => $commenceTime,
-            'is_live' => $isLive, // Add is_live flag
+            'is_live' => $isLive,
             'h2h_home_price' => null,
             'h2h_away_price' => null,
             'spread_home_point' => null,
@@ -114,12 +110,12 @@ class StoreMlbOdds
 
     private function storeOdds($data)
     {
-        MlbOdds::create($data);
+        NbaOdds::create($data);
     }
 
     private function storeHistoricalOdds($existingOdds)
     {
-        MlbOddsHistory::create([
+        NbaOddsHistory::create([
             'odds_id' => $existingOdds->id,
             'h2h_home_price' => $existingOdds->h2h_home_price,
             'h2h_away_price' => $existingOdds->h2h_away_price,
@@ -136,7 +132,6 @@ class StoreMlbOdds
             'created_at' => now(), // Manually set the created_at timestamp
         ]);
     }
-
     private function hasOddsChanged($existingOdds, $newData)
     {
         return $existingOdds->h2h_home_price != $newData['h2h_home_price'] ||

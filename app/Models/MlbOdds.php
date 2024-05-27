@@ -15,6 +15,7 @@ class MlbOdds extends Model
         'sport_key',
         'home_team_id',
         'away_team_id',
+        'is_live', // Add this column
         'h2h_home_price',
         'h2h_away_price',
         'spread_home_point',

@@ -17,6 +17,7 @@ class NbaOdds extends Model
         'away_team_id',
         'h2h_home_price',
         'h2h_away_price',
+        'is_live',
         'spread_home_point',
         'spread_away_point',
         'spread_home_price',
