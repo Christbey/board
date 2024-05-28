@@ -7,12 +7,10 @@
             <x-slot name="description">Manage your tasks efficiently</x-slot>
         </x-section-title>
 
+        <livewire:create-task-modal />
+
         <div class="mt-5 md:mt-0 md:col-span-2">
-            <!-- Create Task Section -->
-            <div class="px-4 py-3 mb-9 bg-white rounded-lg shadow sm:p-6">
-                <h1 class="text-xl font-bold text-gray-700">Create Task</h1>
-                <livewire:create-task-form />
-            </div>
+
 
             <!-- Filter and Task Table Section -->
             <div class="px-4 py-5 bg-white rounded-lg shadow sm:p-6 mb-4">
@@ -34,18 +32,12 @@
         </div>
 
         <!-- Edit Task Modal -->
-        <div x-show="isOpen" @keydown.escape.window="isOpen = false" @click.away="isOpen = false" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-            <div class="bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all max-w-xl w-full mx-auto">
-                <div class="bg-gray-200 px-4 py-2 flex items-center justify-between">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Task</h3>
-                    <button type="button" @click="isOpen = false" class="text-gray-500 hover:text-gray-700 focus:outline-none">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
+        <div x-show="isOpen" @keydown.escape.window="isOpen = false" @click.away="isOpen = false" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 transform transition-all" x-on:click="showModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                <div class="mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-ease-out duration-300 sm:w-full sm:mx-auto max-w-lg" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+
                 <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -109,5 +101,7 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
+
 </x-app-layout>

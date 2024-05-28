@@ -1,4 +1,4 @@
-<form wire:submit.prevent="submit" class="space-y-4 mb-6">
+<form wire:submit.prevent="submit" class="space-y-4 mb-6 p-4">
     @csrf
     @if ($method != 'POST')
         @method($method)

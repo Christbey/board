@@ -19,22 +19,22 @@
     <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     @livewireStyles
 </head>
-<body class="font-sans antialiased bg-gray-50">
+<body class="font-sans antialiased bg-gray-50" x-data="{ isSidebarOpen: true }">
 <div class="flex h-screen">
     <!-- Sidebar -->
-@livewire('sidebar')
+    @livewire('sidebar')
 
     <!-- Main Content -->
-    <div id="mainContent" class="flex-1 flex flex-col overflow-y-auto closed">
+    <div id="mainContent" :class="{'closed': !isSidebarOpen}" class="flex-1 flex flex-col overflow-y-auto">
         <header class="border-b p-4 flex items-center justify-between">
-            <button id="sidebarToggleBtn" class="text-gray-500 cursor-pointer">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button @click="isSidebarOpen = !isSidebarOpen" class="text-gray-500 cursor-pointer">
+                <svg x-show="!isSidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
                 </svg>
+                <svg x-show="isSidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
             </button>
-            <div>
-                @livewire('navigation-menu')
-            </div>
         </header>
 
         <main class="p-4 flex-1 overflow-y-auto">
@@ -48,8 +48,7 @@
 @stack('modals')
 @livewireScripts
 
-<script>
+<x-flash-message />
 
-</script>
 </body>
 </html>
