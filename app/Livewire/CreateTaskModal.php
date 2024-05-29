@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CreateTaskModal extends Component
 {
@@ -24,6 +25,13 @@ class CreateTaskModal extends Component
         'due_date' => 'nullable|date',
     ];
 
+    public function mount()
+    {
+        // Set default values for reminder_date and due_date
+        $this->reminder_date = Carbon::now()->format('Y-m-d\TH:i');
+        $this->due_date = Carbon::now()->format('Y-m-d\TH:i');
+    }
+
     public function save()
     {
         $this->validate();
@@ -42,11 +50,7 @@ class CreateTaskModal extends Component
         $this->emit('taskAdded');
     }
 
-    public function render()
-    {
-        return view('livewire.create-task-modal');
-    }
-
+    // Other methods...
     private function emit(string $string)
     {
     }

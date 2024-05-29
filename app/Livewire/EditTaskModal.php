@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use Livewire\Component;
 use App\Models\Task;
 
@@ -22,8 +23,8 @@ class EditTaskModal extends Component
         'completed' => 'boolean',
         'status' => 'required|string',
         'priority' => 'required|string',
-        'reminder_date' => 'nullable|date',
-        'due_date' => 'nullable|date',
+        'reminder_date' => 'date',
+        'due_date' => 'date',
     ];
 
     public function setTask($task)
@@ -33,8 +34,8 @@ class EditTaskModal extends Component
         $this->completed = $task['completed'];
         $this->status = $task['status'];
         $this->priority = $task['priority'];
-        $this->reminder_date = $task['reminder_date'];
-        $this->due_date = $task['due_date'];
+        $this->reminder_date = $this->task->reminder_date ? Carbon::parse($this->task->reminder_date)->format('Y-m-d\TH:i') : null;
+        $this->due_date = $this->task->due_date ? Carbon::parse($this->task->due_date)->format('Y-m-d\TH:i') : null;
     }
 
     public function save()
