@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Task;
 
-class CreateTaskRow extends Component
+class TaskRow extends Component
 {
     public $task;
 
@@ -16,7 +16,7 @@ class CreateTaskRow extends Component
 
     public function render()
     {
-        return view('livewire.create-task-row');
+        return view('livewire.task-row');
     }
 
 

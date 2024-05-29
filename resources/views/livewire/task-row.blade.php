@@ -6,7 +6,7 @@
         <!-- Edit Button -->
         <button type="button"
                 class="text-white bg-blue-500 hover:bg-blue-600 focus:bg-blue-600 rounded px-4 py-2 focus:outline-none"
-                @click="isOpen = true; activeTask = { id: '{{ $task->id }}', task: '{{ $task->task }}', completed: '{{ $task->completed }}', status: '{{ $task->status }}', priority: '{{ $task->priority }}', reminder_date: '{{ $task->reminder_date }}', due_date: '{{ $task->due_date }}' }">
+                @click="$dispatch('task-edit', { task: {{ $task->toJson() }} })">
             <i class="fas fa-edit"></i>
         </button>
 

@@ -1,15 +1,13 @@
-<div x-data="{ isOpen: false }">
-    <button @click="isOpen = true" class="px-4 py-2 bg-blue-500 text-white rounded">Create Task</button>
-
+<div x-data="{ isOpen: false }" @task-edit.window="isOpen = true">
     <div x-show="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg">
             <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Create Task</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Task</h3>
                 <form wire:submit.prevent="save">
                     <div class="mt-4">
                         <label for="task" class="block text-sm font-medium text-gray-700">Task</label>
-                        <input type="text" wire:model="task" id="task" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        @error('task') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        <input type="text" wire:model="task_name" id="task" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        @error('task_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700">Completed</label>
@@ -45,7 +43,7 @@
                         @error('due_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mt-4">
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Create Task</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Update Task</button>
                         <button type="button" @click="isOpen = false" class="px-4 py-2 bg-gray-500 text-white rounded">Cancel</button>
                     </div>
                 </form>
