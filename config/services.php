@@ -39,6 +39,13 @@ return [
         'base_url' => env('ODDS_API_BASE_URL'),
     ],
 
+    // config/services.php
+
+    'forge' => [
+        'token' => env('FORGE_API_TOKEN'),
+    ],
+
+
 
 
 ];

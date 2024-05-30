@@ -55,3 +55,7 @@ Route::prefix('nba')->group(function () {
     Route::get('odds', [NbaController::class, 'showOdds'])->name('nba.odds');
     Route::get('teams', [NbaController::class, 'index'])->name('nba.teams');
 });
+
+Route::get('/forge-servers', function () {
+    return view('forge-servers');
+})->name('forge-servers');
