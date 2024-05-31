@@ -20,6 +20,6 @@ class NbaScoresFetched
     public function __construct(array $scores)
     {
         $this->scores = $scores;
-        Log::info('NbaScoresFetched event created with scores: ', $scores);
+        Log::info('NbaScoresFetched event created with scores', $scores);
     }
 }

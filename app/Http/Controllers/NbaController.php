@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\NbaScoresFetched;
+use App\Events\NbaOddsFetched;
+use App\Jobs\FetchNbaOdds;
 use App\Jobs\FetchNbaScores;
 use App\Models\NbaTeam;
 use App\Services\NbaOddsService;
@@ -42,7 +43,7 @@ class NbaController extends Controller
         // Dispatch the event to store the odds
         NbaOddsFetched::dispatch($odds);
 
-        Log::info("Odds API Response for {$sport}: " . json_encode($odds));
+        Log::info("Odds API Response for {$sport}", $odds);
 
         return view('nba.odds', compact('odds', 'sport'));
     }
@@ -65,7 +66,7 @@ class NbaController extends Controller
         $scores = $this->nbaScoreService->getScores();
 
         // Log the fetched scores
-        Log::info('Fetched NBA Scores: ', $scores);
+        Log::info('Fetched NBA Scores', $scores);
 
         // Return the view with the scores data
         return view('nba.scores', compact('scores'));

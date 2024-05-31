@@ -34,9 +34,13 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                @foreach ($tasks as $task)
+                @forelse ($tasks as $task)
                     <livewire:task-row :task="$task" :key="$task->id" />
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="2" class="px-6 py-4 text-center text-gray-500">No available tasks.</td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

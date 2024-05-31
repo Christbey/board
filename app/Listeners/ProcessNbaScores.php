@@ -18,7 +18,7 @@ class ProcessNbaScores
         $scores = $event->scores;
 
         // Process the scores as needed
-        Log::info('Processing NBA Scores: ', $scores);
+        Log::info('Processing NBA Scores', $scores);
 
         // Optionally store the scores in the database or perform other actions
     }
