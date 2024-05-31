@@ -27,7 +27,6 @@ class CreateTaskModal extends Component
 
     public function mount()
     {
-        // Set default values for reminder_date and due_date
         $this->reminder_date = Carbon::now()->format('Y-m-d\TH:i');
         $this->due_date = Carbon::now()->format('Y-m-d\TH:i');
     }
@@ -47,10 +46,14 @@ class CreateTaskModal extends Component
         ]);
 
         $this->reset(['task', 'completed', 'status', 'priority', 'reminder_date', 'due_date']);
-        $this->emit('taskAdded');
+        $this->emit('taskSaved');
     }
 
-    // Other methods...
+    public function render()
+    {
+        return view('livewire.create-task-modal');
+    }
+
     private function emit(string $string)
     {
     }

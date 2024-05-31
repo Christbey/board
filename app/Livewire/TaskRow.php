@@ -18,6 +18,10 @@ class TaskRow extends Component
     {
         return view('livewire.task-row');
     }
+    public function emit()
+    {
+
+    }
 
 
 }

@@ -30,10 +30,10 @@ class EditTaskModal extends Component
     public function setTask($task)
     {
         $this->task = Task::find($task['id']);
-        $this->task_name = $task['task'];
-        $this->completed = $task['completed'];
-        $this->status = $task['status'];
-        $this->priority = $task['priority'];
+        $this->task_name = $this->task->task;
+        $this->completed = $this->task->completed;
+        $this->status = $this->task->status;
+        $this->priority = $this->task->priority;
         $this->reminder_date = $this->task->reminder_date ? Carbon::parse($this->task->reminder_date)->format('Y-m-d\TH:i') : null;
         $this->due_date = $this->task->due_date ? Carbon::parse($this->task->due_date)->format('Y-m-d\TH:i') : null;
     }
@@ -51,7 +51,7 @@ class EditTaskModal extends Component
             'due_date' => $this->due_date,
         ]);
 
-        $this->emit('taskUpdated');
+        $this->emit();
     }
 
     public function render()
@@ -59,7 +59,7 @@ class EditTaskModal extends Component
         return view('livewire.edit-task-modal');
     }
 
-    private function emit(string $string)
+    private function emit()
     {
     }
 }

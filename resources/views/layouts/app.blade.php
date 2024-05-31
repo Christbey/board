@@ -18,6 +18,7 @@
 
     <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     @livewireStyles
+
 </head>
 <body class="font-sans antialiased bg-gray-50" x-data="{ isSidebarOpen: true }">
 <div class="flex h-screen">

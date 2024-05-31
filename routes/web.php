@@ -23,6 +23,7 @@ use App\Http\Controllers\TaskController;
 
 Route::resource('tasks', TaskController::class);
 
+
 use App\Http\Controllers\NflController;
 
 Route::get('/nfl/teams', [NflController::class, 'index'])->name('nfl.index');
