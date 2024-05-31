@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
         @if (!empty($scores))
-            <h1 class="text-2xl font-bold mb-6 text-center">MLB Scores</h1>
+            <h1 class="text-2xl font-bold mb-6 text-center">NBA Scores</h1>
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white">
                     <thead>
@@ -27,7 +27,7 @@
                 </table>
             </div>
         @else
-            <p class="text-center text-gray-500">No MLB scores available.</p>
+            <p class="text-center text-gray-500">No NBA scores available.</p>
         @endif
     </div>
 </x-app-layout>

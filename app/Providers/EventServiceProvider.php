@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Events\NbaOddsFetched;
+use App\Events\NbaScoresFetched;
 use App\Events\NcaaOddsFetched;
 use App\Events\NflOddsFetched;
 use App\Events\MlbOddsFetched;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
+use App\Listeners\ProcessNbaScores;
 use App\Listeners\StoreNbaOdds;
 use App\Listeners\StoreNcaaOdds;
 use App\Listeners\StoreNflOdds;
@@ -42,6 +44,9 @@ class EventServiceProvider extends ServiceProvider
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
 
+        NbaScoresFetched::class => [
+            ProcessNbaScores::class,
+        ],
         // other events...
     ];
 

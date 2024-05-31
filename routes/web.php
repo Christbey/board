@@ -62,3 +62,5 @@ Route::get('/forge-servers', function () {
 })->name('forge-servers');
 
 Route::get('/mlb/scores', [MLBController::class, 'showScores'])->name('mlb.scores');
+
+Route::get('/nba/scores', [NbaController::class, 'showScores'])->name('nba.scores');
