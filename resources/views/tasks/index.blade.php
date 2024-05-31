@@ -1,5 +1,4 @@
 <!-- resources/views/tasks/index.blade.php -->
-
 <x-app-layout>
     @props(['tasks', 'filterDate'])
 
@@ -20,7 +19,9 @@
 
         <div class="flex justify-start mb-4">
             <form method="GET" action="{{ route('tasks.index') }}">
-                <input type="date" name="filter_date" value="{{ $filterDate }}" class="p-2 border-gray-300 rounded-lg" onchange="this.form.submit()">
+                <label>
+                    <input type="date" name="filter_date" value="{{ $filterDate }}" class="p-2 border-gray-300 rounded-lg" onchange="this.form.submit()">
+                </label>
             </form>
         </div>
 
@@ -29,7 +30,7 @@
                 <thead class="bg-gray-800">
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Task</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Due Date</th>
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">

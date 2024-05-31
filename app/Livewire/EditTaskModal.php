@@ -41,11 +41,8 @@ class EditTaskModal extends Component
         $this->reminder_date = $this->task->reminder_date ? Carbon::parse($this->task->reminder_date)->format('Y-m-d\TH:i') : null;
         $this->due_date = $this->task->due_date ? Carbon::parse($this->task->due_date)->format('Y-m-d\TH:i') : null;
 
-        // Debugging output
-        logger()->debug('Task loaded', [
-            'reminder_date' => $this->task->reminder_date,
-            'due_date' => $this->task->due_date,
-        ]);
+        // Open the modal
+        $this->dispatchBrowserEvent('open-modal');
     }
 
     public function save()
@@ -67,8 +64,22 @@ class EditTaskModal extends Component
         return redirect()->route('tasks.index');
     }
 
+    public function deleteTask()
+    {
+        if ($this->task) {
+            $this->task->delete();
+
+            session()->flash('status', 'Task deleted successfully!');
+            return redirect()->route('tasks.index');
+        }
+    }
+
     public function render()
     {
         return view('livewire.edit-task-modal');
+    }
+
+    private function dispatchBrowserEvent(string $string)
+    {
     }
 }

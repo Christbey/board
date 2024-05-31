@@ -38,8 +38,10 @@
                         <input type="datetime-local" wire:model="due_date" id="due_date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         @error('due_date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
-                    <div class="mt-4 flex justify-end">
+                    <div class="mt-4 flex justify-end space-x-4">
                         <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Update Task</button>
+                        <button type="button" @click="if (confirm('Are you sure you want to delete this task?')) $wire.deleteTask()" class="px-4 py-2 bg-red-500 text-white rounded">Delete Task</button>
+                        <button type="button" @click="isOpen = false" class="px-4 py-2 bg-gray-500 text-white rounded">Cancel</button>
                     </div>
                 </form>
             </div>
