@@ -10,7 +10,6 @@ use Carbon\Carbon;
 class CreateTaskModal extends Component
 {
     public $task;
-    public $completed = false;
     public $status = 'pending';
     public $priority = 'low';
     public $reminder_date;
@@ -18,7 +17,6 @@ class CreateTaskModal extends Component
 
     protected $rules = [
         'task' => 'required|string|max:255',
-        'completed' => 'boolean',
         'status' => 'required|string',
         'priority' => 'required|string',
         'reminder_date' => 'nullable|date',
@@ -35,9 +33,11 @@ class CreateTaskModal extends Component
     {
         $this->validate();
 
+        $is_completed = $this->status === 'completed' ? 1 : 0;
+
         Task::create([
             'task' => $this->task,
-            'completed' => $this->completed,
+            'is_completed' => $is_completed,
             'status' => $this->status,
             'priority' => $this->priority,
             'reminder_date' => $this->reminder_date,
@@ -45,16 +45,12 @@ class CreateTaskModal extends Component
             'user_id' => Auth::id(),
         ]);
 
-        $this->reset(['task', 'completed', 'status', 'priority', 'reminder_date', 'due_date']);
-        $this->emit('taskSaved');
+        session()->flash('status', 'Task created successfully!');
+        return redirect()->route('tasks.index');
     }
 
     public function render()
     {
         return view('livewire.create-task-modal');
-    }
-
-    private function emit(string $string)
-    {
     }
 }
