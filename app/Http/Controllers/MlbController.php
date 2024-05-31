@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Console\Commands\FetchMLBScores;
 use App\Events\MlbOddsFetched;
 use App\Jobs\FetchMlbOdds;
 use App\Models\MlbTeam;
 use App\Services\MlbOddsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MlbController extends Controller
@@ -53,4 +55,23 @@ class MlbController extends Controller
         // Return the view with the teams data
         return view('mlb.teams', compact('teams'));
     }
+
+    public function showScores(Request $request)
+    {
+        $response = Http::get('https://api.the-odds-api.com/v4/sports/baseball_mlb/scores', [
+            'apiKey' => '9f1d9176fa7c6c47ea169f2ff007c8fa',
+            'daysFrom' => 3,
+            'dateFormat' => 'iso'
+        ]);
+
+        if ($response->successful()) {
+            $scores = $response->json();
+            return view('mlb.scores', compact('scores'));
+        } else {
+            // Handle the case where the API request fails
+            return view('mlb.scores', ['scores' => []]); // Pass an empty array if no scores are available
+        }
+    }
+
+
 }

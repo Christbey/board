@@ -60,3 +60,5 @@ Route::prefix('nba')->group(function () {
 Route::get('/forge-servers', function () {
     return view('forge-servers');
 })->name('forge-servers');
+
+Route::get('/mlb/scores', [MLBController::class, 'showScores'])->name('mlb.scores');
