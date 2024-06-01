@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-class OddsService
+abstract class OddsService
 {
     protected $apiKey;
     protected $baseUrl;
@@ -17,17 +18,26 @@ class OddsService
 
     public function getOdds($sport, $markets)
     {
-        $params = [
-            'apiKey' => $this->apiKey,
-            'regions' => 'us',
-            'markets' => $markets,
-            'dateFormat' => 'iso',
-            'oddsFormat' => 'american',
-            'bookmakers' => 'draftkings',
-        ];
+        try {
+            $response = Http::get("{$this->baseUrl}/sports/{$sport}/odds", [
+                'apiKey' => $this->apiKey,
+                'regions' => 'us',
+                'markets' => $markets,
+                'oddsFormat' => 'american',
+                'dateFormat' => 'iso',
+                'bookmakers' => 'draftkings',
+            ]);
 
-        $response = Http::get("{$this->baseUrl}/sports/{$sport}/odds", $params);
+            $odds = $response->json();
 
-        return $response->json();
+            if ($response->failed() || isset($odds['error_code'])) {
+                return $odds;
+            }
+
+            return $odds;
+        } catch (\Exception $e) {
+            Log::error('Error fetching odds: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }
