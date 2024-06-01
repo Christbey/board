@@ -31,13 +31,37 @@
                 <p class="text-sm font-bold">{{ $odd['away_team'] }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $spread_away }}</p>
+                <p class="text-sm">
+                    @if(is_null($spread_away) || $spread_away == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $spread_away }}
+                    @endif
+                </p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $total_over }}</p>
+                <p class="text-sm">
+                    @if(is_null($total_over) || $total_over == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $total_over }}
+                    @endif
+                </p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $moneyline_away }}</p>
+                <p class="text-sm">
+                    @if(is_null($moneyline_away) || $moneyline_away == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $moneyline_away }}
+                    @endif
+                </p>
             </div>
         </div>
         <div class="grid grid-cols-5 text-center">
@@ -45,13 +69,37 @@
                 <p class="text-sm font-bold">{{ $odd['home_team'] }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $spread_home }}</p>
+                <p class="text-sm">
+                    @if(is_null($spread_home) || $spread_home == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $spread_home }}
+                    @endif
+                </p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $total_under }}</p>
+                <p class="text-sm">
+                    @if(is_null($total_under) || $total_under == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $total_under }}
+                    @endif
+                </p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">{{ $moneyline_home }}</p>
+                <p class="text-sm">
+                    @if(is_null($moneyline_home) || $moneyline_home == 'N/A')
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                    @else
+                        {{ $moneyline_home }}
+                    @endif
+                </p>
             </div>
         </div>
     </div>

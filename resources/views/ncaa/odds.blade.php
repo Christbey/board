@@ -1,4 +1,4 @@
-<!-- resources/views/odds/show.blade.php -->
+<!-- resources/views/ncaa/odds.blade.php -->
 
 <x-app-layout>
     <div class="max-w-3xl py-6 mx-auto text-gray-900">

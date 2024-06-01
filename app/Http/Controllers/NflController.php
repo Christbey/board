@@ -68,6 +68,7 @@ class NflController extends Controller
         Log::info("Odds API Response for {$this->sport}: " . json_encode($odds));
 
         $sport = 'americanfootball_nfl';
-        return view('nfl.odds', compact('odds', 'sport'));
+        $sport_title = 'NFL';
+        return view('nfl.odds', compact('odds', 'sport', 'sport_title'));
     }
 }

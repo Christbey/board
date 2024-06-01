@@ -45,7 +45,7 @@ class NcaaController extends Controller
         Log::info("Odds API Response for {$this->sport}: " . json_encode($odds));
 
         $sport = 'americanfootball_ncaaf';
-        return view('odds.show', compact('odds', 'sport'));
+        return view('ncaa.odds', compact('odds', 'sport'));
     }
 
     public function index()
