@@ -64,3 +64,7 @@ Route::get('/forge-servers', function () {
 Route::get('/mlb/scores', [MLBController::class, 'showScores'])->name('mlb.scores');
 
 Route::get('/nba/scores', [NbaController::class, 'showScores'])->name('nba.scores');
+
+// routes/web.php
+
+Route::get('/nfl/scores', [NflController::class, 'showScores'])->name('nfl.scores');

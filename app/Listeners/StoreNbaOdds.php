@@ -15,9 +15,19 @@ class StoreNbaOdds
     {
         Log::info('StoreNbaOdds listener triggered.');
 
+        if (!is_array($event->odds)) {
+            Log::error('Odds data is not an array.', ['odds' => $event->odds]);
+            return;
+        }
+
         foreach ($event->odds as $eventData) {
-            $homeTeam = NbaTeam::firstOrCreate(['name' => $eventData['home_team']]);
-            $awayTeam = NbaTeam::firstOrCreate(['name' => $eventData['away_team']]);
+            if (!is_array($eventData)) {
+                Log::error('Event data is not an array.', ['eventData' => $eventData]);
+                continue;
+            }
+
+            $homeTeam = $this->getOrCreateTeam($eventData['home_team'] ?? '');
+            $awayTeam = $this->getOrCreateTeam($eventData['away_team'] ?? '');
 
             if (!$homeTeam || !$awayTeam) {
                 Log::warning("Teams not found: Home - {$eventData['home_team']}, Away - {$eventData['away_team']}");
@@ -52,17 +62,23 @@ class StoreNbaOdds
         }
     }
 
+    private function getOrCreateTeam($teamName)
+    {
+        return empty($teamName) ? null : NbaTeam::firstOrCreate(['name' => $teamName]);
+    }
+
     private function prepareOddsData($event, $bookmaker, $homeTeam, $awayTeam)
     {
-        $commenceTime = Carbon::parse($event['commence_time'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s');
+        $commenceTime = Carbon::parse($event['commence_time'] ?? '')->setTimezone('America/Chicago')->format('Y-m-d H:i:s');
         $isLive = Carbon::now()->greaterThanOrEqualTo($commenceTime);
+
         $data = [
-            'event_id' => $event['id'],
-            'sport_title' => $event['sport_title'],
-            'sport_key' => $event['sport_key'],
+            'event_id' => $event['id'] ?? '',
+            'sport_title' => $event['sport_title'] ?? '',
+            'sport_key' => $event['sport_key'] ?? '',
             'home_team_id' => $homeTeam->id,
             'away_team_id' => $awayTeam->id,
-            'bookmaker_key' => $bookmaker['key'],
+            'bookmaker_key' => $bookmaker['key'] ?? '',
             'commence_time' => $commenceTime,
             'is_live' => $isLive,
             'h2h_home_price' => null,
@@ -79,33 +95,53 @@ class StoreNbaOdds
 
         foreach ($bookmaker['markets'] as $market) {
             foreach ($market['outcomes'] as $outcome) {
+                if (!is_array($outcome)) {
+                    Log::error('Outcome is not an array.', ['outcome' => $outcome]);
+                    continue;
+                }
+
                 if ($market['key'] == 'h2h') {
-                    if ($outcome['name'] == $event['home_team']) {
-                        $data['h2h_home_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == $event['away_team']) {
-                        $data['h2h_away_price'] = $outcome['price'];
-                    }
+                    $this->setH2HOdds($data, $outcome, $event);
                 } elseif ($market['key'] == 'spreads') {
-                    if ($outcome['name'] == $event['home_team']) {
-                        $data['spread_home_point'] = $outcome['point'] ?? 0;
-                        $data['spread_home_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == $event['away_team']) {
-                        $data['spread_away_point'] = $outcome['point'] ?? 0;
-                        $data['spread_away_price'] = $outcome['price'];
-                    }
+                    $this->setSpreadOdds($data, $outcome, $event);
                 } elseif ($market['key'] == 'totals') {
-                    if ($outcome['name'] == 'Over') {
-                        $data['total_over_point'] = $outcome['point'] ?? 0;
-                        $data['total_over_price'] = $outcome['price'];
-                    } elseif ($outcome['name'] == 'Under') {
-                        $data['total_under_point'] = $outcome['point'] ?? 0;
-                        $data['total_under_price'] = $outcome['price'];
-                    }
+                    $this->setTotalOdds($data, $outcome);
                 }
             }
         }
 
         return $data;
+    }
+
+    private function setH2HOdds(&$data, $outcome, $event)
+    {
+        if ($outcome['name'] == ($event['home_team'] ?? '')) {
+            $data['h2h_home_price'] = $outcome['price'] ?? null;
+        } elseif ($outcome['name'] == ($event['away_team'] ?? '')) {
+            $data['h2h_away_price'] = $outcome['price'] ?? null;
+        }
+    }
+
+    private function setSpreadOdds(&$data, $outcome, $event)
+    {
+        if ($outcome['name'] == ($event['home_team'] ?? '')) {
+            $data['spread_home_point'] = $outcome['point'] ?? 0;
+            $data['spread_home_price'] = $outcome['price'] ?? null;
+        } elseif ($outcome['name'] == ($event['away_team'] ?? '')) {
+            $data['spread_away_point'] = $outcome['point'] ?? 0;
+            $data['spread_away_price'] = $outcome['price'] ?? null;
+        }
+    }
+
+    private function setTotalOdds(&$data, $outcome)
+    {
+        if ($outcome['name'] == 'Over') {
+            $data['total_over_point'] = $outcome['point'] ?? 0;
+            $data['total_over_price'] = $outcome['price'] ?? null;
+        } elseif ($outcome['name'] == 'Under') {
+            $data['total_under_point'] = $outcome['point'] ?? 0;
+            $data['total_under_price'] = $outcome['price'] ?? null;
+        }
     }
 
     private function storeOdds($data)
@@ -132,6 +168,7 @@ class StoreNbaOdds
             'created_at' => now(), // Manually set the created_at timestamp
         ]);
     }
+
     private function hasOddsChanged($existingOdds, $newData)
     {
         return $existingOdds->h2h_home_price != $newData['h2h_home_price'] ||

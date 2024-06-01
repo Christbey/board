@@ -1,17 +1,22 @@
-<!-- resources/views/odds/show.blade.php -->
 <x-app-layout>
     <div class="max-w-3xl py-6 mx-auto text-gray-900">
         <h1 class="text-2xl font-bold mb-6">Odds for {{ $sport }}</h1>
         <div class="grid grid-cols-1 gap-6">
             @foreach ($odds as $odd)
+                @php
+                    // Debugging Section
+                    if (!is_array($odd)) {
+                        Log::error('Odd is not an array.', ['odd' => $odd]);
+                        continue;
+                    }
+                @endphp
                 <div class="bg-gray-100 text-gray-600 shadow-md rounded-lg p-6">
                     <div class="flex flex-col">
                         <div class="col-span-2">
                             <p class="text-xs text-left">{{ \Carbon\Carbon::parse($odd['commence_time'])->setTimezone('America/Chicago')->format('D M jS') }}</p>
                         </div>
                         <div class="grid grid-cols-5 text-center mb-2">
-                            <div class="col-span-2">
-                            </div>
+                            <div class="col-span-2"></div>
                             <div class="col-span-1">
                                 <p class="text-xs font-semibold text-center uppercase">Spread</p>
                             </div>
@@ -30,9 +35,18 @@
                             $moneyline_away = 'N/A';
                             $moneyline_home = 'N/A';
 
-                            if (isset($odd['bookmakers'][0]['markets'])) {
+                            if (isset($odd['bookmakers'][0]['markets']) && is_array($odd['bookmakers'][0]['markets'])) {
                                 foreach ($odd['bookmakers'][0]['markets'] as $market) {
+                                    if (!is_array($market)) {
+                                        Log::error('Market is not an array.', ['market' => $market]);
+                                        continue;
+                                    }
                                     foreach ($market['outcomes'] as $outcome) {
+                                        if (!is_array($outcome)) {
+                                            Log::error('Outcome is not an array.', ['outcome' => $outcome]);
+                                            continue;
+                                        }
+
                                         if ($market['key'] == 'spreads') {
                                             if ($outcome['name'] == $odd['away_team']) {
                                                 $spread_away = $outcome['point'] ?? 'N/A';
@@ -89,5 +103,4 @@
             @endforeach
         </div>
     </div>
-    <!-- Debugging Section -->
 </x-app-layout>

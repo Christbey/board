@@ -6,6 +6,7 @@ use App\Services\NflOddsService;
 use App\Services\NcaaOddsService;
 use App\Services\MlbOddsService;
 use App\Services\NbaOddsService;
+use App\Services\NFLScoresService;
 use App\Services\OddsService;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(NbaOddsService::class, function ($app) {
             return new NbaOddsService(new OddsService);
+        });
+
+        $this->app->singleton(NFLScoresService::class, function ($app) {
+            return new NFLScoresService();
         });
     }
 
