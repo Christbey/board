@@ -15,8 +15,6 @@ class MlbOddsService
 
     public function fetchOdds()
     {
-        // Your logic to fetch odds from the API
-        // This is just an example and should be modified according to your actual implementation
         $url = $this->baseUrl . '/sports/baseball_mlb/odds?apiKey=' . $this->apiKey . '&regions=us&markets=h2h,spreads,totals';
         $response = file_get_contents($url);
 
