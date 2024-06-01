@@ -6,11 +6,11 @@
                 <table class="min-w-full bg-white">
                     <thead>
                     <tr>
-                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Game</th>
-                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Home Team</th>
-                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Away Team</th>
-                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Home Score</th>
-                        <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Away Score</th>
+                        @foreach(['Game', 'Home Team', 'Away Team', 'Home Score', 'Away Score'] as $header)
+                            <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {{ $header }}
+                            </th>
+                        @endforeach
                     </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">

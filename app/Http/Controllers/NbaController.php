@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Events\NbaOddsFetched;
 use App\Jobs\FetchNbaOdds;
-use App\Jobs\FetchNbaScores;
 use App\Models\NbaTeam;
 use App\Services\NbaOddsService;
 use App\Services\NbaScoreService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class NbaController extends Controller
 {
     protected $nbaOddsService;
     protected $nbaScoreService;
+    protected $sport = 'basketball_nba';
+    protected $markets = 'h2h,spreads,totals';
 
     public function __construct(NbaOddsService $nbaOddsService, NbaScoreService $nbaScoreService)
     {
@@ -21,16 +23,13 @@ class NbaController extends Controller
         $this->nbaScoreService = $nbaScoreService;
     }
 
-    public function showOdds()
+    public function showOdds(Request $request)
     {
-        $sport = 'basketball_nba';
-        $markets = 'h2h,spreads,totals';
-
         // Dispatch the job to fetch NBA odds
         FetchNbaOdds::dispatch($this->nbaOddsService);
 
         // Fetch the odds data directly
-        $odds = $this->nbaOddsService->getOdds($sport, $markets);
+        $odds = $this->nbaOddsService->getOdds($this->sport, $this->markets);
 
         // Check for error in the response
         if (isset($odds['error_code'])) {
@@ -43,8 +42,9 @@ class NbaController extends Controller
         // Dispatch the event to store the odds
         NbaOddsFetched::dispatch($odds);
 
-        Log::info("Odds API Response for {$sport}", $odds);
+        Log::info("Odds API Response for {$this->sport}", $odds);
 
+        $sport = 'basketball_nba';
         return view('nba.odds', compact('odds', 'sport'));
     }
 
@@ -57,7 +57,7 @@ class NbaController extends Controller
         return view('nba.teams', compact('teams'));
     }
 
-    public function showScores()
+    public function showScores(Request $request)
     {
         // Log to ensure this method is being called
         Log::info('showScores method called.');

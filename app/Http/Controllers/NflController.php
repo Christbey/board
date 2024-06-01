@@ -3,19 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Events\NflOddsFetched;
-use App\Jobs\FetchNFLScores;
 use App\Jobs\FetchNflOdds;
 use App\Models\NflTeam;
 use App\Services\NFLScoresService;
 use App\Services\NflOddsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
 class NflController extends Controller
 {
     protected $nflScoresService;
     protected $nflOddsService;
+    protected $sport = 'americanfootball_nfl';
+    protected $markets = 'h2h,spreads,totals';
 
     public function __construct(NFLScoresService $nflScoresService, NflOddsService $nflOddsService)
     {
@@ -34,8 +34,8 @@ class NflController extends Controller
 
     public function showScores()
     {
-        // Dispatch the job to fetch scores and get the scores from the job
-        $scores = Bus::dispatchNow(new FetchNFLScores())->scores;
+        // Fetch scores using the service
+        $scores = $this->nflScoresService->fetchScores();
 
         if (empty($scores)) {
             $errorMessage = 'No scores available or there was an error fetching the scores.';
@@ -48,11 +48,11 @@ class NflController extends Controller
 
     public function showOdds(Request $request)
     {
-        $sport = 'americanfootball_nfl';
-        $markets = 'h2h,spreads,totals';
+        // Dispatch the job to fetch NFL odds
+        FetchNflOdds::dispatch($this->nflOddsService);
 
-        // Dispatch the job to fetch NFL odds and fetch the odds data directly
-        $odds = Bus::dispatchNow(new FetchNflOdds($this->nflOddsService))->odds ?? $this->nflOddsService->getOdds($sport, $markets);
+        // Fetch the odds data directly
+        $odds = $this->nflOddsService->getOdds($this->sport, $this->markets);
 
         // Check for error in the response
         if (isset($odds['error_code'])) {
@@ -65,8 +65,9 @@ class NflController extends Controller
         // Dispatch the event to store the odds
         NflOddsFetched::dispatch($odds);
 
-        Log::info("Odds API Response for {$sport}: " . json_encode($odds));
+        Log::info("Odds API Response for {$this->sport}: " . json_encode($odds));
 
+        $sport = 'americanfootball_nfl';
         return view('nfl.odds', compact('odds', 'sport'));
     }
 }

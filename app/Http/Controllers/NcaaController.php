@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\NcaaOddsFetched;
-use App\Events\OddsFetched;
 use App\Models\NcaaTeam;
 use App\Services\NcaaOddsService;
 use Illuminate\Http\Request;
@@ -13,6 +12,8 @@ use App\Jobs\FetchNcaaOdds;
 class NcaaController extends Controller
 {
     protected $ncaaOddsService;
+    protected $sport = 'americanfootball_ncaaf';
+    protected $markets = 'h2h,spreads,totals';
 
     public function __construct(NcaaOddsService $ncaaOddsService)
     {
@@ -21,11 +22,8 @@ class NcaaController extends Controller
 
     public function showOdds(Request $request)
     {
-        $sport = 'americanfootball_ncaaf';
-        $markets = 'h2h,spreads,totals';
-
         // Fetch the odds data directly
-        $odds = $this->ncaaOddsService->getOdds($sport, $markets);
+        $odds = $this->ncaaOddsService->getOdds($this->sport, $this->markets);
 
         // Check for error in the response
         if (isset($odds['error_code'])) {
@@ -36,10 +34,7 @@ class NcaaController extends Controller
         }
 
         // Ensure teams exist in the database
-        foreach ($odds as $eventData) {
-            $this->ensureTeamExists($eventData['home_team']);
-            $this->ensureTeamExists($eventData['away_team']);
-        }
+        $this->ensureTeamsExist($odds);
 
         // Dispatch the job to fetch NCAA odds
         FetchNcaaOdds::dispatch($this->ncaaOddsService);
@@ -47,8 +42,9 @@ class NcaaController extends Controller
         // Dispatch the event to store the odds
         NcaaOddsFetched::dispatch($odds);
 
-        Log::info("Odds API Response for {$sport}: " . json_encode($odds));
+        Log::info("Odds API Response for {$this->sport}: " . json_encode($odds));
 
+        $sport = 'americanfootball_ncaaf';
         return view('odds.show', compact('odds', 'sport'));
     }
 
@@ -59,6 +55,14 @@ class NcaaController extends Controller
 
         // Return the view with the teams data
         return view('ncaa.teams', compact('teams'));
+    }
+
+    private function ensureTeamsExist(array $odds)
+    {
+        foreach ($odds as $eventData) {
+            $this->ensureTeamExists($eventData['home_team']);
+            $this->ensureTeamExists($eventData['away_team']);
+        }
     }
 
     private function ensureTeamExists($teamName)

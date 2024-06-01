@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Console\Commands\FetchMLBScores;
 use App\Events\MlbOddsFetched;
 use App\Jobs\FetchMlbOdds;
 use App\Models\MlbTeam;
@@ -14,10 +13,14 @@ use Illuminate\Support\Facades\Log;
 class MlbController extends Controller
 {
     protected $mlbOddsService;
+    protected $apiKey;
+    protected $baseUrl;
 
     public function __construct(MlbOddsService $mlbOddsService)
     {
         $this->mlbOddsService = $mlbOddsService;
+        $this->apiKey = config('services.oddsapi.key');
+        $this->baseUrl = config('services.oddsapi.base_url');
     }
 
     public function showOdds(Request $request)
@@ -58,20 +61,24 @@ class MlbController extends Controller
 
     public function showScores(Request $request)
     {
-        $response = Http::get('https://api.the-odds-api.com/v4/sports/baseball_mlb/scores', [
-            'apiKey' => '9f1d9176fa7c6c47ea169f2ff007c8fa',
+        $scores = $this->fetchScores();
+
+        return view('mlb.scores', compact('scores'));
+    }
+
+    protected function fetchScores()
+    {
+        $response = Http::get("{$this->baseUrl}/sports/baseball_mlb/scores", [
+            'apiKey' => $this->apiKey,
             'daysFrom' => 3,
-            'dateFormat' => 'iso'
+            'dateFormat' => 'iso',
         ]);
 
         if ($response->successful()) {
-            $scores = $response->json();
-            return view('mlb.scores', compact('scores'));
-        } else {
-            // Handle the case where the API request fails
-            return view('mlb.scores', ['scores' => []]); // Pass an empty array if no scores are available
+            return $response->json();
         }
+
+        // Handle the case where the API request fails
+        return [];
     }
-
-
 }

@@ -14,11 +14,10 @@
     <!-- Styles and Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMXy8FKxoAO8HZw/Sy6FrgfYpJNEJvoRXAxpuAa" crossorigin="anonymous">
 
     <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     @livewireStyles
-
 </head>
 <body class="font-sans antialiased bg-gray-50" x-data="{ isSidebarOpen: true }">
 <div class="flex h-screen">
@@ -50,6 +49,5 @@
 @livewireScripts
 
 <x-flash-message />
-
 </body>
 </html>
