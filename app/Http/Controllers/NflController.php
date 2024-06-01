@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\NflOddsFetched;
 use App\Jobs\FetchNflOdds;
 use App\Models\NflTeam;
-use App\Services\NFLScoresService;
+use App\Services\NflScoresService;
 use App\Services\NflOddsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ class NflController extends Controller
     protected $sport = 'americanfootball_nfl';
     protected $markets = 'h2h,spreads,totals';
 
-    public function __construct(NFLScoresService $nflScoresService, NflOddsService $nflOddsService)
+    public function __construct(NflScoresService $nflScoresService, NflOddsService $nflOddsService)
     {
         $this->nflScoresService = $nflScoresService;
         $this->nflOddsService = $nflOddsService;
