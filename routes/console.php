@@ -45,5 +45,5 @@ Schedule::call(function () {
 
 Schedule::call(function () {
     $mlbOddsService = app(MlbOddsService::class);
-    FetchMlbOdds::dispatch($mlbOddsService);
-})->hourly();
+    dispatch(new FetchMlbOdds($mlbOddsService));
+})->everyMinute();
