@@ -8,6 +8,7 @@ use App\Services\MlbOddsService;
 use App\Services\NbaOddsService;
 use App\Services\NflScoresService;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Telescope\TelescopeApplicationServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NflScoresService::class, function ($app) {
             return new NflScoresService();
         });
+
+        $this->app->register(TelescopeServiceProvider::class);
+        $this->app->register(TelescopeApplicationServiceProvider::class);
     }
 
     /**
