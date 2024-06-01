@@ -2,26 +2,7 @@
 
 namespace App\Services;
 
-class MlbOddsService
+class MlbOddsService extends OddsService
 {
-    protected $apiKey;
-    protected $baseUrl;
-
-    public function __construct()
-    {
-        $this->apiKey = config('services.odds_api.key'); // Ensure you have the API key in your config/services.php
-        $this->baseUrl = 'https://api.the-odds-api.com/v4'; // Base URL for the API
-    }
-
-    public function fetchOdds()
-    {
-        $url = $this->baseUrl . '/sports/baseball_mlb/odds?apiKey=' . $this->apiKey . '&regions=us&markets=h2h,spreads,totals';
-        $response = file_get_contents($url);
-
-        if ($response === false) {
-            throw new \Exception('Error fetching MLB odds');
-        }
-
-        return json_decode($response, true);
-    }
+    // No need to implement getOdds here as it is inherited from OddsService
 }
