@@ -15,11 +15,16 @@ class FetchNbaScores implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Handle the job.
+     *
+     * @return void
+     */
     public function handle()
     {
         $url = 'https://api.the-odds-api.com/v4/sports/basketball_nba/scores';
         $params = [
-            'apiKey' => '9f1d9176fa7c6c47ea169f2ff007c8fa',
+            'apiKey' => config('services.odds_api.key'),
             'daysFrom' => 3,
             'dateFormat' => 'iso'
         ];
@@ -30,10 +35,21 @@ class FetchNbaScores implements ShouldQueue
             $scores = $response->json();
             event(new NbaScoresFetched($scores));
         } else {
-            Log::error('Failed to fetch NBA scores', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
+            $this->logError($response);
         }
+    }
+
+    /**
+     * Log error details if the API call fails.
+     *
+     * @param \Illuminate\Http\Client\Response $response
+     * @return void
+     */
+    protected function logError($response)
+    {
+        Log::error('Failed to fetch NBA scores', [
+            'status' => $response->status(),
+            'body' => $response->body()
+        ]);
     }
 }
