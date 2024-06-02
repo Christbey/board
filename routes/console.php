@@ -27,20 +27,14 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule the jobs to run every minute
-Schedule::call(function () {
-    $nflOddsService = app(NflOddsService::class);
-    FetchNflOdds::dispatch($nflOddsService);
-})->hourly();
+// Fetch NFL odds every minute
+Schedule::command('odds:fetch-nfl')->everyMinute();
 
-Schedule::call(function () {
-    $ncaaOddsService = app(NcaaOddsService::class);
-    FetchNcaaOdds::dispatch($ncaaOddsService);
-})->hourly();
+// Fetch NCAA odds every minute
+Schedule::command('odds:fetch-ncaa')->everyMinute();
 
-Schedule::call(function () {
-    $nbaOddsService = app(NbaOddsService::class);
-    FetchNbaOdds::dispatch($nbaOddsService);
-})->hourly();
+// Fetch NBA odds every minute
+Schedule::command('odds:fetch-nba')->everyMinute();
 
+// Fetch MLB odds every minute
 Schedule::command('odds:fetch-mlb')->everyMinute();

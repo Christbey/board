@@ -1,3 +1,5 @@
+<!-- resources/views/livewire/odds-card.blade.php -->
+
 <div class="relative bg-gray-100 text-gray-600 shadow-md rounded-lg p-6">
     <div class="flex justify-between mb-4">
         <p class="text-xs">{{ \Carbon\Carbon::parse($odd->commence_time)->setTimezone('America/Chicago')->format('D M jS') }}</p>
@@ -31,37 +33,13 @@
                 <p class="text-sm font-bold">{{ $odd->awayTeam->name }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->spread_away_point) || $odd->spread_away_point == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->spread_away_point }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $spread_away }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->total_over_point) || $odd->total_over_point == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->total_over_point }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $total_over }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->h2h_away_price) || $odd->h2h_away_price == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->h2h_away_price }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $moneyline_away }}</p>
             </div>
         </div>
         <div class="grid grid-cols-5 text-center">
@@ -69,37 +47,13 @@
                 <p class="text-sm font-bold">{{ $odd->homeTeam->name }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->spread_home_point) || $odd->spread_home_point == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->spread_home_point }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $spread_home }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->total_under_point) || $odd->total_under_point == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->total_under_point }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $total_under }}</p>
             </div>
             <div class="col-span-1 text-center">
-                <p class="text-sm">
-                    @if(is_null($odd->h2h_home_price) || $odd->h2h_home_price == 'N/A')
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mx-auto">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                    @else
-                        {{ $odd->h2h_home_price }}
-                    @endif
-                </p>
+                <p class="text-sm">{{ $moneyline_home }}</p>
             </div>
         </div>
     </div>

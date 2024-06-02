@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold mb-6">Odds for {{ $sport }}</h1>
         <div class="grid grid-cols-1 gap-6">
             @foreach ($odds as $odd)
-                <livewire:odds-card :odd="$odd" />
+                <livewire:odds-card :odd="$odd" :sport="$sport" />
             @endforeach
         </div>
     </div>

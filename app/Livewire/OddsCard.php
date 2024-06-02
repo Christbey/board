@@ -8,59 +8,27 @@ use Illuminate\Support\Facades\Log;
 class OddsCard extends Component
 {
     public $odd;
+    public $sport;
 
-    public function mount($odd)
+    public function mount($odd, $sport)
     {
-        if (!is_array($odd)) {
-            Log::error('Odd is not an array.', ['odd' => $odd]);
+        if (!is_object($odd) || !method_exists($odd, 'getAttributes')) {
+            Log::error('Odd is not a valid object.', ['odd' => $odd]);
             return;
         }
+
         $this->odd = $odd;
+        $this->sport = $sport;
     }
 
     public function render()
     {
-        $spread_away = 'N/A';
-        $spread_home = 'N/A';
-        $total_over = 'N/A';
-        $total_under = 'N/A';
-        $moneyline_away = 'N/A';
-        $moneyline_home = 'N/A';
-
-        if (isset($this->odd['bookmakers'][0]['markets']) && is_array($this->odd['bookmakers'][0]['markets'])) {
-            foreach ($this->odd['bookmakers'][0]['markets'] as $market) {
-                if (!is_array($market)) {
-                    Log::error('Market is not an array.', ['market' => $market]);
-                    continue;
-                }
-                foreach ($market['outcomes'] as $outcome) {
-                    if (!is_array($outcome)) {
-                        Log::error('Outcome is not an array.', ['outcome' => $outcome]);
-                        continue;
-                    }
-
-                    if ($market['key'] == 'spreads') {
-                        if ($outcome['name'] == $this->odd['away_team']) {
-                            $spread_away = $outcome['point'] ?? 'N/A';
-                        } elseif ($outcome['name'] == $this->odd['home_team']) {
-                            $spread_home = $outcome['point'] ?? 'N/A';
-                        }
-                    } elseif ($market['key'] == 'totals') {
-                        if ($outcome['name'] == 'Over') {
-                            $total_over = $outcome['point'] ?? 'N/A';
-                        } elseif ($outcome['name'] == 'Under') {
-                            $total_under = $outcome['point'] ?? 'N/A';
-                        }
-                    } elseif ($market['key'] == 'h2h') {
-                        if ($outcome['name'] == $this->odd['away_team']) {
-                            $moneyline_away = $outcome['price'] ?? 'N/A';
-                        } elseif ($outcome['name'] == $this->odd['home_team']) {
-                            $moneyline_home = $outcome['price'] ?? 'N/A';
-                        }
-                    }
-                }
-            }
-        }
+        $spread_away = $this->odd->spread_away_point ?? 'N/A';
+        $spread_home = $this->odd->spread_home_point ?? 'N/A';
+        $total_over = $this->odd->total_over_point ?? 'N/A';
+        $total_under = $this->odd->total_under_point ?? 'N/A';
+        $moneyline_away = $this->odd->h2h_away_price ?? 'N/A';
+        $moneyline_home = $this->odd->h2h_home_price ?? 'N/A';
 
         return view('livewire.odds-card', [
             'spread_away' => $spread_away,

@@ -2,49 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\NcaaOddsFetched;
+use App\Models\NcaaOdds;
 use App\Models\NcaaTeam;
 use App\Services\NcaaOddsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\FetchNcaaOdds;
 
 class NcaaController extends Controller
 {
     protected $ncaaOddsService;
-    protected $sport = 'americanfootball_ncaaf';
-    protected $markets = 'h2h,spreads,totals';
+    protected $apiKey;
+    protected $baseUrl;
 
     public function __construct(NcaaOddsService $ncaaOddsService)
     {
         $this->ncaaOddsService = $ncaaOddsService;
+        $this->apiKey = config('services.oddsapi.key');
+        $this->baseUrl = config('services.oddsapi.base_url');
     }
 
     public function showOdds(Request $request)
     {
-        // Fetch the odds data directly
-        $odds = $this->ncaaOddsService->getOdds($this->sport, $this->markets);
+        $sport = 'americanfootball_ncaaf';
 
-        // Check for error in the response
-        if (isset($odds['error_code'])) {
-            return view('errors.quota', [
-                'message' => $odds['message'],
-                'details_url' => $odds['details_url'],
-            ]);
+        // Fetch the odds data from the database
+        $odds = NcaaOdds::all();
+
+        // Check if odds are empty
+        if ($odds->isEmpty()) {
+            $errorMessage = 'No odds available at the moment.';
+            Log::error($errorMessage);
+            return view('ncaa.odds', compact('odds', 'sport'))->withErrors($errorMessage);
         }
 
-        // Ensure teams exist in the database
-        $this->ensureTeamsExist($odds);
-
-        // Dispatch the job to fetch NCAA odds
-        FetchNcaaOdds::dispatch($this->ncaaOddsService);
-
-        // Dispatch the event to store the odds
-        NcaaOddsFetched::dispatch($odds);
-
-        Log::info("Odds API Response for {$this->sport}: " . json_encode($odds));
-
-        $sport = 'americanfootball_ncaaf';
         return view('ncaa.odds', compact('odds', 'sport'));
     }
 

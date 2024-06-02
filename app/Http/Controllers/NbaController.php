@@ -2,49 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\NbaOddsFetched;
-use App\Jobs\FetchNbaOdds;
+use App\Models\NbaOdds;
 use App\Models\NbaTeam;
 use App\Services\NbaOddsService;
-use App\Services\NbaScoreService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NbaController extends Controller
 {
     protected $nbaOddsService;
-    protected $nbaScoreService;
-    protected $sport = 'basketball_nba';
-    protected $markets = 'h2h,spreads,totals';
+    protected $apiKey;
+    protected $baseUrl;
 
-    public function __construct(NbaOddsService $nbaOddsService, NbaScoreService $nbaScoreService)
+    public function __construct(NbaOddsService $nbaOddsService)
     {
         $this->nbaOddsService = $nbaOddsService;
-        $this->nbaScoreService = $nbaScoreService;
+        $this->apiKey = config('services.oddsapi.key');
+        $this->baseUrl = config('services.oddsapi.base_url');
     }
 
     public function showOdds(Request $request)
     {
-        // Dispatch the job to fetch NBA odds
-        FetchNbaOdds::dispatch($this->nbaOddsService);
+        $sport = 'basketball_nba';
 
-        // Fetch the odds data directly
-        $odds = $this->nbaOddsService->getOdds($this->sport, $this->markets);
+        // Fetch the odds data from the database
+        $odds = NbaOdds::all();
 
-        // Check for error in the response
-        if (isset($odds['error_code'])) {
-            return view('errors.quota', [
-                'message' => $odds['message'],
-                'details_url' => $odds['details_url'],
-            ]);
+        // Check if odds are empty
+        if ($odds->isEmpty()) {
+            $errorMessage = 'No odds available at the moment.';
+            Log::error($errorMessage);
+            return view('nba.odds', compact('odds', 'sport'))->withErrors($errorMessage);
         }
 
-        // Dispatch the event to store the odds
-        NbaOddsFetched::dispatch($odds);
-
-        Log::info("Odds API Response for {$this->sport}", $odds);
-
-        $sport = 'basketball_nba';
         return view('nba.odds', compact('odds', 'sport'));
     }
 
@@ -59,16 +50,24 @@ class NbaController extends Controller
 
     public function showScores(Request $request)
     {
-        // Log to ensure this method is being called
-        Log::info('showScores method called.');
+        $scores = $this->fetchScores();
 
-        // Fetch the scores data directly
-        $scores = $this->nbaScoreService->getScores();
-
-        // Log the fetched scores
-        Log::info('Fetched NBA Scores', $scores);
-
-        // Return the view with the scores data
         return view('nba.scores', compact('scores'));
+    }
+
+    protected function fetchScores()
+    {
+        $response = Http::get("{$this->baseUrl}/sports/basketball_nba/scores", [
+            'apiKey' => $this->apiKey,
+            'daysFrom' => 3,
+            'dateFormat' => 'iso',
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        // Handle the case where the API request fails
+        return [];
     }
 }

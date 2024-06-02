@@ -29,4 +29,14 @@ class NbaOdds extends Model
         'commence_time',
         'bookmaker_key',
     ];
+
+    public function homeTeam()
+    {
+        return $this->belongsTo(NbaTeam::class, 'home_team_id');
+    }
+
+    public function awayTeam()
+    {
+        return $this->belongsTo(NbaTeam::class, 'away_team_id');
+    }
 }
