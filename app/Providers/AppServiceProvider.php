@@ -8,14 +8,13 @@ use App\Services\MlbOddsService;
 use App\Services\NbaOddsService;
 use App\Services\NflScoresService;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Telescope\TelescopeApplicationServiceProvider;
+use Laravel\Telescope\TelescopeServiceProvider;
+use Laravel\Horizon\HorizonServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
     public function register()
     {
@@ -39,8 +38,9 @@ class AppServiceProvider extends ServiceProvider
             return new NflScoresService();
         });
 
+        // Register Horizon and Telescope service providers
+        $this->app->register(HorizonServiceProvider::class);
         $this->app->register(TelescopeServiceProvider::class);
-        $this->app->register(TelescopeApplicationServiceProvider::class);
     }
 
     /**
