@@ -43,7 +43,4 @@ Schedule::call(function () {
     FetchNbaOdds::dispatch($nbaOddsService);
 })->hourly();
 
-Schedule::call(function () {
-    $mlbOddsService = app(MlbOddsService::class);
-    dispatch(new FetchMlbOdds($mlbOddsService));
-})->everyMinute();
+Schedule::command('odds:fetch-mlb')->everyMinute();

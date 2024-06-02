@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Jobs;
 
 use App\Services\MlbOddsService;
@@ -11,19 +12,18 @@ use Illuminate\Queue\SerializesModels;
 
 class FetchMlbOdds extends FetchOddsJob implements ShouldQueue
 {
-use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-protected $mlbOddsService;
+    protected $mlbOddsService;
 
-public function __construct(MlbOddsService $mlbOddsService)
-{
-$this->mlbOddsService = $mlbOddsService;
-parent::__construct($mlbOddsService, 'baseball_mlb', MlbOddsFetched::class);
-}
+    public function __construct(MlbOddsService $mlbOddsService)
+    {
+        $this->mlbOddsService = $mlbOddsService;
+        parent::__construct($mlbOddsService, 'baseball_mlb', MlbOddsFetched::class);
+    }
 
-public function handle()
-{
-$odds = $this->mlbOddsService->fetchOdds();
-event(new MlbOddsFetched($odds));
-}
+    public function handle()
+    {
+        parent::handle(); // Call the parent's handle method
+    }
 }
