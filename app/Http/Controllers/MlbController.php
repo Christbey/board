@@ -10,6 +10,7 @@ use App\Services\MlbOddsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class MlbController extends Controller
 {
@@ -24,21 +25,15 @@ class MlbController extends Controller
         $this->baseUrl = config('services.oddsapi.base_url');
     }
 
-    public function showOdds(Request $request)
+    public function showOdds()
     {
-        $sport = 'baseball_mlb';
+        $today = Carbon::today();
+        $odds = MLBOdds::whereDate('commence_time', $today)->get();
 
-        // Fetch the odds data from the database
-        $odds = MlbOdds::all();
-
-        // Check if odds are empty
-        if ($odds->isEmpty()) {
-            $errorMessage = 'No odds available at the moment.';
-            Log::error($errorMessage);
-            return view('mlb.odds', compact('odds', 'sport'))->withErrors($errorMessage);
-        }
-
-        return view('mlb.odds', compact('odds', 'sport'));
+        return view('mlb.odds', [
+            'odds' => $odds,
+            'sport' => 'MLB' // Or fetch dynamically as needed
+        ]);
     }
 
     public function index()
