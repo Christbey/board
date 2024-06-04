@@ -38,4 +38,14 @@ class MlbTeam extends Model
     {
         return $this->hasMany(Odds::class, 'away_team_id');
     }
+
+    public function homeScores()
+    {
+        return $this->hasMany(MlbScore::class, 'home_team_id');
+    }
+
+    public function awayScores()
+    {
+        return $this->hasMany(MlbScore::class, 'away_team_id');
+    }
 }
