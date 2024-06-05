@@ -58,10 +58,4 @@ Route::get('/forge-servers', function () {
     return view('forge-servers');
 })->name('forge-servers');
 
-use Laravel\Horizon\Http\Controllers\HomeController as HorizonHomeController;
-use Laravel\Telescope\Http\Controllers\HomeController as TelescopeHomeController;
 
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::get('/horizon', [HorizonHomeController::class, 'index'])->name('horizon.index');
-    Route::get('/telescope', [TelescopeHomeController::class, 'index'])->name('telescope.index');
-});
