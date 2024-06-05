@@ -24,8 +24,5 @@ class NcaaOddsHistory extends Model
 
     ];
 
-    public function odds()
-    {
-        return $this->belongsTo(NcaaOdds::class, 'odds_id');
-    }
+
 }

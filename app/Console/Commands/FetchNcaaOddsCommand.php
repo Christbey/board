@@ -2,22 +2,17 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\NcaaOddsService;
-use App\Jobs\FetchNcaaOdds;
-use Symfony\Component\Console\Command\Command as CommandAlias;
+use App\Models\NcaaOdds;
+use App\Models\NcaaOddsHistory;
+use App\Models\NcaaTeam;
 
-class FetchNcaaOddsCommand extends Command
+class FetchNcaaOddsCommand extends FetchOddsCommand
 {
     protected $signature = 'odds:fetch-ncaa';
-    protected $description = 'Fetch NCAA odds and store them in the database';
+    protected $description = 'NCAA odds';
 
-    public function handle()
-    {
-        $ncaaOddsService = app(NcaaOddsService::class);
-        FetchNcaaOdds::dispatch($ncaaOddsService);
-
-        $this->info('NCAA odds fetched and job dispatched successfully.');
-        return CommandAlias::SUCCESS;
-    }
+    protected $sportKey = 'americanfootball_ncaaf';
+    protected $teamModel = NcaaTeam::class;
+    protected $oddsModel = NcaaOdds::class;
+    protected $historyModel = NcaaOddsHistory::class;
 }

@@ -2,22 +2,17 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\NbaOddsService;
-use App\Jobs\FetchNbaOdds;
-use Symfony\Component\Console\Command\Command as CommandAlias;
+use App\Models\NbaOdds;
+use App\Models\NbaOddsHistory;
+use App\Models\NbaTeam;
 
-class FetchNbaOddsCommand extends Command
+class FetchNbaOddsCommand extends FetchOddsCommand
 {
     protected $signature = 'odds:fetch-nba';
-    protected $description = 'Fetch NBA odds and store them in the database';
+    protected $description = 'NBA odds';
 
-    public function handle()
-    {
-        $nbaOddsService = app(NbaOddsService::class);
-        FetchNbaOdds::dispatch($nbaOddsService);
-
-        $this->info('NBA odds fetched and job dispatched successfully.');
-        return CommandAlias::SUCCESS;
-    }
+    protected $sportKey = 'basketball_nba';
+    protected $teamModel = NbaTeam::class;
+    protected $oddsModel = NbaOdds::class;
+    protected $historyModel = NbaOddsHistory::class;
 }

@@ -3,9 +3,12 @@
 namespace App\Traits;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 trait ProcessesOdds
 {
+    use CompareOdds;
+
     public function processOdds(array $odds, $teamModel, $oddsModel, $oddsHistoryModel)
     {
         foreach ($odds as $odd) {
@@ -13,18 +16,35 @@ trait ProcessesOdds
             $awayTeam = $this->getTeam($teamModel, $odd['away_team']);
 
             if ($homeTeam && $awayTeam) {
-                $oddsData = $this->prepareOddsData($odd, $homeTeam->id, $awayTeam->id);
-                $this->storeOrUpdateOdds($oddsModel, $oddsHistoryModel, $oddsData);
+                foreach ($odd['bookmakers'] as $bookmaker) {
+                    if ($bookmaker['key'] !== 'draftkings') {
+                        continue; // Skip other bookmakers
+                    }
+
+                    $oddsData = $this->prepareOddsData($odd, $bookmaker, $homeTeam->id, $awayTeam->id);
+                    Log::info('Prepared odds data:', $oddsData);
+
+                    $existingOdds = $this->storeOrUpdateOdds($oddsModel, $oddsData);
+
+                    if ($existingOdds && $this->oddsHaveChanged($existingOdds, $oddsData)) {
+                        Log::info('Odds have changed, storing history for event ID: ' . $oddsData['event_id']);
+                        $this->storeOddsHistory($oddsHistoryModel, $existingOdds, $oddsData);
+                        $existingOdds->update($oddsData);
+                    } elseif (!$existingOdds) {
+                        Log::info('Storing new odds for event ID: ' . $oddsData['event_id']);
+                        $this->storeOdds($oddsModel, $oddsData);
+                    }
+                }
             }
         }
     }
 
     protected function getTeam($teamModel, $teamName)
     {
-        return $teamModel::firstOrCreate(['name' => $teamName]);
+        return $teamModel::firstWhere('name', $teamName);
     }
 
-    protected function prepareOddsData(array $odd, $homeTeamId, $awayTeamId)
+    protected function prepareOddsData(array $odd, array $bookmaker, $homeTeamId, $awayTeamId)
     {
         return [
             'event_id' => $odd['id'],
@@ -33,32 +53,30 @@ trait ProcessesOdds
             'commence_time' => Carbon::parse($odd['commence_time'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s'),
             'home_team_id' => $homeTeamId,
             'away_team_id' => $awayTeamId,
-            'bookmaker_key' => $odd['bookmakers'][0]['key'] ?? null,
-            'h2h_home_price' => $this->getPrice($odd, 'h2h', $odd['home_team']),
-            'h2h_away_price' => $this->getPrice($odd, 'h2h', $odd['away_team']),
-            'spread_home_point' => $this->getPoint($odd, 'spreads', $odd['home_team']),
-            'spread_away_point' => $this->getPoint($odd, 'spreads', $odd['away_team']),
-            'spread_home_price' => $this->getPrice($odd, 'spreads', $odd['home_team']),
-            'spread_away_price' => $this->getPrice($odd, 'spreads', $odd['away_team']),
-            'total_over_point' => $this->getPoint($odd, 'totals', 'Over'),
-            'total_under_point' => $this->getPoint($odd, 'totals', 'Under'),
-            'total_over_price' => $this->getPrice($odd, 'totals', 'Over'),
-            'total_under_price' => $this->getPrice($odd, 'totals', 'Under'),
+            'bookmaker_key' => $bookmaker['key'],
+            'h2h_home_price' => $this->getPrice($bookmaker, 'h2h', $odd['home_team']),
+            'h2h_away_price' => $this->getPrice($bookmaker, 'h2h', $odd['away_team']),
+            'spread_home_point' => $this->getPoint($bookmaker, 'spreads', $odd['home_team']),
+            'spread_away_point' => $this->getPoint($bookmaker, 'spreads', $odd['away_team']),
+            'spread_home_price' => $this->getPrice($bookmaker, 'spreads', $odd['home_team']),
+            'spread_away_price' => $this->getPrice($bookmaker, 'spreads', $odd['away_team']),
+            'total_over_point' => $this->getPoint($bookmaker, 'totals', 'Over'),
+            'total_under_point' => $this->getPoint($bookmaker, 'totals', 'Under'),
+            'total_over_price' => $this->getPrice($bookmaker, 'totals', 'Over'),
+            'total_under_price' => $this->getPrice($bookmaker, 'totals', 'Under'),
             'last_update' => isset($odd['last_update'])
                 ? Carbon::parse($odd['last_update'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s')
                 : null,
         ];
     }
 
-    protected function getPrice(array $odd, $marketKey, $outcomeName)
+    protected function getPrice(array $bookmaker, $marketKey, $outcomeName)
     {
-        if (isset($odd['bookmakers'][0]['markets'])) {
-            foreach ($odd['bookmakers'][0]['markets'] as $market) {
-                if ($market['key'] === $marketKey) {
-                    foreach ($market['outcomes'] as $outcome) {
-                        if ($outcome['name'] === $outcomeName) {
-                            return $outcome['price'] ?? null;
-                        }
+        foreach ($bookmaker['markets'] as $market) {
+            if ($market['key'] === $marketKey) {
+                foreach ($market['outcomes'] as $outcome) {
+                    if ($outcome['name'] === $outcomeName) {
+                        return $outcome['price'] ?? null;
                     }
                 }
             }
@@ -66,15 +84,13 @@ trait ProcessesOdds
         return null;
     }
 
-    protected function getPoint(array $odd, $marketKey, $outcomeName)
+    protected function getPoint(array $bookmaker, $marketKey, $outcomeName)
     {
-        if (isset($odd['bookmakers'][0]['markets'])) {
-            foreach ($odd['bookmakers'][0]['markets'] as $market) {
-                if ($market['key'] === $marketKey) {
-                    foreach ($market['outcomes'] as $outcome) {
-                        if ($outcome['name'] === $outcomeName) {
-                            return $outcome['point'] ?? null;
-                        }
+        foreach ($bookmaker['markets'] as $market) {
+            if ($market['key'] === $marketKey) {
+                foreach ($market['outcomes'] as $outcome) {
+                    if ($outcome['name'] === $outcomeName) {
+                        return $outcome['point'] ?? null;
                     }
                 }
             }
@@ -82,24 +98,23 @@ trait ProcessesOdds
         return null;
     }
 
-    protected function storeOrUpdateOdds($oddsModel, $oddsHistoryModel, array $oddsData)
+    protected function storeOrUpdateOdds($oddsModel, array $oddsData)
     {
         $existingOdds = $oddsModel::where('event_id', $oddsData['event_id'])
             ->where('bookmaker_key', $oddsData['bookmaker_key'])
             ->first();
 
         if ($existingOdds) {
-            if ($this->oddsHaveChanged($existingOdds, $oddsData)) {
-                $this->storeHistoricalOdds($existingOdds, $oddsHistoryModel);
-                $existingOdds->update($oddsData);
-            }
-        } else {
-            $oddsModel::create($oddsData);
+            return $existingOdds;
         }
+
+        return $oddsModel::create($oddsData);
     }
 
-    protected function storeHistoricalOdds($existingOdds, $oddsHistoryModel)
+    protected function storeOddsHistory($oddsHistoryModel, $existingOdds, array $oddsData)
     {
+        Log::info('Storing historical odds:', ['odds_id' => $existingOdds->id]);
+
         $oddsHistoryModel::create([
             'odds_id' => $existingOdds->id,
             'h2h_home_price' => $existingOdds->h2h_home_price,
@@ -114,7 +129,7 @@ trait ProcessesOdds
             'total_under_price' => $existingOdds->total_under_price,
             'commence_time' => $existingOdds->commence_time,
             'bookmaker_key' => $existingOdds->bookmaker_key,
-            'created_at' => now(),
+            'created_at' => now(), // Manually set the created_at timestamp
         ]);
     }
 }
