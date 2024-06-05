@@ -7,8 +7,8 @@ trait CompareOdds
     /**
      * Compare existing odds with new data.
      *
-     * @param  object  $existingOdds
-     * @param  array  $newData
+     * @param object $existingOdds
+     * @param array $newData
      * @return bool
      */
     public function oddsHaveChanged($existingOdds, array $newData): bool

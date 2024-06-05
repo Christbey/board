@@ -2,13 +2,15 @@
 
 namespace App\Listeners;
 
+use App\Traits\CompareOdds;
+use App\Traits\PreparesOddsData;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 abstract class BaseOddsListener
 {
-    use \App\Traits\CompareOdds;
-    use \App\Traits\PreparesOddsData;
+    use CompareOdds;
+    use PreparesOddsData;
 
     protected function handleOdds($event, $modelClass, $historyModelClass, $teamClass)
     {

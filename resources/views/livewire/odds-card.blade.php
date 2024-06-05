@@ -12,7 +12,6 @@
         };
     @endphp
 
-    @if($isToday)
         <div class="relative bg-gray-100 text-gray-600 shadow-md rounded-lg p-6">
             <div class="flex justify-between mb-4">
                 <p class="text-xs">{{ $commenceTime->setTimezone('America/Chicago')->format('D M jS, g:i A') }}</p>
@@ -69,5 +68,4 @@
                 </div>
             </div>
         </div>
-    @endif
 </div>

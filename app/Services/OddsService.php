@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-abstract class OddsService
+class OddsService
 {
     protected $apiKey;
     protected $baseUrl;
@@ -31,7 +31,7 @@ abstract class OddsService
             $odds = $response->json();
 
             if ($response->failed() || isset($odds['error_code'])) {
-                return $odds;
+                return [];
             }
 
             return $odds;
