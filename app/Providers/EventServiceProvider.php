@@ -21,19 +21,7 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 class EventServiceProvider extends ServiceProvider
 {
     protected $listen = [
-        NflOddsFetched::class => [
-            StoreNflOdds::class,
-        ],
-        MlbOddsFetched::class => [
-            StoreMlbOdds::class,
-        ],
-        NbaOddsFetched::class => [
-            StoreNbaOdds::class,
-        ],
 
-        NcaaOddsFetched::class => [
-            StoreNcaaOdds::class,
-        ],
         TaskCreated::class => [
             [TaskEventListeners::class, 'handleTaskCreated'],
         ],
@@ -44,9 +32,7 @@ class EventServiceProvider extends ServiceProvider
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
 
-        NbaScoresFetched::class => [
-            ProcessNbaScores::class,
-        ],
+
         // other events...
     ];
 

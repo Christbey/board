@@ -44,28 +44,28 @@ trait ProcessesOdds
         return $teamModel::firstWhere('name', $teamName);
     }
 
-    protected function prepareOddsData(array $odd, array $bookmaker, $homeTeamId, $awayTeamId)
+    protected function prepareOddsData(array $event, array $bookmaker, $homeTeamId, $awayTeamId): array
     {
         return [
-            'event_id' => $odd['id'],
-            'sport_key' => $odd['sport_key'],
-            'sport_title' => $odd['sport_title'],
-            'commence_time' => Carbon::parse($odd['commence_time'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s'),
+            'event_id' => $event['id'],
+            'sport_key' => $event['sport_key'],
+            'sport_title' => $event['sport_title'],
+            'commence_time' => Carbon::parse($event['commence_time'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s'),
             'home_team_id' => $homeTeamId,
             'away_team_id' => $awayTeamId,
             'bookmaker_key' => $bookmaker['key'],
-            'h2h_home_price' => $this->getPrice($bookmaker, 'h2h', $odd['home_team']),
-            'h2h_away_price' => $this->getPrice($bookmaker, 'h2h', $odd['away_team']),
-            'spread_home_point' => $this->getPoint($bookmaker, 'spreads', $odd['home_team']),
-            'spread_away_point' => $this->getPoint($bookmaker, 'spreads', $odd['away_team']),
-            'spread_home_price' => $this->getPrice($bookmaker, 'spreads', $odd['home_team']),
-            'spread_away_price' => $this->getPrice($bookmaker, 'spreads', $odd['away_team']),
+            'h2h_home_price' => $this->getPrice($bookmaker, 'h2h', $event['home_team']),
+            'h2h_away_price' => $this->getPrice($bookmaker, 'h2h', $event['away_team']),
+            'spread_home_point' => $this->getPoint($bookmaker, 'spreads', $event['home_team']),
+            'spread_away_point' => $this->getPoint($bookmaker, 'spreads', $event['away_team']),
+            'spread_home_price' => $this->getPrice($bookmaker, 'spreads', $event['home_team']),
+            'spread_away_price' => $this->getPrice($bookmaker, 'spreads', $event['away_team']),
             'total_over_point' => $this->getPoint($bookmaker, 'totals', 'Over'),
             'total_under_point' => $this->getPoint($bookmaker, 'totals', 'Under'),
             'total_over_price' => $this->getPrice($bookmaker, 'totals', 'Over'),
             'total_under_price' => $this->getPrice($bookmaker, 'totals', 'Under'),
-            'last_update' => isset($odd['last_update'])
-                ? Carbon::parse($odd['last_update'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s')
+            'last_update' => isset($event['last_update'])
+                ? Carbon::parse($event['last_update'])->setTimezone('America/Chicago')->format('Y-m-d H:i:s')
                 : null,
         ];
     }

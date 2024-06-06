@@ -4,20 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\NbaOdds;
 use App\Models\NbaTeam;
-use App\Services\NbaOddsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NbaController extends Controller
 {
-    protected $nbaOddsService;
     protected $apiKey;
     protected $baseUrl;
 
-    public function __construct(NbaOddsService $nbaOddsService)
+    public function __construct()
     {
-        $this->nbaOddsService = $nbaOddsService;
         $this->apiKey = config('services.oddsapi.key');
         $this->baseUrl = config('services.oddsapi.base_url');
     }
@@ -25,11 +22,8 @@ class NbaController extends Controller
     public function showOdds(Request $request)
     {
         $sport = 'basketball_nba';
-
-        // Fetch the odds data from the database
         $odds = NbaOdds::all();
 
-        // Check if odds are empty
         if ($odds->isEmpty()) {
             $errorMessage = 'No odds available at the moment.';
             Log::error($errorMessage);
@@ -41,17 +35,13 @@ class NbaController extends Controller
 
     public function index()
     {
-        // Fetch all NBA teams
         $teams = NbaTeam::all();
-
-        // Return the view with the teams data
         return view('nba.teams', compact('teams'));
     }
 
     public function showScores(Request $request)
     {
         $scores = $this->fetchScores();
-
         return view('nba.scores', compact('scores'));
     }
 
@@ -63,11 +53,6 @@ class NbaController extends Controller
             'dateFormat' => 'iso',
         ]);
 
-        if ($response->successful()) {
-            return $response->json();
-        }
-
-        // Handle the case where the API request fails
-        return [];
+        return $response->successful() ? $response->json() : [];
     }
 }

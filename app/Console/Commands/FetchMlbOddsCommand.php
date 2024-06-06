@@ -2,9 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\MlbOdds;
-use App\Models\MlbOddsHistory;
-use App\Models\MlbTeam;
+use App\Services\OddsService;
+use App\Services\OddsProcessingService;
+use Symfony\Component\Console\Command\Command as CommandAlias;
+use Illuminate\Support\Facades\Log;
 
 class FetchMlbOddsCommand extends FetchOddsCommand
 {
@@ -12,7 +13,12 @@ class FetchMlbOddsCommand extends FetchOddsCommand
     protected $description = 'MLB odds';
 
     protected $sportKey = 'baseball_mlb';
-    protected $teamModel = MlbTeam::class;
-    protected $oddsModel = MlbOdds::class;
-    protected $historyModel = MlbOddsHistory::class;
+    protected $teamModel = \App\Models\MlbTeam::class;
+    protected $oddsModel = \App\Models\MlbOdds::class;
+    protected $historyModel = \App\Models\MlbOddsHistory::class;
+
+    public function __construct(OddsService $oddsService, OddsProcessingService $oddsProcessingService)
+    {
+        parent::__construct($oddsService, $oddsProcessingService);
+    }
 }

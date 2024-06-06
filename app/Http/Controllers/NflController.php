@@ -4,30 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\NflOdds;
 use App\Models\NflTeam;
-use App\Services\NflScoresService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class NflController extends Controller
 {
-    protected $nflScoresService;
+    protected $apiKey;
+    protected $baseUrl;
 
-    public function __construct(NflScoresService $nflScoresService)
+    public function __construct()
     {
-        $this->nflScoresService = $nflScoresService;
-    }
-
-    public function index()
-    {
-        $teams = NflTeam::all();
-        return view('nfl.teams', compact('teams'));
-    }
-
-    public function showScores()
-    {
-        $scores = $this->fetchScores();
-        return view('nfl.scores', compact('scores'));
+        $this->apiKey = config('services.oddsapi.key');
+        $this->baseUrl = config('services.oddsapi.base_url');
     }
 
     public function showOdds(Request $request)
@@ -41,24 +31,26 @@ class NflController extends Controller
         ]);
     }
 
+    public function index()
+    {
+        $teams = NflTeam::all();
+        return view('nfl.teams', compact('teams'));
+    }
+
+    public function showScores(Request $request)
+    {
+        $scores = $this->fetchScores();
+        return view('nfl.scores', compact('scores'));
+    }
+
     protected function fetchScores()
     {
-        $response = Http::get("{$this->getBaseUrl()}/sports/americanfootball_nfl/scores", [
-            'apiKey' => $this->getApiKey(),
+        $response = Http::get("{$this->baseUrl}/sports/americanfootball_nfl/scores", [
+            'apiKey' => $this->apiKey,
             'daysFrom' => 3,
             'dateFormat' => 'iso',
         ]);
 
         return $response->successful() ? $response->json() : [];
-    }
-
-    protected function getApiKey()
-    {
-        return config('services.oddsapi.key');
-    }
-
-    protected function getBaseUrl()
-    {
-        return config('services.oddsapi.base_url');
     }
 }
