@@ -111,6 +111,11 @@ trait ProcessesOdds
         return $oddsModel::create($oddsData);
     }
 
+    protected function storeOdds($oddsModel, array $oddsData)
+    {
+        return $oddsModel::create($oddsData);
+    }
+
     protected function storeOddsHistory($oddsHistoryModel, $existingOdds, array $oddsData)
     {
         Log::info('Storing historical odds:', ['odds_id' => $existingOdds->id]);
