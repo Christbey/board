@@ -14,11 +14,13 @@ class MlbController extends Controller
 {
     protected $apiKey;
     protected $baseUrl;
+    protected $sport;
 
     public function __construct()
     {
         $this->apiKey = config('services.oddsapi.key');
         $this->baseUrl = config('services.oddsapi.base_url');
+        $this->sport = 'mlb';
     }
 
     public function showOdds(Request $request)
@@ -26,8 +28,17 @@ class MlbController extends Controller
         $date = Carbon::parse($request->input('date', Carbon::today()->format('Y-m-d')));
         $odds = MlbOdds::whereDate('commence_time', $date)->get();
 
-        return view('mlb.odds', [
-            'sport' => 'MLB',
+        if ($odds->isEmpty()) {
+            $errorMessage = 'No odds available at the moment.';
+            Log::error($errorMessage);
+            return view('odds.show', [
+                'sport' => strtoupper($this->sport),
+                'odds' => $odds,
+            ])->withErrors($errorMessage);
+        }
+
+        return view('odds.show', [
+            'sport' => strtoupper($this->sport),
             'odds' => $odds,
         ]);
     }
@@ -40,9 +51,21 @@ class MlbController extends Controller
 
     public function showScores(Request $request)
     {
-        $scores = $this->fetchScores();
+        $scores = MlbScore::with(['homeTeam', 'awayTeam'])
+            ->get()
+            ->sortBy(function($score) {
+                if ($score->completed) {
+                    return PHP_INT_MAX; // Completed events are sorted last
+                } elseif ($score->home_team_score !== null && $score->away_team_score !== null) {
+                    return Carbon::parse($score->commence_time)->timestamp; // Live events are sorted by start time
+                } else {
+                    return PHP_INT_MAX - 1; // Upcoming events
+                }
+            });
+
         return view('mlb.scores', compact('scores'));
     }
+
 
     protected function fetchScores()
     {
@@ -53,5 +76,10 @@ class MlbController extends Controller
         ]);
 
         return $response->successful() ? $response->json() : [];
+    }
+
+    public function filter(Request $request)
+    {
+        return redirect()->route('odds.show', ['mlb' => $this->sport, 'date' => $request->input('date')]);
     }
 }

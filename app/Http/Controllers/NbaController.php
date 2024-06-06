@@ -7,6 +7,7 @@ use App\Models\NbaTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class NbaController extends Controller
 {
@@ -21,16 +22,22 @@ class NbaController extends Controller
 
     public function showOdds(Request $request)
     {
-        $sport = 'basketball_nba';
-        $odds = NbaOdds::all();
+        $date = Carbon::parse($request->input('date', Carbon::today()->format('Y-m-d')));
+        $odds = NbaOdds::whereDate('commence_time', $date)->get();
 
         if ($odds->isEmpty()) {
-            $errorMessage = 'No odds available at the moment.';
+            $errorMessage = 'No odds available for the selected date.';
             Log::error($errorMessage);
-            return view('nba.odds', compact('odds', 'sport'))->withErrors($errorMessage);
+            return view('odds.show', [
+                'odds' => $odds,
+                'sport' => 'NBA'
+            ])->withErrors($errorMessage);
         }
 
-        return view('nba.odds', compact('odds', 'sport'));
+        return view('odds.show', [
+            'odds' => $odds,
+            'sport' => 'NBA'
+        ]);
     }
 
     public function index()
@@ -54,5 +61,11 @@ class NbaController extends Controller
         ]);
 
         return $response->successful() ? $response->json() : [];
+    }
+
+    public function filter(Request $request)
+    {
+        $routeName = 'nba.odds'; // Ensure route name is correct
+        return redirect()->route($routeName, ['date' => $request->input('date')]);
     }
 }

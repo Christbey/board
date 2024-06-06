@@ -25,9 +25,18 @@ class NflController extends Controller
         $date = Carbon::parse($request->input('date', Carbon::today()->format('Y-m-d')));
         $odds = NflOdds::whereDate('commence_time', $date)->get();
 
+        if ($odds->isEmpty()) {
+            $errorMessage = 'No odds available at the moment.';
+            Log::error($errorMessage);
+            return view('nfl.odds', [
+                'odds' => $odds,
+                'sport' => 'NFL'
+            ])->withErrors($errorMessage);
+        }
+
         return view('nfl.odds', [
-            'sport' => 'NFL',
             'odds' => $odds,
+            'sport' => 'NFL'
         ]);
     }
 
@@ -52,5 +61,11 @@ class NflController extends Controller
         ]);
 
         return $response->successful() ? $response->json() : [];
+    }
+
+    public function filter(Request $request)
+    {
+        $routeName = strtolower('NFL') . '.odds'; // Ensure route name is in lowercase
+        return redirect()->route($routeName, ['date' => $request->input('date')]);
     }
 }
