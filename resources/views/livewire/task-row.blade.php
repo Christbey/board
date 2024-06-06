@@ -5,4 +5,5 @@
     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('m/d/Y') : 'No Due Date' }}
     </td>
+
 </tr>

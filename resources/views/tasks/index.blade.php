@@ -36,6 +36,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                 @forelse ($tasks as $task)
                     <livewire:task-row :task="$task" :key="$task->id" />
+
                 @empty
                     <tr>
                         <td colspan="2" class="px-6 py-4 text-center text-gray-500">No available tasks.</td>

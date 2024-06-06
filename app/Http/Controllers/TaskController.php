@@ -35,10 +35,7 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate($this->validationRules);
-
         $task = $this->createOrUpdateTask(new Task(), $validated);
-
-        // Dispatch the TaskCreated event
         event(new TaskCreated($task));
 
         return redirect()->route('tasks.index')->with('status', 'Task created successfully!');
@@ -47,10 +44,7 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $validated = $request->validate($this->validationRules);
-
         $task = $this->createOrUpdateTask($task, $validated);
-
-        // Dispatch the TaskUpdated event
         event(new TaskUpdated($task));
 
         return redirect()->route('tasks.index')->with('status', 'Task updated successfully!');
@@ -59,8 +53,6 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         $task->delete();
-
-        // Dispatch the TaskDeleted event
         event(new TaskDeleted($task));
 
         return redirect()->route('tasks.index')->with('status', 'Task deleted successfully!');
@@ -68,22 +60,15 @@ class TaskController extends Controller
 
     private function createOrUpdateTask(Task $task, array $validated)
     {
-        $is_completed = $validated['status'] === 'completed' ? 1 : 0;
-
         $task->fill([
             'task' => $validated['task'],
             'user_id' => Auth::id(),
-            'is_completed' => $is_completed,
+            'is_completed' => $validated['status'] === 'completed',
             'status' => $validated['status'],
             'priority' => $validated['priority'],
             'reminder_date' => $validated['reminder_date'] ?? null,
             'due_date' => $validated['due_date'] ?? null,
-            'updated_at' => Carbon::now(),
         ]);
-
-        if (!$task->exists) {
-            $task->created_at = Carbon::now();
-        }
 
         $task->save();
 
