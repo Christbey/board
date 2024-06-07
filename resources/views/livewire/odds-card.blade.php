@@ -1,5 +1,3 @@
-<!-- resources/views/livewire/odds-card.blade.php -->
-
 <div>
     @php
         $commenceTime = \Carbon\Carbon::parse($odd->commence_time);
