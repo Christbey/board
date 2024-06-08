@@ -8,23 +8,27 @@ use Illuminate\Support\Facades\Log;
 
 trait FetchOddsTrait
 {
-    public function fetchAndStoreOdds($sportKey, $description, $teamModel, $oddsModel, $historyModel, $oddsService, $oddsProcessingService)
-    {
+    public function fetchAndStoreOdds(
+        $sportKey,
+        $description,
+        $teamModel,
+        $oddsModel,
+        $historyModel,
+        $oddsService,
+        $oddsProcessingService
+    ) {
+        Log::info("Starting to fetch odds for {$sportKey}");
+
         try {
             $odds = $oddsService->getOdds($sportKey, 'h2h,spreads,totals');
-
             if (!empty($odds)) {
                 $oddsProcessingService->processOdds($odds, $teamModel, $oddsModel, $historyModel);
-                $this->info("{$description} fetched and stored successfully.");
+                Log::info("{$description} fetched and stored successfully.");
             } else {
-                $this->warn("No {$description} fetched.");
+                Log::warning("No {$description} fetched.");
             }
-
-            return \Symfony\Component\Console\Command\Command::SUCCESS;
         } catch (\Exception $e) {
             Log::error("Error fetching {$description}: " . $e->getMessage());
-            $this->error("Error fetching {$description}. Check logs for details.");
-            return \Symfony\Component\Console\Command\Command::FAILURE;
         }
     }
 }
