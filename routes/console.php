@@ -26,8 +26,8 @@ Schedule::command('odds:fetch nba')->everySixHours();
 Schedule::command('odds:fetch mlb')->everySixHours();
 
 
-Schedule::command('scores:fetch nfl')->everyMinute();
-Schedule::command('scores:fetch ncaa')->everyMinute();
-Schedule::command('scores:fetch nba')->everyMinute();
-Schedule::command('scores:fetch mlb')->everyMinute();
+Schedule::command('scores:fetch nfl')->everySixHours();
+Schedule::command('scores:fetch ncaa')->everySixHours();
+Schedule::command('scores:fetch nba')->everySixHours();
+Schedule::command('scores:fetch mlb')->everySixHours();
 
