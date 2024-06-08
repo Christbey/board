@@ -1,32 +1,35 @@
 <!-- resources/views/livewire/forge-servers.blade.php -->
-<div>
-    <h1 class="text-xl font-semibold mb-4">Servers</h1>
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-semibold mb-6 text-center">Servers</h1>
     @if (count($servers) > 0)
         <ul class="space-y-4">
             @foreach ($servers as $server)
-                <li class="p-4 bg-white rounded shadow flex items-center justify-between cursor-pointer" wire:click="fetchSites({{ $server['id'] }})">
+                <li class="p-6 bg-white rounded-lg shadow-lg flex items-center justify-between cursor-pointer hover:bg-gray-50 transition duration-150" wire:click="fetchSites({{ $server['id'] }})">
                     <div>
-                        <div class="text-lg font-semibold">{{ $server['name'] }}</div>
-                        <div class="text-sm text-gray-600">ID: {{ $server['id'] }}</div>
-                        <div class="text-sm text-gray-600">IP: {{ $server['ip_address'] }}</div>
-                        <div class="text-sm text-gray-600">Region: {{ $server['region'] }}</div>
-                        <div class="text-sm text-gray-600">PHP Version: {{ $server['php_version'] }}</div>
+                        <div class="text-xl font-bold text-gray-800">{{ $server['name'] }}</div>
+                        <div class="text-sm text-gray-600 mt-1">ID: {{ $server['id'] }}</div>
+                        <div class="text-sm text-gray-600 mt-1">IP: {{ $server['ip_address'] }}</div>
+                        <div class="text-sm text-gray-600 mt-1">Region: {{ $server['region'] }}</div>
+                        <div class="text-sm text-gray-600 mt-1">PHP Version: {{ $server['php_version'] }}</div>
                     </div>
                     @if ($server['is_ready'])
-                        <span class="flex h-3 w-3 relative">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </span>
+                        <div class="flex items-center">
+                            <span class="relative flex h-4 w-4">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                            </span>
+                            <span class="ml-2 text-sm text-gray-600">Ready</span>
+                        </div>
                     @endif
                 </li>
                 @if ($selectedServer === $server['id'])
-                    <ul class="ml-6 mt-4 space-y-2">
+                    <ul class="ml-8 mt-4 space-y-2">
                         @foreach ($sites as $site)
-                            <li class="p-2 bg-gray-100 rounded shadow">
-                                <div class="text-sm font-semibold">{{ $site['name'] }}</div>
-                                <div class="text-sm text-gray-600">ID: {{ $site['id'] }}</div>
-                                <div class="text-sm text-gray-600">Directory: {{ $site['directory'] }}</div>
-                                <div class="text-sm text-gray-600">Status: {{ $site['status'] }}</div>
+                            <li class="p-4 bg-gray-50 rounded shadow">
+                                <div class="text-md font-medium text-gray-800">{{ $site['name'] }}</div>
+                                <div class="text-sm text-gray-600 mt-1">ID: {{ $site['id'] }}</div>
+                                <div class="text-sm text-gray-600 mt-1">Directory: {{ $site['directory'] }}</div>
+                                <div class="text-sm text-gray-600 mt-1">Status: {{ $site['status'] }}</div>
                             </li>
                         @endforeach
                     </ul>
@@ -34,6 +37,6 @@
             @endforeach
         </ul>
     @else
-        <p class="text-gray-600">No servers found.</p>
+        <p class="text-center text-gray-600 mt-4">No servers found.</p>
     @endif
 </div>
