@@ -1,6 +1,4 @@
 <?php
-
-
 // app/Traits/FetchScoresTrait.php
 
 namespace App\Traits;
@@ -16,7 +14,17 @@ trait FetchScoresTrait
         $baseUrl = env('ODDS_API_BASE_URL');
         $apiKey = env('ODDS_API_KEY');
 
-        $response = Http::get("$baseUrl/$endpoint", [
+        if (!$baseUrl) {
+            Log::error('The base URL for the odds API is not set.');
+            return;
+        }
+
+        $url = "{$baseUrl}/{$endpoint}";
+
+        $response = Http::withOptions([
+            'timeout' => 10, // Increase the timeout value as needed
+            'connect_timeout' => 5,
+        ])->retry(3, 100)->get($url, [
             'apiKey' => $apiKey,
             'daysFrom' => 3,
             'dateFormat' => 'iso'
