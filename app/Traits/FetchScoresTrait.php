@@ -1,36 +1,29 @@
 <?php
 
-// app/Console/Commands/FetchMLBScores.php
 
-namespace App\Console\Commands;
+// app/Traits/FetchScoresTrait.php
 
-use Illuminate\Console\Command;
+namespace App\Traits;
+
 use Illuminate\Support\Facades\Http;
-use App\Models\MlbScore;
-use App\Models\MlbTeam;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class FetchMLBScores extends Command
+trait FetchScoresTrait
 {
-    protected $signature = 'mlb:scores:fetch';
-    protected $description = 'Fetch the latest MLB scores from the API';
-
-    public function __construct()
+    public function fetchAndStoreScores($sport, $endpoint, $modelClass, $teamModelClass)
     {
-        parent::__construct();
-    }
+        $baseUrl = env('ODDS_API_BASE_URL');
+        $apiKey = env('ODDS_API_KEY');
 
-    public function handle()
-    {
-        $response = Http::get(env('ODDS_API_BASE_URL') . '/sports/baseball_mlb/scores', [
-            'apiKey' => env('ODDS_API_KEY'),
+        $response = Http::get("$baseUrl/$endpoint", [
+            'apiKey' => $apiKey,
             'daysFrom' => 3,
             'dateFormat' => 'iso'
         ]);
 
         // Log the response for debugging purposes
-        Log::info('MLB Scores API Response', ['response' => $response->json()]);
+        Log::info(strtoupper($sport) . ' Scores API Response', ['response' => $response->json()]);
 
         if ($response->successful()) {
             $scores = $response->json();
@@ -54,15 +47,15 @@ class FetchMLBScores extends Command
                     }
                 }
 
-                MlbScore::updateOrCreate(
+                $modelClass::updateOrCreate(
                     ['event_id' => $score['id']],
                     [
                         'sport_key' => $score['sport_key'],
                         'sport_title' => $score['sport_title'],
                         'commence_time' => $commenceTime,
                         'completed' => $score['completed'],
-                        'home_team_id' => MlbTeam::firstOrCreate(['name' => $score['home_team']])->id,
-                        'away_team_id' => MlbTeam::firstOrCreate(['name' => $score['away_team']])->id,
+                        'home_team_id' => $teamModelClass::firstOrCreate(['name' => $score['home_team']])->id,
+                        'away_team_id' => $teamModelClass::firstOrCreate(['name' => $score['away_team']])->id,
                         'home_team_score' => $homeTeamScore,
                         'away_team_score' => $awayTeamScore,
                         'last_update' => now(),
@@ -70,12 +63,9 @@ class FetchMLBScores extends Command
                 );
             }
 
-            $this->info('MLB scores fetched and stored in the database.');
+            Log::info(strtoupper($sport) . ' scores fetched and stored in the database.');
         } else {
-            $this->error('Failed to fetch MLB scores: ' . $response->body());
-            Log::error('Failed to fetch MLB scores: ' . $response->body());
+            Log::error('Failed to fetch ' . strtoupper($sport) . ' scores: ' . $response->body());
         }
-
-        return 0;
     }
 }

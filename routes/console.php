@@ -3,14 +3,6 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-use App\Jobs\FetchNflOdds;
-use App\Jobs\FetchNcaaOdds;
-use App\Jobs\FetchNbaOdds;
-use App\Jobs\FetchMlbOdds;
-use App\Services\NflOddsService;
-use App\Services\NcaaOddsService;
-use App\Services\NbaOddsService;
-use App\Services\MlbOddsService;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,14 +19,15 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Fetch NFL odds every minute
-Schedule::command('odds:fetch-nfl')->everyMinute();
+// Schedule FetchOddsCommand for different sports
+Schedule::command('odds:fetch nfl')->everySixHours();
+Schedule::command('odds:fetch ncaa')->everySixHours();
+Schedule::command('odds:fetch nba')->everySixHours();
+Schedule::command('odds:fetch mlb')->everySixHours();
 
-// Fetch NCAA odds every minute
-Schedule::command('odds:fetch-ncaa')->everyMinute();
 
-// Fetch NBA odds every minute
-Schedule::command('odds:fetch-nba')->everyMinute();
+Schedule::command('scores:fetch nfl')->everyMinute();
+Schedule::command('scores:fetch ncaa')->everyMinute();
+Schedule::command('scores:fetch nba')->everyMinute();
+Schedule::command('scores:fetch mlb')->everyMinute();
 
-// Fetch MLB odds every minute
-Schedule::command('odds:fetch-mlb')->everyMinute();
