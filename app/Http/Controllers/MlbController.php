@@ -82,4 +82,14 @@ class MlbController extends Controller
     {
         return redirect()->route('odds.show', ['mlb' => $this->sport, 'date' => $request->input('date')]);
     }
+
+    public function show()
+    {
+        // Fetch scores and odds
+        $scores = MlbScore::with('homeTeam', 'awayTeam')->get();
+        $odds = MlbOdds::all();
+
+        // Pass the data to the view
+        return view('mlb.show', compact('scores', 'odds'));
+    }
 }

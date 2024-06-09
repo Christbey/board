@@ -202,4 +202,10 @@ return [
         Watchers\ScheduleWatcher::class => env('TELESCOPE_SCHEDULE_WATCHER', true),
         Watchers\ViewWatcher::class => env('TELESCOPE_VIEW_WATCHER', true),
     ],
+
+    'prune' => [
+        'batch' => env('TELESCOPE_PRUNE_BATCH', 100),
+        'after' => env('TELESCOPE_PRUNE_AFTER_HOURS', 48),
+    ],
+
 ];
