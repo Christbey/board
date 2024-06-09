@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\FetchMlbScoresCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -19,11 +20,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('odds:fetch {sport}', function ($sport) {
-    Artisan::call('odds:fetch', ['sport' => $sport]);
-})->describe('Fetch the latest odds for the specified sport.');
+// Register Commands
 
-Artisan::command('scores:fetch {sport}', function ($sport) {
-    Artisan::call('scores:fetch', ['sport' => $sport]);
-})->describe('Fetch the latest scores for the specified sport.');
-
+Artisan::command('scores:fetch-mlb', function () {
+    $this->info('Fetching MLB scores...');
+    $this->call('scores:fetch', ['sport' => 'mlb']);
+})->purpose('Fetch the latest MLB scores from the API');
