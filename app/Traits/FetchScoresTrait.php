@@ -11,8 +11,8 @@ trait FetchScoresTrait
 {
     public function fetchAndStoreScores($sport, $endpoint, $modelClass, $teamModelClass)
     {
-        $baseUrl = env('ODDS_API_BASE_URL');
-        $apiKey = env('ODDS_API_KEY');
+        $baseUrl =config('services.oddsapi.base_url');
+        $apiKey = config('services.oddsapi.key');
 
         if (!$baseUrl) {
             Log::error('The base URL for the odds API is not set.');
