@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Jobs\FetchScoresJob;
 
-class FetchMlbScoresCommand extends Command
+class FetchMlbScores extends Command
 {
     protected $signature = 'scores:fetch-mlb';
     protected $description = 'Fetch the latest MLB scores from the API';
