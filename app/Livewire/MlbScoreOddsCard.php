@@ -9,11 +9,13 @@ class MlbScoreOddsCard extends Component
 {
     public $score;
     public $odd;
+    public $isCompleted;
 
     public function mount($score, $odd)
     {
         $this->score = $score;
         $this->odd = $odd;
+        $this->isCompleted = $this->score->completed;
     }
 
     public function render()
