@@ -64,5 +64,16 @@ Artisan::command('fetch:ncaa-odds', function () {
     $this->call('fetch:odds', ['sport' => 'ncaa']);
 })->purpose('Fetch the latest NCAA odds from the API');
 
-// Register FetchOddsCommand Commands
+// Schedule The Commands
 
+// Schedule Commands to run twice a day
+Schedule::command('fetch:mlb-odds')->twiceDaily();
+Schedule::command('fetch:nba-odds')->twiceDaily();
+Schedule::command('fetch:nfl-odds')->twiceDaily();
+Schedule::command('fetch:ncaa-odds')->twiceDaily();
+
+// Schedule Scores Commands to run hourly
+Schedule::command('fetch:mlb-scores')->hourly();
+Schedule::command('fetch:nba-scores')->hourly();
+Schedule::command('fetch:nfl-scores')->hourly();
+Schedule::command('fetch:ncaa-scores')->hourly();
