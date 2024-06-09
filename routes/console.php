@@ -1,6 +1,5 @@
 <?php
 
-use App\Console\Commands\FetchMlbScoresCommand;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -22,46 +21,46 @@ Artisan::command('inspire', function () {
 
 // Register Scores Commands
 
-Artisan::command('scores:fetch-mlb', function () {
+Artisan::command('fetch:mlb-scores', function () {
     $this->info('Fetching MLB scores...');
     $this->call('scores:fetch', ['sport' => 'mlb']);
 })->purpose('Fetch the latest MLB scores from the API');
 
-Artisan::command('scores:fetch-nba', function () {
+Artisan::command('fetch:nba-scores', function () {
     $this->info('Fetching NBA scores...');
     $this->call('scores:fetch', ['sport' => 'nba']);
 })->purpose('Fetch the latest NBA scores from the API');
 
 Artisan::command('fetch:nfl-scores', function () {
     $this->info('Fetching NFL scores...');
-    $this->call('fetch:scores', ['sport' => 'nfl']);
+    $this->call('scores:fetch', ['sport' => 'nfl']);
 })->purpose('Fetch the latest NFL scores from the API');
 
 Artisan::command('fetch:ncaa-scores', function () {
     $this->info('Fetching NCAA scores...');
-    $this->call('fetch:scores', ['sport' => 'ncaa']);
+    $this->call('scores:fetch', ['sport' => 'ncaa']);
 })->purpose('Fetch the latest NCAA scores from the API');
 
 // Register Odds Commands
 
 Artisan::command('fetch:mlb-odds', function () {
     $this->info('Fetching MLB odds...');
-    $this->call('fetch:odds', ['sport' => 'mlb']);
+    $this->call('odds:fetch', ['sport' => 'mlb']);
 })->purpose('Fetch the latest MLB odds from the API');
 
 Artisan::command('fetch:nba-odds', function () {
     $this->info('Fetching NBA odds...');
-    $this->call('fetch:odds', ['sport' => 'nba']);
+    $this->call('odds:fetch', ['sport' => 'nba']);
 })->purpose('Fetch the latest NBA odds from the API');
 
 Artisan::command('fetch:nfl-odds', function () {
     $this->info('Fetching NFL odds...');
-    $this->call('fetch:odds', ['sport' => 'nfl']);
+    $this->call('odds:fetch', ['sport' => 'nfl']);
 })->purpose('Fetch the latest NFL odds from the API');
 
 Artisan::command('fetch:ncaa-odds', function () {
     $this->info('Fetching NCAA odds...');
-    $this->call('fetch:odds', ['sport' => 'ncaa']);
+    $this->call('odds:fetch', ['sport' => 'ncaa']);
 })->purpose('Fetch the latest NCAA odds from the API');
 
 // Schedule The Commands
