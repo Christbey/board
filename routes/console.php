@@ -19,15 +19,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule FetchOddsCommand for different sports
-Schedule::command('odds:fetch nfl')->everySixHours();
-Schedule::command('odds:fetch ncaa')->everySixHours();
-Schedule::command('odds:fetch nba')->everySixHours();
-Schedule::command('odds:fetch mlb')->everySixHours();
+Artisan::command('odds:fetch {sport}', function ($sport) {
+    Artisan::call('odds:fetch', ['sport' => $sport]);
+})->describe('Fetch the latest odds for the specified sport.');
 
-
-Schedule::command('scores:fetch nfl')->everySixHours();
-Schedule::command('scores:fetch ncaa')->everySixHours();
-Schedule::command('scores:fetch nba')->everySixHours();
-Schedule::command('scores:fetch mlb')->everySixHours();
+Artisan::command('scores:fetch {sport}', function ($sport) {
+    Artisan::call('scores:fetch', ['sport' => $sport]);
+})->describe('Fetch the latest scores for the specified sport.');
 
