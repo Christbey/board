@@ -6,22 +6,12 @@ use App\Models\MlbOdds;
 use App\Models\MlbScore;
 use App\Models\MlbTeam;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class MlbController extends Controller
 {
-    protected $apiKey;
-    protected $baseUrl;
-    protected $sport;
-
-    public function __construct()
-    {
-        $this->apiKey = config('services.oddsapi.key');
-        $this->baseUrl = config('services.oddsapi.base_url');
-        $this->sport = 'mlb';
-    }
+    protected $sport = 'mlb';
 
     public function showOdds(Request $request)
     {
@@ -54,28 +44,10 @@ class MlbController extends Controller
         $scores = MlbScore::with(['homeTeam', 'awayTeam'])
             ->get()
             ->sortBy(function($score) {
-                if ($score->completed) {
-                    return PHP_INT_MAX; // Completed events are sorted last
-                } elseif ($score->home_team_score !== null && $score->away_team_score !== null) {
-                    return Carbon::parse($score->commence_time)->timestamp; // Live events are sorted by start time
-                } else {
-                    return PHP_INT_MAX - 1; // Upcoming events
-                }
+                return $score->completed ? PHP_INT_MAX : Carbon::parse($score->commence_time)->timestamp;
             });
 
         return view('mlb.scores', compact('scores'));
-    }
-
-
-    protected function fetchScores()
-    {
-        $response = Http::get("{$this->baseUrl}/sports/baseball_mlb/scores", [
-            'apiKey' => $this->apiKey,
-            'daysFrom' => 3,
-            'dateFormat' => 'iso',
-        ]);
-
-        return $response->successful() ? $response->json() : [];
     }
 
     public function filter(Request $request)
@@ -93,5 +65,4 @@ class MlbController extends Controller
 
         return view('mlb.show', compact('scores', 'odds', 'selectedDate'));
     }
-
 }
