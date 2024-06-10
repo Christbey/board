@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">MLB Game Details</h1>
-        <livewire:date-picker :selectedDate="$selectedDate" :sport="'mlb'" />
+        <h1 class="text-2xl font-bold mb-4">NFL Game Details</h1>
+        <livewire:date-picker :selectedDate="$selectedDate" :sport="'nfl'" />
 
         @if ($scores->isEmpty())
             <div class="text-center text-gray-500">

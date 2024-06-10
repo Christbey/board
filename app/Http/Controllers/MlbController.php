@@ -83,13 +83,15 @@ class MlbController extends Controller
         return redirect()->route('odds.show', ['mlb' => $this->sport, 'date' => $request->input('date')]);
     }
 
-    public function show()
+    public function show(Request $request)
     {
-        // Fetch scores and odds
-        $scores = MlbScore::with('homeTeam', 'awayTeam')->get();
-        $odds = MlbOdds::all();
+        $selectedDate = $request->input('selectedDate', Carbon::today()->format('Y-m-d'));
+        $scores = MlbScore::with('homeTeam', 'awayTeam')
+            ->whereDate('commence_time', $selectedDate)
+            ->get();
+        $odds = MlbOdds::whereIn('event_id', $scores->pluck('event_id'))->get();
 
-        // Pass the data to the view
-        return view('mlb.show', compact('scores', 'odds'));
+        return view('mlb.show', compact('scores', 'odds', 'selectedDate'));
     }
+
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MlbScore;
 use App\Models\NflOdds;
 use App\Models\NflTeam;
 use Illuminate\Http\Request;
@@ -67,5 +68,16 @@ class NflController extends Controller
     {
         $routeName = strtolower('NFL') . '.odds'; // Ensure route name is in lowercase
         return redirect()->route($routeName, ['date' => $request->input('date')]);
+    }
+
+    public function show(Request $request)
+    {
+        $selectedDate = $request->input('selectedDate', Carbon::today()->format('Y-m-d'));
+        $scores = NflScore::with('homeTeam', 'awayTeam')
+            ->whereDate('commence_time', $selectedDate)
+            ->get();
+        $odds = NflOdds::whereIn('event_id', $scores->pluck('event_id'))->get();
+
+        return view('nfl.show', compact('scores', 'odds', 'selectedDate'));
     }
 }

@@ -8,23 +8,23 @@ use Carbon\Carbon;
 class DatePicker extends Component
 {
     public $sport;
-    public $date;
+    public $selectedDate;
 
-    public function mount($sport)
+    public function mount($selectedDate, $sport)
     {
         $this->sport = $sport;
-        $this->date = request('date', Carbon::today()->format('Y-m-d'));
+        $this->selectedDate = $selectedDate;
     }
 
-    public function updatedDate()
+    public function updatedSelectedDate()
     {
         $this->filter();
     }
 
     public function filter()
     {
-        $routeName = strtolower($this->sport) . '.odds';
-        return redirect()->route($routeName, ['date' => $this->date]);
+        $routeName = strtolower($this->sport) . '.show';
+        return redirect()->route($routeName, ['selectedDate' => $this->selectedDate]);
     }
 
     public function render()

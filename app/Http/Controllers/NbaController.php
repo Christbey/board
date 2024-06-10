@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NbaOdds;
+use App\Models\NbaScore;
 use App\Models\NbaTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -68,4 +69,16 @@ class NbaController extends Controller
         $routeName = 'nba.odds'; // Ensure route name is correct
         return redirect()->route($routeName, ['date' => $request->input('date')]);
     }
+
+    public function show(Request $request)
+    {
+        $selectedDate = $request->input('selectedDate', Carbon::today()->format('Y-m-d'));
+        $scores = NbaScore::with('homeTeam', 'awayTeam')
+            ->whereDate('commence_time', $selectedDate)
+            ->get();
+        $odds = NbaOdds::whereIn('event_id', $scores->pluck('event_id'))->get();
+
+        return view('nba.show', compact('scores', 'odds', 'selectedDate'));
+    }
+
 }

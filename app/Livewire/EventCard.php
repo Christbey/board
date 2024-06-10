@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Helpers\FormatHelper;
 
-class MlbScoreOddsCard extends Component
+class EventCard extends Component
 {
     public $score;
     public $odd;
@@ -20,6 +20,6 @@ class MlbScoreOddsCard extends Component
 
     public function render()
     {
-        return view('livewire.mlb-score-odds-card');
+        return view('livewire.event-card');
     }
 }

@@ -62,3 +62,5 @@ Route::get('/forge-servers', function () {
 })->name('forge-servers');
 
 
+Route::get('nba/show', [NbaController::class, 'show'])->name('nba.show');
+Route::get('nfl/show', [NflController::class, 'show'])->name('nfl.show');
