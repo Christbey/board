@@ -36,7 +36,7 @@
                         @if (is_null($odd->total_over_point))
                             @include('components.lock-icon')
                         @else
-                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_over_point) }}
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_over_point, 'total_home') }}
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $homeIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $homeColor }}">
@@ -61,7 +61,7 @@
                         @if (is_null($odd->total_under_point))
                             @include('components.lock-icon')
                         @else
-                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_under_point) }}
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_under_point, 'total_away') }}
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $awayIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $awayColor }}">

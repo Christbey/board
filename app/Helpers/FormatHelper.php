@@ -4,11 +4,18 @@ namespace App\Helpers;
 
 class FormatHelper
 {
-    public static function formatOdds($value)
+    public static function formatOdds($value, $type = 'default')
     {
-        if ($value > 0) {
-            return '+' . $value;
+        switch ($type) {
+            case 'total_home':
+                return 'o' . $value;
+            case 'total_away':
+                return 'u' . $value;
+            default:
+                if ($value > 0) {
+                    return '+' . $value;
+                }
+                return $value;
         }
-        return $value;
     }
 }
