@@ -23,7 +23,7 @@ class DatePicker extends Component
 
     public function filter()
     {
-        $routeName = strtolower($this->sport) . '.show';
+        $routeName = strtolower($this->sport) . '.event';
         return redirect()->route($routeName, ['selectedDate' => $this->selectedDate]);
     }
 

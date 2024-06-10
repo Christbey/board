@@ -9,12 +9,14 @@ class EventCard extends Component
 {
     public $score;
     public $odd;
+    public $winnerColor;
     public $isCompleted;
 
-    public function mount($score, $odd)
+    public function mount($score, $odd, $winnerColor)
     {
         $this->score = $score;
         $this->odd = $odd;
+        $this->winnerColor = $winnerColor;
         $this->isCompleted = $this->score->completed;
     }
 

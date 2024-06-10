@@ -52,7 +52,7 @@ Route::prefix('nba')->group(function () {
     Route::get('scores', [NbaController::class, 'showScores'])->name('nba.scores');
 });
 
-Route::get('/mlb/show', [MlbController::class, 'show'])->name('mlb.show');
+Route::get('/mlb/event', [MlbController::class, 'event'])->name('mlb.event');
 
 
 
@@ -62,6 +62,6 @@ Route::get('/forge-servers', function () {
 })->name('forge-servers');
 
 
-Route::get('nba/show', [NbaController::class, 'show'])->name('nba.show');
+Route::get('nba/event', [NbaController::class, 'event'])->name('nba.event');
 Route::get('nfl/show', [NflController::class, 'show'])->name('nfl.show');
 Route::get('ncaa/show', [NcaaController::class, 'show'])->name('ncaa.show');

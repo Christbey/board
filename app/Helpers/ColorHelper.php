@@ -26,4 +26,22 @@ class ColorHelper
 
         return "$r, $g, $b";
     }
+
+    /**
+     * Get the primary color for a team.
+     *
+     * @param string $teamName
+     * @return string
+     */
+    public static function getPrimaryColor($teamName)
+    {
+        // Example logic for determining team colors
+        $teamColors = [
+            'Team A' => '#ff0000', // Red
+            'Team B' => '#00ff00', // Green
+            // Add more teams and their primary colors here
+        ];
+
+        return $teamColors[$teamName] ?? '#ffffff'; // Default to white if the team color is not found
+    }
 }

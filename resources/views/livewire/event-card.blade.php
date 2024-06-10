@@ -12,33 +12,66 @@
                 </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                @foreach (['home', 'away'] as $team)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $score->{$team . 'Team'}->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ $score->{$team . '_team_score'} ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            @if (is_null($odd->{'spread_' . $team . '_point'}))
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" viewBox="0 0 448 512"><!-- Font Awesome Free 6.5.2 by @fontawesome --><path fill="#6b7280" d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z"/></svg>
-                            @else
-                                {{ \App\Helpers\FormatHelper::formatOdds($odd->{'spread_' . $team . '_point'}) }}
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            @if (is_null($odd->{'total_' . ($team === 'home' ? 'over' : 'under') . '_point'}))
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" viewBox="0 0 448 512"><!-- Font Awesome Free 6.5.2 by @fontawesome --><path fill="#6b7280" d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z"/></svg>
-                            @else
-                                {{ \App\Helpers\FormatHelper::formatOdds($odd->{'total_' . ($team === 'home' ? 'over' : 'under') . '_point'}) }}
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            @if (is_null($odd->{'h2h_' . $team . '_price'}))
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" viewBox="0 0 448 512"><!-- Font Awesome Free 6.5.2 by @fontawesome --><path fill="#6b7280" d="M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z"/></svg>
-                            @else
-                                {{ \App\Helpers\FormatHelper::formatOdds($odd->{'h2h_' . $team . '_price'}) }}
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
+                @php
+                    $homeScore = $score->home_team_score ?? 0;
+                    $awayScore = $score->away_team_score ?? 0;
+                    $homeIsWinner = $homeScore > $awayScore;
+                    $awayIsWinner = $awayScore > $homeScore;
+                    $homeColor = $homeIsWinner ? '#' . ltrim($score->homeTeam->primary_color, '#') : '';
+                    $awayColor = $awayIsWinner ? '#' . ltrim($score->awayTeam->primary_color, '#') : '';
+                    $homeSpreadCovered = $homeScore + $odd->spread_home_point > $awayScore;
+                    $awaySpreadCovered = $awayScore + $odd->spread_away_point > $homeScore;
+                @endphp
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm {{ $homeIsWinner ? 'font-bold' : 'font-medium text-gray-900' }}" style="color: {{ $homeColor }}">{{ $score->homeTeam->name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $homeIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $homeColor }}">{{ $homeScore }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $homeSpreadCovered ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $homeSpreadCovered ? $homeColor : '' }}">
+                        @if (is_null($odd->spread_home_point))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->spread_home_point) }}
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        @if (is_null($odd->total_over_point))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_over_point) }}
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $homeIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $homeColor }}">
+                        @if (is_null($odd->h2h_home_price))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->h2h_home_price) }}
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm {{ $awayIsWinner ? 'font-bold' : 'font-medium text-gray-900' }}" style="color: {{ $awayColor }}">{{ $score->awayTeam->name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $awayIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $awayColor }}">{{ $awayScore }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $awaySpreadCovered ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $awaySpreadCovered ? $awayColor : '' }}">
+                        @if (is_null($odd->spread_away_point))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->spread_away_point) }}
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        @if (is_null($odd->total_under_point))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_under_point) }}
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $awayIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $awayColor }}">
+                        @if (is_null($odd->h2h_away_price))
+                            @include('components.lock-icon')
+                        @else
+                            {{ \App\Helpers\FormatHelper::formatOdds($odd->h2h_away_price) }}
+                        @endif
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
