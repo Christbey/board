@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MlbScore;
 use App\Models\NflOdds;
+use App\Models\NflScore;
 use App\Models\NflTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;

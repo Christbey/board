@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\NcaaScore;
 use App\Models\NcaaOdds;
 use App\Models\NcaaTeam;
 use Illuminate\Http\Request;
@@ -67,5 +68,16 @@ class NcaaController extends Controller
     {
         $routeName = strtolower($this->sport) . '.odds'; // Ensure route name is in lowercase
         return redirect()->route($routeName, ['date' => $request->input('date')]);
+    }
+
+    public function show(Request $request)
+    {
+        $selectedDate = $request->input('selectedDate', Carbon::today()->format('Y-m-d'));
+        $scores = NcaaScore::with('homeTeam', 'awayTeam')
+            ->whereDate('commence_time', $selectedDate)
+            ->get();
+        $odds = NcaaOdds::whereIn('event_id', $scores->pluck('event_id'))->get();
+
+        return view('Ncaa.show', compact('scores', 'odds', 'selectedDate'));
     }
 }

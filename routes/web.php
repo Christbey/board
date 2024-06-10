@@ -64,3 +64,4 @@ Route::get('/forge-servers', function () {
 
 Route::get('nba/show', [NbaController::class, 'show'])->name('nba.show');
 Route::get('nfl/show', [NflController::class, 'show'])->name('nfl.show');
+Route::get('ncaa/show', [NcaaController::class, 'show'])->name('ncaa.show');
