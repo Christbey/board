@@ -40,14 +40,4 @@ class NflTeam extends Model
     {
         return $this->hasMany(Odds::class, 'away_team_id');
     }
-    public function rankings()
-    {
-        return $this->hasMany(NflRanking::class, 'team_id');
-    }
-
-    public function qbrs()
-    {
-        return $this->hasMany(NflQbr::class, 'team_id');
-    }
-
 }
