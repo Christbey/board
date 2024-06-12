@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->withPersonalTeam()->create();
         $this->call([
             NbaTeamsSeeder::class,
+            NflRankingsTableSeeder::class,
         ]);
 
         User::factory()->withPersonalTeam()->create([

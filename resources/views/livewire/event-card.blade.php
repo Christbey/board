@@ -21,6 +21,16 @@
                     $awayColor = $awayIsWinner ? '#' . ltrim($score->awayTeam->primary_color, '#') : '';
                     $homeSpreadCovered = $homeScore + $odd->spread_home_point > $awayScore;
                     $awaySpreadCovered = $awayScore + $odd->spread_away_point > $homeScore;
+
+                    $totalScore = $homeScore + $awayScore;
+                    $totalOverPoint = $odd->total_over_point ?? 0;
+                    $totalUnderPoint = $odd->total_under_point ?? 0;
+                    $isOver = $isUnder = false;
+
+                    if ($isCompleted) {
+                        $isOver = $totalScore > $totalOverPoint;
+                        $isUnder = $totalScore < $totalUnderPoint;
+                    }
                 @endphp
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm {{ $homeIsWinner ? 'font-bold' : 'font-medium text-gray-900' }}" style="color: {{ $homeColor }}">{{ $score->homeTeam->name }}</td>
@@ -36,7 +46,9 @@
                         @if (is_null($odd->total_over_point))
                             @include('components.lock-icon')
                         @else
-                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_over_point, 'total_home') }}
+                            <span class="{{ $isCompleted && $isOver ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $isCompleted && $isOver ? $homeColor : '' }}">
+                                {{ \App\Helpers\FormatHelper::formatOdds($odd->total_over_point, 'total_home') }}
+                            </span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $homeIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $homeColor }}">
@@ -61,7 +73,9 @@
                         @if (is_null($odd->total_under_point))
                             @include('components.lock-icon')
                         @else
-                            {{ \App\Helpers\FormatHelper::formatOdds($odd->total_under_point, 'total_away') }}
+                            <span class="{{ $isCompleted && $isUnder ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $isCompleted && $isUnder ? $awayColor : '' }}">
+                                {{ \App\Helpers\FormatHelper::formatOdds($odd->total_under_point, 'total_away') }}
+                            </span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center {{ $awayIsWinner ? 'font-bold' : 'text-gray-500' }}" style="color: {{ $awayColor }}">
