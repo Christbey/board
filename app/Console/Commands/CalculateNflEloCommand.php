@@ -18,14 +18,18 @@ class CalculateNflEloCommand extends Command
 
     public function handle()
     {
-        $games = DB::table('nfl_odds')->select('away_team_id', 'home_team_id', 'h2h_home_price', 'h2h_away_price', 'spread_home_point', 'spread_away_point')->get();
-        $eloRatings = $this->initializeEloRatings();
+        try {
+            $games = DB::table('nfl_odds')->select('away_team_id', 'home_team_id', 'h2h_home_price', 'h2h_away_price', 'spread_home_point', 'spread_away_point')->get();
+            $eloRatings = $this->initializeEloRatings();
 
-        foreach ($games as $game) {
-            $this->processGame($game, $eloRatings);
+            foreach ($games as $game) {
+                $this->processGame($game, $eloRatings);
+            }
+
+            $this->saveEloRatings($eloRatings);
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate NFL Elo ratings: ' . $e->getMessage());
         }
-
-        $this->saveEloRatings($eloRatings);
     }
 
     private function initializeEloRatings()
@@ -38,17 +42,11 @@ class CalculateNflEloCommand extends Command
         $homeTeam = $game->home_team_id;
         $awayTeam = $game->away_team_id;
 
-        $homeOdds = $this->convertAmericanToDecimal($game->h2h_home_price);
-        $awayOdds = $this->convertAmericanToDecimal($game->h2h_away_price);
+        $homeWinProbability = $this->calculateWinProbability($game->h2h_home_price);
+        $awayWinProbability = $this->calculateWinProbability($game->h2h_away_price);
 
-        $homeWinProbability = 1 / $homeOdds;
-        $awayWinProbability = 1 / $awayOdds;
-
-        $spreadHome = $game->spread_home_point * -1;
-        $spreadAway = $game->spread_away_point * -1;
-
-        $adjustedHomeProbability = $this->adjustProbabilityForSpread($homeWinProbability, $spreadHome);
-        $adjustedAwayProbability = $this->adjustProbabilityForSpread($awayWinProbability, $spreadAway);
+        $adjustedHomeProbability = $this->adjustProbabilityForSpread($homeWinProbability, $game->spread_home_point * -1);
+        $adjustedAwayProbability = $this->adjustProbabilityForSpread($awayWinProbability, $game->spread_away_point * -1);
 
         $expectedHome = $this->expectedScore($eloRatings[$homeTeam], $eloRatings[$awayTeam]);
         $expectedAway = $this->expectedScore($eloRatings[$awayTeam], $eloRatings[$homeTeam]);
@@ -59,15 +57,20 @@ class CalculateNflEloCommand extends Command
         Log::info("Updated Elo ratings: Home Team ({$homeTeam}) = {$eloRatings[$homeTeam]}, Away Team ({$awayTeam}) = {$eloRatings[$awayTeam]}");
     }
 
+    private function calculateWinProbability($odds)
+    {
+        $decimalOdds = $this->convertAmericanToDecimal($odds);
+        return 1 / $decimalOdds;
+    }
+
     private function convertAmericanToDecimal($odds)
     {
-        return $odds > 0 ? $odds / 100 + 1 : 100 / abs($odds) + 1;
+        return $odds > 0 ? ($odds / 100) + 1 : (100 / abs($odds)) + 1;
     }
 
     private function adjustProbabilityForSpread($probability, $spread)
     {
-        // Adjust the probability based on the spread. The exact adjustment depends on your model.
-        // This is a simple linear adjustment; you can replace it with a more sophisticated model if needed.
+        // Adjust the probability based on the spread. This is a simple linear adjustment.
         return $probability * (1 + $spread / 10);
     }
 

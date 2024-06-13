@@ -115,3 +115,5 @@ class GetNflQbr extends Command
         $this->info("Data exported to {$filepath}");
     }
 }
+
+// Modify to store in the database, i need to modify my code to store the data in the database and also modify my model. 
