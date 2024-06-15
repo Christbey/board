@@ -79,4 +79,4 @@ Schedule::command('fetch:ncaa-scores')->hourly();
 
 // Schedule News Command to run hourly
 
-Schedule::command('nfl:fetch-news')->hourly();
+Schedule::command('nfl:fetch-news')->everyFifteenMinutes();
