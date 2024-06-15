@@ -50,4 +50,8 @@ class NflTeam extends Model
         return $this->hasMany(NflQbr::class, 'team_id');
     }
 
+    public function injuries()
+    {
+        return $this->hasMany(NflInjury::class, 'team_id');
+    }
 }
