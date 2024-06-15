@@ -9,7 +9,7 @@ class FetchNFLStats extends Command
 {
     protected $signature = 'fetch:nfl-stats {playerId}';
     protected $description = 'Fetch NFL stats for a player';
-    protected $nflStatsService;
+    protected NFLStatsService $nflStatsService;
 
     public function __construct(NFLStatsService $nflStatsService)
     {
@@ -17,7 +17,7 @@ class FetchNFLStats extends Command
         $this->nflStatsService = $nflStatsService;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $playerId = $this->argument('playerId');
         $stats = $this->nflStatsService->getPlayerStats($playerId);

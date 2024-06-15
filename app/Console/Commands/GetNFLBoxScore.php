@@ -4,8 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
-use League\Csv\Writer;
-use SplTempFileObject;
 
 class GetNFLBoxScore extends Command
 {
@@ -36,9 +34,6 @@ class GetNFLBoxScore extends Command
 
         // Display the box score data
         $this->displayBoxScore($boxScore);
-
-        // Export the box score data to a CSV file
-        $this->exportToCsv($boxScore, $gameID);
     }
 
     protected function displayBoxScore(array $boxScore, $prefix = ''): void
@@ -51,24 +46,5 @@ class GetNFLBoxScore extends Command
                 $this->info($prefix . ucfirst($key) . ': ' . $value);
             }
         }
-    }
-
-    protected function exportToCsv(array $boxScore, $gameID)
-    {
-        $csv = Writer::createFromFileObject(new SplTempFileObject());
-        $csv->insertOne(['gameID', 'gameStatus', 'gameDate', 'teamStats']);
-
-        // Extract relevant data
-        $data = [
-            'gameID' => $gameID,
-            'gameStatus' => $boxScore['gameStatus'] ?? 'N/A',
-            'gameDate' => $boxScore['teamStats']['gameDate'] ?? 'N/A',
-            'teamStats' => json_encode($boxScore['teamStats'] ?? [])
-        ];
-
-        $csv->insertOne($data);
-
-        // Save CSV to a file
-        $csv->output('nfl_box_score_' . $gameID . '.csv');
     }
 }

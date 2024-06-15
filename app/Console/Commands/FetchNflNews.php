@@ -21,9 +21,9 @@ class FetchNflNews extends Command
     public function handle(): void
     {
         $playerID = $this->option('playerID');
-        $topNews = (bool)$this->option('topNews');
-        $fantasyNews = (bool)$this->option('fantasyNews');
-        $recentNews = (bool)$this->option('recentNews');
+        $topNews = (bool) $this->option('topNews');
+        $fantasyNews = (bool) $this->option('fantasyNews');
+        $recentNews = (bool) $this->option('recentNews');
         $maxItems = $this->option('maxItems');
 
         $this->info('Fetching NFL news...');

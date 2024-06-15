@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\NflPlayer;
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
-use App\Models\Player;
+use App\Models\NflPlayer;
 
 class GetNFLPlayerList extends Command
 {
@@ -31,7 +30,6 @@ class GetNFLPlayerList extends Command
             return;
         }
 
-        // Save the player list data into the database
         $this->savePlayerList($playerList);
     }
 

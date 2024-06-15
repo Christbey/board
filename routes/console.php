@@ -76,3 +76,7 @@ Schedule::command('fetch:mlb-scores')->hourly();
 Schedule::command('fetch:nba-scores')->hourly();
 Schedule::command('fetch:nfl-scores')->hourly();
 Schedule::command('fetch:ncaa-scores')->hourly();
+
+// Schedule News Command to run hourly
+
+Schedule::command('nfl:fetch-news')->hourly();
