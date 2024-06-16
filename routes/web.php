@@ -27,41 +27,30 @@ Route::resource('tasks', TaskController::class);
 
 // NFL routes
 Route::prefix('nfl')->group(function () {
-    Route::get('odds', [NflController::class, 'showOdds'])->name('nfl.odds');
     Route::get('teams', [NflController::class, 'index'])->name('nfl.teams');
-    Route::get('scores', [NflController::class, 'showScores'])->name('nfl.scores');
+    Route::get('event', [NflController::class, 'event'])->name('nfl.event');
 });
 
 // NCAA routes
 Route::prefix('ncaa')->group(function () {
-    Route::get('odds', [NcaaController::class, 'showOdds'])->name('ncaa.odds');
+    Route::get('event', [NcaaController::class, 'event'])->name('ncaa.event');
     Route::get('teams', [NcaaController::class, 'index'])->name('ncaa.teams');
 });
 
 // MLB routes
 Route::prefix('mlb')->group(function () {
-    Route::get('odds', [MlbController::class, 'showOdds'])->name('mlb.odds');
     Route::get('teams', [MlbController::class, 'index'])->name('mlb.teams');
-    Route::get('scores', [MlbController::class, 'showScores'])->name('mlb.scores');
+    Route::get('event', [MlbController::class, 'event'])->name('mlb.event');
 });
 
 // NBA routes
 Route::prefix('nba')->group(function () {
-    Route::get('odds', [NbaController::class, 'showOdds'])->name('nba.odds');
     Route::get('teams', [NbaController::class, 'index'])->name('nba.teams');
-    Route::get('scores', [NbaController::class, 'showScores'])->name('nba.scores');
+    Route::get('event', [NbaController::class, 'event'])->name('nba.event');
 });
-
-Route::get('/mlb/event', [MlbController::class, 'event'])->name('mlb.event');
-
-
 
 // Additional route for forge servers view
 Route::get('/forge-servers', function () {
     return view('forge-servers');
 })->name('forge-servers');
 
-
-Route::get('nba/event', [NbaController::class, 'event'])->name('nba.event');
-Route::get('nfl/show', [NflController::class, 'show'])->name('nfl.show');
-Route::get('ncaa/show', [NcaaController::class, 'show'])->name('ncaa.show');

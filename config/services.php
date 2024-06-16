@@ -48,6 +48,7 @@ return [
     'rapidapi' => [
         'key' => env('RAPIDAPI_KEY'),
         'base_url' => 'https://tank01-nfl-live-in-game-real-time-statistics-nfl.p.rapidapi.com',
+        'host' => 'tank01-nfl-live-in-game-real-time-statistics-nfl.p.rapidapi.com',
     ],
 
 

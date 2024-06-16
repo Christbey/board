@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class MlbController extends Controller
 {
-    protected $sport = 'mlb';
+    protected string $sport = 'mlb';
 
     public function index()
     {

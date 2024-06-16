@@ -23,7 +23,7 @@ class FetchScoresJob implements ShouldQueue
         $this->sport = $sport;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $sport = $this->sport;
 

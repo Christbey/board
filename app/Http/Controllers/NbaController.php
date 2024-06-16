@@ -12,8 +12,8 @@ use Carbon\Carbon;
 
 class NbaController extends Controller
 {
-    protected $apiKey;
-    protected $baseUrl;
+    protected mixed $apiKey;
+    protected mixed $baseUrl;
 
     public function __construct()
     {

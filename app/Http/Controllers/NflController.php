@@ -6,39 +6,17 @@ use App\Models\NflOdds;
 use App\Models\NflScore;
 use App\Models\NflTeam;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class NflController extends Controller
 {
-    protected $apiKey;
-    protected $baseUrl;
+    protected mixed $apiKey;
+    protected mixed $baseUrl;
 
     public function __construct()
     {
         $this->apiKey = config('services.oddsapi.key');
         $this->baseUrl = config('services.oddsapi.base_url');
-    }
-
-    public function showOdds(Request $request)
-    {
-        $date = Carbon::parse($request->input('date', Carbon::today()->format('Y-m-d')));
-        $odds = NflOdds::whereDate('commence_time', $date)->get();
-
-        if ($odds->isEmpty()) {
-            $errorMessage = 'No odds available at the moment.';
-            Log::error($errorMessage);
-            return view('nfl.odds', [
-                'odds' => $odds,
-                'sport' => 'NFL'
-            ])->withErrors($errorMessage);
-        }
-
-        return view('nfl.odds', [
-            'odds' => $odds,
-            'sport' => 'NFL'
-        ]);
     }
 
     public function index()
@@ -47,30 +25,7 @@ class NflController extends Controller
         return view('nfl.teams', compact('teams'));
     }
 
-    public function showScores(Request $request)
-    {
-        $scores = $this->fetchScores();
-        return view('nfl.scores', compact('scores'));
-    }
-
-    protected function fetchScores()
-    {
-        $response = Http::get("{$this->baseUrl}/sports/americanfootball_nfl/scores", [
-            'apiKey' => $this->apiKey,
-            'daysFrom' => 3,
-            'dateFormat' => 'iso',
-        ]);
-
-        return $response->successful() ? $response->json() : [];
-    }
-
-    public function filter(Request $request)
-    {
-        $routeName = strtolower('NFL') . '.odds'; // Ensure route name is in lowercase
-        return redirect()->route($routeName, ['date' => $request->input('date')]);
-    }
-
-    public function show(Request $request)
+    public function event(Request $request)
     {
         $selectedDate = $request->input('selectedDate', Carbon::today()->format('Y-m-d'));
         $scores = NflScore::with('homeTeam', 'awayTeam')
@@ -78,6 +33,6 @@ class NflController extends Controller
             ->get();
         $odds = NflOdds::whereIn('event_id', $scores->pluck('event_id'))->get();
 
-        return view('nfl.show', compact('scores', 'odds', 'selectedDate'));
+        return view('nfl.event', compact('scores', 'odds', 'selectedDate'));
     }
 }

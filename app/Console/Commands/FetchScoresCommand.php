@@ -17,7 +17,7 @@ class FetchScoresCommand extends Command
         parent::__construct();
     }
 
-    public function handle()
+    public function handle(): void
     {
         $sport = $this->argument('sport');
         FetchScoresJob::dispatch($sport);

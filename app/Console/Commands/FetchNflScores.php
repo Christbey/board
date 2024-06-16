@@ -12,7 +12,7 @@ class FetchNflScores extends Command
     protected $signature = 'fetch:nfl-scores';
     protected $description = 'Fetch the latest NFL scores from the API';
 
-    public function handle()
+    public function handle(): void
     {
         FetchScoresJob::dispatch('nfl');
         $this->info('FetchScoresJob for NFL dispatched.');

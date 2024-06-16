@@ -26,8 +26,8 @@
                     <x-nav-link href="{{ route('nfl.teams') }}" :active="request()->routeIs('nfl.teams')">
                         {{ __('Teams') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('nfl.odds') }}" :active="request()->routeIs('nfl.odds')">
-                        {{ __('Odds') }}
+                    <x-nav-link href="{{ route('nfl.event') }}" :active="request()->routeIs('nfl.event')">
+                        {{ __('Events') }}
                     </x-nav-link>
                 </x-nav-dropdown>
                 <!-- MLB Dropdown -->
@@ -35,8 +35,8 @@
                     <x-nav-link href="{{ route('mlb.teams') }}" :active="request()->routeIs('mlb.teams')">
                         {{ __('Teams') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('mlb.odds') }}" :active="request()->routeIs('mlb.odds')">
-                        {{ __('Odds') }}
+                    <x-nav-link href="{{ route('mlb.event') }}" :active="request()->routeIs('mlb.event')">
+                        {{ __('Events') }}
                     </x-nav-link>
                 </x-nav-dropdown>
                 <!-- NBA Dropdown -->
@@ -44,8 +44,8 @@
                     <x-nav-link href="{{ route('nba.teams') }}" :active="request()->routeIs('nba.teams')">
                         {{ __('Teams') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('nba.odds') }}" :active="request()->routeIs('nba.odds')">
-                        {{ __('Odds') }}
+                    <x-nav-link href="{{ route('nba.event') }}" :active="request()->routeIs('nba.event')">
+                        {{ __('Events') }}
                     </x-nav-link>
                 </x-nav-dropdown>
                 <!-- NCAAF Dropdown -->
@@ -53,8 +53,8 @@
                     <x-nav-link href="{{ route('ncaa.teams') }}" :active="request()->routeIs('ncaa.teams')">
                         {{ __('Teams') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('ncaa.odds') }}" :active="request()->routeIs('ncaa.odds')">
-                        {{ __('Odds') }}
+                    <x-nav-link href="{{ route('ncaa.event') }}" :active="request()->routeIs('ncaa.event')">
+                        {{ __('Events') }}
                     </x-nav-link>
                 </x-nav-dropdown>
                 <!-- Management Dropdown -->
