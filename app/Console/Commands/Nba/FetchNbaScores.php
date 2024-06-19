@@ -1,7 +1,7 @@
 <?php
 // app/Console/Commands/FetchNbaScoresCommand.php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nba;
 
 use Illuminate\Console\Command;
 use App\Jobs\FetchScoresJob;

@@ -2,7 +2,7 @@
 
 // app/Console/Commands/FetchNcaaScores.php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Ncaa;
 
 use Illuminate\Console\Command;
 use App\Jobs\FetchScoresJob;
