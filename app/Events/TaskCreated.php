@@ -11,7 +11,7 @@ class TaskCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $task;
+    public Task $task;
 
     public function __construct(Task $task)
     {

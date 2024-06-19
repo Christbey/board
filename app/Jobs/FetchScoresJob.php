@@ -41,7 +41,7 @@ class FetchScoresJob implements ShouldQueue
         }
     }
 
-    protected function getEndpoint($sport)
+    protected function getEndpoint($sport): ?string
     {
         $endpoints = [
             'mlb' => 'sports/baseball_mlb/scores',
@@ -65,7 +65,7 @@ class FetchScoresJob implements ShouldQueue
         return $models[$sport] ?? null;
     }
 
-    protected function getTeamModelClass($sport)
+    protected function getTeamModelClass($sport): ?string
     {
         $models = [
             'mlb' => \App\Models\MlbTeam::class,

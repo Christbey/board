@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nfl;
 
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
 
 class GetNFLTeams extends Command
 {
-    protected $signature = 'nfl:get-teams {--schedules} {--rosters} {--topPerformers} {--teamStats}';
+    protected $signature = 'nfl:get-teams {--schedules} {--teamStats}';
     protected $description = 'Get NFL teams data with optional details';
     protected NFLStatsService $nflStatsService;
 
@@ -20,11 +20,9 @@ class GetNFLTeams extends Command
     public function handle(): void
     {
         $schedules = $this->option('schedules');
-        $rosters = $this->option('rosters');
-        $topPerformers = $this->option('topPerformers');
         $teamStats = $this->option('teamStats');
 
-        $response = $this->nflStatsService->getNFLTeams($schedules, $rosters, $topPerformers, $teamStats);
+        $response = $this->nflStatsService->getNFLTeams($schedules, $teamStats);
         $teams = $response['body'] ?? [];
 
         if (empty($teams)) {
@@ -41,7 +39,7 @@ class GetNFLTeams extends Command
         }
     }
 
-    protected function displayTeamInfo(array $team)
+    protected function displayTeamInfo(array $team): void
     {
         $this->info('Team: ' . ($team['teamName'] ?? 'N/A'));
         $this->info('City: ' . ($team['teamCity'] ?? 'N/A'));
@@ -56,4 +54,6 @@ class GetNFLTeams extends Command
 
         $this->info('---');
     }
+
+
 }

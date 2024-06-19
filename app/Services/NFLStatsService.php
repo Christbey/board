@@ -48,6 +48,41 @@ class NFLStatsService
         return $this->makeApiRequest('/getNFLPlayerList');
     }
 
+    public function getPlayerStats($playerID)
+    {
+        $url = $this->baseUrl . '/getNFLGamesForPlayer';
+        $params = [
+            'query' => [
+                'playerID' => $playerID,
+                'fantasyPoints' => 'true',
+                'twoPointConversions' => 2,
+                'passYards' => 0.04,
+                'passTD' => 4,
+                'passInterceptions' => -2,
+                'pointsPerReception' => 1,
+                'carries' => 0.2,
+                'rushYards' => 0.1,
+                'rushTD' => 6,
+                'fumbles' => -2,
+                'receivingYards' => 0.1,
+                'receivingTD' => 6,
+                'targets' => 0,
+                'defTD' => 6,
+                'xpMade' => 1,
+                'xpMissed' => -1,
+                'fgMade' => 3,
+                'fgMissed' => -3
+            ],
+            'headers' => [
+                'x-rapidapi-host' => $this->apiHost,
+                'x-rapidapi-key' => $this->apiKey,
+            ],
+        ];
+
+        return $this->makeApiRequest($url, $params);
+
+    }
+
     public function getNFLGamesForPlayer($playerID, $fantasyPoints = true, $twoPointConversions = 2, $passYards = 0.04, $passTD = 4, $passInterceptions = -2, $pointsPerReception = 1, $carries = 0.2, $rushYards = 0.1, $rushTD = 6, $fumbles = -2, $receivingYards = 0.1, $receivingTD = 6, $targets = 0, $defTD = 6, $xpMade = 1, $xpMissed = -1, $fgMade = 3, $fgMissed = -3)
     {
         $params = [
@@ -75,10 +110,9 @@ class NFLStatsService
         return $this->makeApiRequest('/getNFLGamesForPlayer', $params);
     }
 
-    public function getNFLTeamRoster($teamID, $teamAbv)
+    public function getNFLTeamRoster($teamAbv)
     {
         $params = [
-            'teamID' => $teamID,
             'teamAbv' => $teamAbv,
             'getStats' => 'true'
         ];
@@ -113,11 +147,29 @@ class NFLStatsService
         try {
             $response = $this->client->request('GET', $url, $params);
             $responseBody = $response->getBody()->getContents();
+            $headers = $response->getHeaders();
+
             Log::info('API Response: ' . $responseBody);
+            Log::info('Rate Limit Info: ', [
+                'limit' => $headers['x-ratelimit-requests-limit'][0] ?? 'N/A',
+                'remaining' => $headers['x-ratelimit-requests-remaining'][0] ?? 'N/A',
+                'reset' => $headers['x-ratelimit-requests-reset'][0] ?? 'N/A',
+            ]);
+
             return json_decode($responseBody, true);
         } catch (RequestException $e) {
             Log::error('API Request failed: ' . $e->getMessage());
             return null;
         }
     }
+    public function getNFLTeamSchedule($teamAbv, $season)
+    {
+        $params = [
+            'teamAbv' => $teamAbv,
+            'season' => $season
+        ];
+
+        return $this->makeApiRequest('/getNFLTeamSchedule?', $params);
+    }
+
 }

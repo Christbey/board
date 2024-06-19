@@ -18,7 +18,7 @@ class NflPlayerStat extends Model
         'rush_yards', 'carries', 'rush_td', 'receptions', 'rec_td', 'targets',
         'rec_yards', 'games_played', 'total_tackles', 'fumbles_lost', 'def_td',
         'fumbles', 'fumbles_recovered', 'solo_tackles', 'defensive_interceptions',
-        'qb_hits', 'tfl', 'pass_deflections', 'sacks'
+        'qb_hits', 'tfl', 'pass_deflections', 'sacks', 'pass_yards', 'pass_int', 'pass_td', 'pass_rtg', 'pass_qbr', 'pass_completions', 'pass_attempts', 'sacked', 'pass_avg'
     ];
 
     public function player()

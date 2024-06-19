@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nfl;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -10,13 +10,11 @@ class CalculateNflEloCommand extends Command
 {
     protected $signature = 'nfl:elo';
     protected $description = 'Calculate Elo ratings based on NFL odds data';
-
     public function __construct()
     {
         parent::__construct();
     }
-
-    public function handle()
+    public function handle(): void
     {
         try {
             $games = DB::table('nfl_odds')->select('away_team_id', 'home_team_id', 'h2h_home_price', 'h2h_away_price', 'spread_home_point', 'spread_away_point')->get();
@@ -25,19 +23,18 @@ class CalculateNflEloCommand extends Command
             foreach ($games as $game) {
                 $this->processGame($game, $eloRatings);
             }
-
             $this->saveEloRatings($eloRatings);
         } catch (\Exception $e) {
             Log::error('Failed to calculate NFL Elo ratings: ' . $e->getMessage());
         }
     }
 
-    private function initializeEloRatings()
+    private function initializeEloRatings(): array
     {
         return DB::table('nfl_rankings')->pluck('season_elo', 'team_id')->toArray();
     }
 
-    private function processGame($game, &$eloRatings)
+    private function processGame($game, &$eloRatings): void
     {
         $homeTeam = $game->home_team_id;
         $awayTeam = $game->away_team_id;
@@ -57,24 +54,24 @@ class CalculateNflEloCommand extends Command
         Log::info("Updated Elo ratings: Home Team ({$homeTeam}) = {$eloRatings[$homeTeam]}, Away Team ({$awayTeam}) = {$eloRatings[$awayTeam]}");
     }
 
-    private function calculateWinProbability($odds)
+    private function calculateWinProbability($odds): float|int
     {
         $decimalOdds = $this->convertAmericanToDecimal($odds);
         return 1 / $decimalOdds;
     }
 
-    private function convertAmericanToDecimal($odds)
+    private function convertAmericanToDecimal($odds): float|int
     {
         return $odds > 0 ? ($odds / 100) + 1 : (100 / abs($odds)) + 1;
     }
 
-    private function adjustProbabilityForSpread($probability, $spread)
+    private function adjustProbabilityForSpread($probability, $spread): float|int
     {
         // Adjust the probability based on the spread. This is a simple linear adjustment.
         return $probability * (1 + $spread / 10);
     }
 
-    private function expectedScore($eloA, $eloB)
+    private function expectedScore($eloA, $eloB): float|int
     {
         return 1 / (1 + pow(10, ($eloB - $eloA) / 400));
     }
@@ -84,7 +81,7 @@ class CalculateNflEloCommand extends Command
         return $elo + $kFactor * ($actualScore - $expectedScore);
     }
 
-    private function saveEloRatings($eloRatings)
+    private function saveEloRatings($eloRatings): void
     {
         foreach ($eloRatings as $team => $elo) {
             try {

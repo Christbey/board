@@ -28,15 +28,6 @@ function registerFetchCommands($type, $sport): void
     })->purpose("Fetch the latest {$sport} {$type} from the API");
 }
 
-// Function to schedule commands
-function scheduleFetchCommands($type, $scheduleMethod): void
-{
-    $sports = ['mlb', 'nba', 'nfl', 'ncaa'];
-    foreach ($sports as $sport) {
-        Schedule::command("fetch:{$sport}-{$type}")->{$scheduleMethod}();
-    }
-}
-
 // Register Scores Commands
 registerFetchCommands('scores', 'mlb');
 registerFetchCommands('scores', 'nba');
@@ -50,8 +41,7 @@ registerFetchCommands('odds', 'nfl');
 registerFetchCommands('odds', 'ncaa');
 
 // Schedule the Commands
-scheduleFetchCommands('odds', 'twiceDaily');
-scheduleFetchCommands('scores', 'hourly');
+Schedule::command('fetch:odds-api')->hourly();  // Schedule to run hourly
 
 // Schedule News Command to run every fifteen minutes
-Schedule::command('nfl:fetch-news --topNews')->everyFifteenMinutes();
+Schedule::command('nfl:fetch-news --topNews')->everyFiveMinutes();

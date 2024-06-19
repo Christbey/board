@@ -2,7 +2,9 @@
 
 // app/Console/Commands/FetchNbaOdds.php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nba;
+
+use App\Console\Commands\FetchOddsCommand;
 
 class FetchNbaOdds extends FetchOddsCommand
 {

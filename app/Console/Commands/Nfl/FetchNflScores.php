@@ -2,7 +2,7 @@
 
 // app/Console/Commands/FetchNflScores.php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nfl;
 
 use Illuminate\Console\Command;
 use App\Jobs\FetchScoresJob;

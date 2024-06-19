@@ -41,6 +41,16 @@ class CreateNflPlayerStatsTable extends Migration
             $table->integer('tfl')->nullable();
             $table->integer('pass_deflections')->nullable();
             $table->integer('sacks')->nullable();
+            // Adding new columns for passing stats
+            $table->integer('pass_yards')->nullable();
+            $table->integer('pass_int')->nullable();
+            $table->integer('pass_td')->nullable();
+            $table->float('pass_rtg')->nullable();
+            $table->float('pass_qbr')->nullable();
+            $table->integer('pass_completions')->nullable();
+            $table->integer('pass_attempts')->nullable();
+            $table->string('sacked')->nullable();
+            $table->float('pass_avg')->nullable();
             $table->timestamps();
         });
     }
@@ -55,4 +65,3 @@ class CreateNflPlayerStatsTable extends Migration
         Schema::dropIfExists('nfl_player_stats');
     }
 }
-

@@ -1,8 +1,8 @@
 <?php
 
-// app/Console/Commands/FetchNflOdds.php
+namespace App\Console\Commands\Nfl;
 
-namespace App\Console\Commands;
+use App\Console\Commands\FetchOddsCommand;
 
 class FetchNflOdds extends FetchOddsCommand
 {
@@ -14,3 +14,4 @@ class FetchNflOdds extends FetchOddsCommand
         return 'nfl';
     }
 }
+// app/Console/Commands/FetchNflOdds.php

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nfl;
 
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
+use App\Jobs\NflPlayerStatsJob;
 
 class GetNFLBoxScore extends Command
 {
@@ -32,19 +33,7 @@ class GetNFLBoxScore extends Command
             return;
         }
 
-        // Display the box score data
-        $this->displayBoxScore($boxScore);
-    }
-
-    protected function displayBoxScore(array $boxScore, $prefix = ''): void
-    {
-        foreach ($boxScore as $key => $value) {
-            if (is_array($value)) {
-                $this->info($prefix . ucfirst($key) . ':');
-                $this->displayBoxScore($value, $prefix . '  ');  // Recursive call for nested arrays
-            } else {
-                $this->info($prefix . ucfirst($key) . ': ' . $value);
-            }
-        }
+        // Dispatch job with player stats
+        NflPlayerStatsJob::dispatch($gameID, $boxScore['playerStats'] ?? []);
     }
 }
