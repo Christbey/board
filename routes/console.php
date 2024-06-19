@@ -1,47 +1,22 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-/*
-|--------------------------------------------------------------------------
-| Console Routes
-|--------------------------------------------------------------------------
-|
-| This file is where you may define all of your Closure based console
-| commands. Each Closure is bound to a command instance allowing a
-| simple approach to interacting with each command's IO methods.
-|
-*/
+$sports = ['mlb', 'nba', 'nfl', 'ncaa'];
+$types = ['scores', 'odds'];
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
-
-// Function to register fetch commands
-function registerFetchCommands($type, $sport): void
-{
-    Artisan::command("fetch:{$sport}-{$type}", function () use ($type, $sport) {
-        $this->info("Fetching {$sport} {$type}...");
-        $this->call("{$type}:fetch", ['sport' => $sport]);
-    })->purpose("Fetch the latest {$sport} {$type} from the API");
+foreach ($sports as $sport) {
+    foreach ($types as $type) {
+        Artisan::command("fetch:{$sport}-{$type}", function () use ($type, $sport) {
+            $this->info("Fetching {$sport} {$type}...");
+            $this->call("{$type}:fetch", ['sport' => $sport]);
+        })->purpose("Fetch the latest {$sport} {$type} from the API");
+    }
 }
 
-// Register Scores Commands
-registerFetchCommands('scores', 'mlb');
-registerFetchCommands('scores', 'nba');
-registerFetchCommands('scores', 'nfl');
-registerFetchCommands('scores', 'ncaa');
-
-// Register Odds Commands
-registerFetchCommands('odds', 'mlb');
-registerFetchCommands('odds', 'nba');
-registerFetchCommands('odds', 'nfl');
-registerFetchCommands('odds', 'ncaa');
-
-// Schedule the Commands
-Schedule::command('fetch:odds-api')->hourly();  // Schedule to run hourly
+// Incorrect command or typo can cause issues
+Schedule::command('fetch:odds-api')->hourly(); // Ensure 'fetch:odds-api' is correctly defined
 
 // Schedule News Command to run every fifteen minutes
-Schedule::command('nfl:fetch-news --topNews')->everyFiveMinutes();
+Schedule::command('nfl:fetch-news --topNews')->everyFiveMinutes(); // Comment says every fifteen minutes but it's set to every five
