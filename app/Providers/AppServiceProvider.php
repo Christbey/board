@@ -21,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
 
 
         // Register Horizon and Telescope service providers
-        $this->app->register(HorizonServiceProvider::class);
         $this->app->register(TelescopeServiceProvider::class);
     }
 
