@@ -79,6 +79,4 @@ class FetchNFLTeamSchedule extends Command
             }
         }
     }
-
-
 }

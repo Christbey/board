@@ -20,7 +20,7 @@ class FetchAllNFLStats extends Command
 
         foreach ($playerIds as $playerId) {
             $this->info("Queuing stats fetch for player ID: $playerId");
-            FetchNFLStatsJob::dispatch($playerId);
+            FetchNFLStatsJob::dispatch($playerId, null);
         }
 
         $this->info('Player stats fetch jobs have been queued successfully.');

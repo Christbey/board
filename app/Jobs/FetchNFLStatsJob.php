@@ -17,20 +17,22 @@ class FetchNFLStatsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $playerId;
+    protected $longName;
 
-    public function __construct($playerId)
+    public function __construct($playerId, $longName = null)
     {
         $this->playerId = $playerId;
+        $this->longName = $longName;
     }
 
     public function handle(NFLStatsService $nflStatsService)
     {
-        Log::info('Fetching stats for player ID: ' . $this->playerId);
+        Log::info("Fetching stats for player ID: {$this->playerId}");
 
         $response = $nflStatsService->getNFLGamesForPlayer($this->playerId);
 
         if (is_null($response)) {
-            Log::error('API Request failed or no data returned for player ID: ' . $this->playerId);
+            Log::error("API Request failed or no data returned for player ID: {$this->playerId}");
             return;
         }
 
@@ -39,13 +41,13 @@ class FetchNFLStatsJob implements ShouldQueue
         $games = $response['body'] ?? [];
 
         if (empty($games)) {
-            Log::error('No game data found for player ID: ' . $this->playerId);
+            Log::error("No game data found for player ID: {$this->playerId}");
             return;
         }
 
         foreach ($games as $gameID => $game) {
-            if (isset($game['playerID'], $game['longName'])) {
-                $teamAbv = $game['teamAbv'];
+            if (isset($game['playerID'])) {
+                $teamAbv = $game['teamAbv'] ?? '';
                 $team = NFLTeam::where('abbreviation', $teamAbv)->first();
 
                 if ($team) {
@@ -53,16 +55,20 @@ class FetchNFLStatsJob implements ShouldQueue
                     NFLPlayerStat::updateOrCreate(
                         ['game_id' => $gameID, 'player_id' => $this->playerId],
                         array_merge(
-                            ['team_id' => $team->id, 'team_abv' => $teamAbv, 'player_name' => $game['longName']],
+                            [
+                                'team_id' => $team->id,
+                                'team_abv' => $teamAbv,
+                                'player_name' => $game['longName'] ?? $this->longName
+                            ],
                             $stats
                         )
                     );
-                    Log::info('Player stats stored for player: ' . $game['longName']);
+                    Log::info('Player stats stored for player: ' . ($game['longName'] ?? $this->longName));
                 } else {
-                    Log::warning('Team not found for abbreviation: ' . $teamAbv);
+                    Log::warning("Team not found for abbreviation: {$teamAbv}");
                 }
             } else {
-                Log::warning('Missing playerID or longName for player ID: ' . $this->playerId . ', Game ID: ' . $gameID);
+                Log::warning("Missing playerID for player ID: {$this->playerId}, Game ID: {$gameID}");
             }
         }
     }
@@ -89,7 +95,6 @@ class FetchNFLStatsJob implements ShouldQueue
             'tfl' => $game['Defense']['tfl'] ?? 0,
             'pass_deflections' => $game['Defense']['passDeflections'] ?? 0,
             'sacks' => $game['Defense']['sacks'] ?? 0,
-            // Added Passing Stats
             'pass_yards' => $game['Passing']['passYds'] ?? 0,
             'pass_int' => $game['Passing']['int'] ?? 0,
             'pass_td' => $game['Passing']['passTD'] ?? 0,

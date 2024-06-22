@@ -14,7 +14,7 @@ class NflPlayerStat extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'game_id', 'team_id', 'team_abv', 'player_id', 'player_name',
+        'game_id', 'longName', 'team_id', 'team_abv', 'player_id', 'player_name',
         'rush_yards', 'carries', 'rush_td', 'receptions', 'rec_td', 'targets',
         'rec_yards', 'games_played', 'total_tackles', 'fumbles_lost', 'def_td',
         'fumbles', 'fumbles_recovered', 'solo_tackles', 'defensive_interceptions',
