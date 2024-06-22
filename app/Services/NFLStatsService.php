@@ -33,19 +33,19 @@ class NFLStatsService
         return $this->makeApiRequest('/getNFLTeams', $params);
     }
 
-    public function getNFLBoxScore($gameID, $playByPlay = false)
-    {
-        $params = [
-            'gameID' => $gameID,
-            'playByPlay' => $playByPlay ? 'true' : 'false'
-        ];
-
-        return $this->makeApiRequest('/getNFLBoxScore', $params);
-    }
 
     public function getNFLPlayerList()
     {
         return $this->makeApiRequest('/getNFLPlayerList');
+    }
+
+    public function getBoxScore(string $gameID): array
+    {
+        $params = [
+            'gameID' => $gameID
+        ];
+
+        return $this->makeApiRequest('/getNFLBoxScore', $params);
     }
 
     public function getPlayerStats($playerID)

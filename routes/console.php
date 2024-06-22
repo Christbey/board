@@ -19,4 +19,7 @@ foreach ($sports as $sport) {
 Schedule::command('fetch:odds-api')->hourly(); // Ensure 'fetch:odds-api' is correctly defined
 
 // Schedule News Command to run every fifteen minutes
-Schedule::command('nfl:fetch-news --topNews')->everyFiveMinutes(); // Comment says every fifteen minutes but it's set to every five
+Schedule::command('nfl:fetch-news --recentNews')->everyFiveMinutes(); // Comment says every fifteen minutes but it's set to every five
+
+// Schedule Nfl Players Command to run daily
+Schedule::command('nfl:get-players')->daily();
