@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 trait FetchScoresTrait
 {
-    public function fetchAndStoreScores($sport, $endpoint, $modelClass, $teamModelClass)
+    public function fetchAndStoreScores($sport, $endpoint, $modelClass, $teamModelClass): void
     {
         $baseUrl =config('services.oddsapi.base_url');
         $apiKey = config('services.oddsapi.key');

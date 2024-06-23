@@ -37,4 +37,9 @@ class NflTeamSchedule extends Model
     {
         return $this->belongsTo(NflTeam::class, 'team_id_away');
     }
+
+    public function playerStats()
+    {
+        return $this->hasMany(NflPlayerStat::class, 'game_id', 'game_id');
+    }
 }

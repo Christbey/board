@@ -48,40 +48,6 @@ class NFLStatsService
         return $this->makeApiRequest('/getNFLBoxScore', $params);
     }
 
-    public function getPlayerStats($playerID)
-    {
-        $url = $this->baseUrl . '/getNFLGamesForPlayer';
-        $params = [
-            'query' => [
-                'playerID' => $playerID,
-                'fantasyPoints' => 'true',
-                'twoPointConversions' => 2,
-                'passYards' => 0.04,
-                'passTD' => 4,
-                'passInterceptions' => -2,
-                'pointsPerReception' => 1,
-                'carries' => 0.2,
-                'rushYards' => 0.1,
-                'rushTD' => 6,
-                'fumbles' => -2,
-                'receivingYards' => 0.1,
-                'receivingTD' => 6,
-                'targets' => 0,
-                'defTD' => 6,
-                'xpMade' => 1,
-                'xpMissed' => -1,
-                'fgMade' => 3,
-                'fgMissed' => -3
-            ],
-            'headers' => [
-                'x-rapidapi-host' => $this->apiHost,
-                'x-rapidapi-key' => $this->apiKey,
-            ],
-        ];
-
-        return $this->makeApiRequest($url, $params);
-
-    }
 
     public function getNFLGamesForPlayer($playerID, $fantasyPoints = true, $twoPointConversions = 2, $passYards = 0.04, $passTD = 4, $passInterceptions = -2, $pointsPerReception = 1, $carries = 0.2, $rushYards = 0.1, $rushTD = 6, $fumbles = -2, $receivingYards = 0.1, $receivingTD = 6, $targets = 0, $defTD = 6, $xpMade = 1, $xpMissed = -1, $fgMade = 3, $fgMissed = -3)
     {

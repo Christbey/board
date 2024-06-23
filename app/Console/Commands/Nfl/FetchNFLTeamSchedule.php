@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Nfl;
 
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
@@ -20,7 +20,7 @@ class FetchNFLTeamSchedule extends Command
         $this->nflStatsService = $nflStatsService;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $teamAbv = $this->argument('teamAbv');
         $season = $this->argument('season');
@@ -67,7 +67,7 @@ class FetchNFLTeamSchedule extends Command
                         'home' => $game['home'] ?? 'N/A',
                         'away_result' => $game['awayResult'] ?? null,
                         'home_pts' => $game['homePts'] ?? 0,
-                        'game_time' => $gameTime, // Store as is
+                        'game_time' => $gameTime,
                         'home_result' => $game['homeResult'] ?? null,
                         'away_pts' => $game['awayPts'] ?? 0,
                     ]
