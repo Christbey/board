@@ -5,12 +5,13 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Carbon\Carbon;
 
 class FetchStadiumWeather extends Command
 {
     protected $signature = 'fetch:stadium-weather {year}';
-    protected $description = 'Fetch historical weather data for NFL stadiums from the Open-Meteo API';
+    protected $description = 'Fetch historical weather data for NFL games from the Open-Meteo API';
 
     public function __construct()
     {
@@ -41,74 +42,113 @@ class FetchStadiumWeather extends Command
         $startDate = $range['start'];
         $endDate = $range['end'];
 
-        $schedules = DB::table('nfl_team_schedules')
+        // Preload all stadiums
+        $stadiums = DB::table('nfl_stadiums')->get()->keyBy('team_id');
+
+        // Get all games for the year within the date range
+        $games = DB::table('nfl_team_schedules')
             ->whereBetween('game_date', [$startDate, $endDate])
             ->get();
 
-        foreach ($schedules as $schedule) {
-            $stadium = DB::table('nfl_stadiums')
-                ->where('team_id', $schedule->team_id_home)
-                ->first();
+        if ($games->isEmpty()) {
+            $this->info("No games found for the year $year.");
+            return;
+        }
 
-            if ($stadium) {
-                $gameDate = Carbon::parse($schedule->game_date)->format('Y-m-d');
+        foreach ($games as $game) {
+            // Check if weather data already exists for the game
+            $existingWeatherData = DB::table('nfl_weather')
+                ->where('game_id', $game->id)
+                ->exists();
 
-                try {
-                    $response = $client->get('https://archive-api.open-meteo.com/v1/era5', [
-                        'query' => [
-                            'latitude' => $stadium->latitude,
-                            'longitude' => $stadium->longitude,
-                            'start_date' => $startDate,
-                            'end_date' => $endDate,
-                            'hourly' => 'temperature_2m'
-                        ]
-                    ]);
+            if ($existingWeatherData) {
+                $this->info("Weather data already exists for game ID {$game->id}, skipping API call.");
+                continue;
+            }
 
-                    $data = json_decode($response->getBody(), true);
+            if (!isset($stadiums[$game->team_id_home])) {
+                $this->error("No stadium found for team ID {$game->team_id_home}");
+                continue;
+            }
 
-                    if (isset($data['hourly']['temperature_2m']) && isset($data['hourly']['time'])) {
-                        $filteredData = [
-                            'time' => [],
-                            'temperature_2m' => [],
-                        ];
+            $stadium = $stadiums[$game->team_id_home];
+            $gameDate = Carbon::parse($game->game_date)->format('Y-m-d');
+            $gameTimeString = $game->game_time;
 
-                        foreach ($data['hourly']['time'] as $index => $time) {
-                            $timeCarbon = Carbon::parse($time);
-                            if ($timeCarbon->isSameDay($gameDate)) {
-                                // Convert Celsius to Fahrenheit
-                                $tempCelsius = $data['hourly']['temperature_2m'][$index];
-                                $tempFahrenheit = ($tempCelsius * 9 / 5) + 32;
+            $this->info("Fetching weather data for stadium: {$stadium->stadium_name} on {$gameDate} at {$gameTimeString}");
 
-                                $filteredData['time'][] = $time;
-                                $filteredData['temperature_2m'][] = $tempFahrenheit;
-                            }
-                        }
+            try {
+                // Fetch weather data for the game
+                $response = $client->get('https://archive-api.open-meteo.com/v1/era5', [
+                    'query' => [
+                        'latitude' => $stadium->latitude,
+                        'longitude' => $stadium->longitude,
+                        'temperature_unit' => 'fahrenheit',
+                        'timezone' => 'America/Chicago',
+                        'start_date' => $gameDate,
+                        'end_date' => $gameDate,
+                        'hourly' => 'temperature_2m',
+                    ]
+                ]);
 
-                        if (!empty($filteredData['time'])) {
-                            // Use updateOrInsert to store or update the data in the nfl_weather table
-                            DB::table('nfl_weather')->updateOrInsert(
-                                ['game_id' => $schedule->id],
-                                [
-                                    'stadium_id' => $stadium->id,
-                                    'date' => $gameDate,
-                                    'temperature_data' => json_encode($filteredData),
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ]
-                            );
+                $data = json_decode($response->getBody(), true);
 
-                            $this->info("Fetched and stored historical weather data for {$stadium->stadium_name} on {$gameDate}");
-                        } else {
-                            $this->error("No temperature data available for {$stadium->stadium_name} on {$gameDate}");
-                        }
-                    } else {
-                        $this->error("No temperature data available for {$stadium->stadium_name} on {$gameDate}");
-                    }
-                } catch (\Exception $e) {
-                    $this->error("Failed to fetch weather data for {$stadium->stadium_name} on {$gameDate}: " . $e->getMessage());
+                // Debug: Log the raw response data
+                $this->info("Raw response for {$stadium->stadium_name} on {$gameDate}: " . json_encode($data));
+
+                if (empty($data['hourly']['temperature_2m']) || empty($data['hourly']['time'])) {
+                    $this->error("No temperature data available for {$stadium->stadium_name} on {$gameDate}");
+                    continue;
                 }
-            } else {
-                $this->error("No stadium found for team_id {$schedule->team_id_home}");
+
+                $timeArray = $data['hourly']['time'];
+                $temperatureArray = $data['hourly']['temperature_2m'];
+
+                $gameTime = Carbon::parse($gameDate . ' ' . $gameTimeString);
+                $closestIndex = null;
+                $closestTimeDiff = null;
+
+                // Find the closest temperature data for the game time
+                foreach ($timeArray as $index => $time) {
+                    $timeCarbon = Carbon::parse($time);
+                    $timeDiff = $gameTime->diffInMinutes($timeCarbon);
+
+                    if ($closestTimeDiff === null || $timeDiff < $closestTimeDiff) {
+                        $closestTimeDiff = $timeDiff;
+                        $closestIndex = $index;
+                    }
+                }
+
+                if ($closestIndex !== null && Carbon::parse($timeArray[$closestIndex])->isSameDay($gameTime)) {
+                    $closestTemperature = $temperatureArray[$closestIndex];
+
+                    // Debug: Log the temperature data
+                    $this->info("Game Date: $gameDate, Game Time: $gameTimeString, Closest Time: {$timeArray[$closestIndex]}, Temperature: $closestTemperature °F");
+
+                    // Store the temperature data in the nfl_weather table
+                    DB::table('nfl_weather')->updateOrInsert(
+                        ['game_id' => $game->id],
+                        [
+                            'stadium_id' => $stadium->id,
+                            'date' => $gameDate,
+                            'game_time' => $gameTimeString,
+                            'temperature_data' => $closestTemperature,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+
+                    $this->info("Stored weather data for {$stadium->stadium_name} on {$gameDate} at {$gameTimeString}");
+                } else {
+                    $this->error("No valid temperature data available for {$stadium->stadium_name} on {$gameDate} at {$gameTimeString}");
+                }
+            } catch (RequestException $e) {
+                $response = $e->getResponse();
+                $responseBody = $response ? $response->getBody()->getContents() : 'No response body';
+                $this->error("Failed to fetch weather data for {$stadium->stadium_name}: " . $e->getMessage());
+                $this->error('Response: ' . $responseBody);
+            } catch (\Exception $e) {
+                $this->error("Failed to fetch weather data for {$stadium->stadium_name}: " . $e->getMessage());
             }
         }
     }
