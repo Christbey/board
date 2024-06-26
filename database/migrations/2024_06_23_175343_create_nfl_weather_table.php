@@ -13,7 +13,9 @@ class CreateNflWeatherTable extends Migration
             $table->unsignedBigInteger('stadium_id');
             $table->unsignedBigInteger('game_id');
             $table->date('date');
-            $table->json('temperature_data');
+            $table->string('game_time');
+            $table->json('temp');
+            $table->decimal('wind', 5, 2)->nullable();
             $table->timestamps();
 
             $table->foreign('stadium_id')->references('id')->on('nfl_stadiums')->onDelete('cascade');
