@@ -54,3 +54,8 @@ Route::get('/forge-servers', function () {
     return view('forge-servers');
 })->name('forge-servers');
 
+use App\Http\Controllers\DataPreparationController;
+
+Route::get('/data-preparation', [DataPreparationController::class, 'fetchData']);
+
+
