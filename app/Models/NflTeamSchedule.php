@@ -42,4 +42,9 @@ class NflTeamSchedule extends Model
     {
         return $this->hasMany(NflPlayerStat::class, 'game_id', 'game_id');
     }
+
+    public function odds()
+    {
+        return $this->hasOne(NflOdds::class, 'team_id', 'team_id_home')->where('commence_time', $this->commence_time);
+    }
 }

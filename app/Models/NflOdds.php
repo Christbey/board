@@ -43,4 +43,9 @@ class NflOdds extends Model
     {
         return $this->hasMany(NflOddsHistory::class, 'odds_id');
     }
+
+    public function teamSchedule()
+    {
+        return $this->belongsTo(NflTeamSchedule::class, 'team_id', 'team_id_home');
+    }
 }

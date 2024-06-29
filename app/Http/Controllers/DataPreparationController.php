@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\NflTeamSchedule;
+use App\Models\NflOdds;
 use Phpml\Classification\Linear\LogisticRegression;
 use Phpml\Dataset\ArrayDataset;
 use Carbon\Carbon;
@@ -12,60 +13,42 @@ class DataPreparationController extends Controller
 {
     public function fetchData()
     {
-        // Fetch data from nfl_team_schedules
         $schedules = NflTeamSchedule::all()->toArray();
 
-        // Ensure data is fetched
         if (empty($schedules)) {
             return view('data_preparation', ['message' => 'No data found in nfl_team_schedules table']);
         }
 
-        // Clean and prepare data
         $cleanedSchedules = $this->cleanData($schedules);
-
-        // Split data into training and future game sets
         [$trainData, $futureGames] = $this->splitData($cleanedSchedules);
 
-        // Ensure training data is available
         if (empty($trainData)) {
             return view('data_preparation', ['message' => 'No training data available']);
         }
 
-        // Train the model
         $model = $this->trainModel($trainData);
-
-        // Make predictions for future games
         $predictions = $this->makePredictions($model, $futureGames);
 
-        // Log predictions for debugging
         \Log::info('Predictions: ', $predictions);
 
-        // Check if predictions are empty and log the future games data for debugging
         if (empty($predictions)) {
             \Log::info('Future games data: ', $futureGames);
         }
 
-        // Pass predictions to the view
         return view('data_preparation', compact('predictions'));
     }
 
     private function cleanData($data)
     {
-        foreach ($data as &$record) {
-            foreach ($record as $key => $value) {
-                if (is_null($value)) {
-                    $record[$key] = 0; // Handle missing values
-                } else if (is_numeric($value)) {
-                    $record[$key] = $value; // Ensure numeric values are kept as-is
-                }
-            }
-        }
-        return $data;
+        return array_map(function($record) {
+            return array_map(function($value) {
+                return is_null($value) ? 0 : (is_numeric($value) ? $value : $value);
+            }, $record);
+        }, $data);
     }
 
     private function normalize($value)
     {
-        // Adjust normalization based on realistic range of your data
         return $value / 100;
     }
 
@@ -73,7 +56,6 @@ class DataPreparationController extends Controller
     {
         $trainData = [];
         $futureGames = [];
-
         $cutoffDate = Carbon::create(2024, 3, 1);
 
         foreach ($data as $record) {
@@ -85,7 +67,6 @@ class DataPreparationController extends Controller
             }
         }
 
-        // Log the training and future games data for debugging
         \Log::info('Training data: ', $trainData);
         \Log::info('Future games data: ', $futureGames);
 
@@ -94,19 +75,14 @@ class DataPreparationController extends Controller
 
     private function trainModel($trainData)
     {
-        $samples = [];
-        $targets = [];
+        $samples = array_map(function($record) {
+            return [$this->normalize($record['home_pts']), $this->normalize($record['away_pts'])];
+        }, $trainData);
 
-        foreach ($trainData as $record) {
-            $samples[] = [
-                $this->normalize($record['home_pts']),
-                $this->normalize($record['away_pts'])
-                // Add other relevant features here
-            ];
-            $targets[] = $record['home_result'] === 'W' ? 1 : 0; // 1 for win, 0 for loss
-        }
+        $targets = array_map(function($record) {
+            return $record['home_result'] === 'W' ? 1 : 0;
+        }, $trainData);
 
-        // Log the training samples and targets for debugging
         \Log::info('Training samples: ', $samples);
         \Log::info('Training targets: ', $targets);
 
@@ -119,9 +95,39 @@ class DataPreparationController extends Controller
 
     private function makePredictions($model, $futureGames)
     {
+        $teamAverages = $this->calculateTeamAverages();
         $predictions = [];
 
-        // Calculate historical averages for home and away points by team
+        foreach ($futureGames as $record) {
+            $homeTeamId = $record['team_id_home'];
+            $awayTeamId = $record['team_id_away'];
+
+            $predictedHomePts = round($teamAverages[$homeTeamId]['home_avg']);
+            $predictedAwayPts = round($teamAverages[$awayTeamId]['away_avg']);
+
+            $odds = $this->getOddsForGame($homeTeamId, $awayTeamId, $record['game_date']);
+
+            if ($odds) {
+                list($predictedHomePts, $predictedAwayPts) = $this->adjustPredictionsWithOdds($predictedHomePts, $predictedAwayPts, $odds);
+            }
+
+            $predictedWinner = $predictedHomePts > $predictedAwayPts ? 'Home' : 'Away';
+
+            $predictions[] = [
+                'game_id' => $record['game_id'],
+                'predicted_winner' => $predictedWinner,
+                'home_pts' => $predictedHomePts,
+                'away_pts' => $predictedAwayPts,
+            ];
+        }
+
+        \Log::info('Generated predictions: ', $predictions);
+
+        return $predictions;
+    }
+
+    private function calculateTeamAverages()
+    {
         $teamAverages = [];
         $teams = \DB::table('nfl_teams')->pluck('id');
 
@@ -134,38 +140,85 @@ class DataPreparationController extends Controller
             ];
         }
 
-        foreach ($futureGames as $record) {
-            $homeTeamId = $record['team_id_home'];
-            $awayTeamId = $record['team_id_away'];
-
-            $predictedHomePts = round($teamAverages[$homeTeamId]['home_avg']);
-            $predictedAwayPts = round($teamAverages[$awayTeamId]['away_avg']);
-
-            // Determine the predicted winner based on the predicted points
-            $predictedWinner = $predictedHomePts > $predictedAwayPts ? 'Home' : 'Away';
-
-            $predictions[] = [
-                'game_id' => $record['game_id'],
-                'predicted_winner' => $predictedWinner,
-                'home_pts' => $predictedHomePts,
-                'away_pts' => $predictedAwayPts,
-            ];
-        }
-
-        // Log the predictions for debugging
-        \Log::info('Generated predictions: ', $predictions);
-
-        return $predictions;
+        return $teamAverages;
     }
 
-    private function isSampleValid($sample)
+    private function getOddsForGame($homeTeamId, $awayTeamId, $gameDate)
     {
-        // Check if the sample has valid numeric values
-        foreach ($sample as $value) {
-            if (!is_numeric($value)) {
-                return false;
+        try {
+            $gameDateString = Carbon::parse($gameDate)->toDateString();
+        } catch (\Exception $e) {
+            \Log::error('Failed to parse game date: ' . $gameDate);
+            return null;
+        }
+
+        $odds = NflOdds::where('home_team_id', $homeTeamId)
+            ->where('away_team_id', $awayTeamId)
+            ->whereDate('commence_time', '=', $gameDateString)
+            ->first();
+
+        \Log::info('Odds Lookup: ', [
+            'home_team_id' => $homeTeamId,
+            'away_team_id' => $awayTeamId,
+            'game_date' => $gameDateString,
+            'odds' => $odds
+        ]);
+
+        return $odds;
+    }
+
+    private function adjustPredictionsWithOdds($predictedHomePts, $predictedAwayPts, $odds)
+    {
+        $homeOdds = (float) $odds->h2h_home_price;
+        $awayOdds = (float) $odds->h2h_away_price;
+        $spreadHomePoints = (float) $odds->spread_home_point;
+        $spreadAwayPoints = (float) $odds->spread_away_point;
+        $totalOverPoints = (float) $odds->total_over_point;
+        $totalUnderPoints = (float) $odds->total_under_point;
+
+        $predictedHomePts += ($homeOdds / 100) + ($spreadHomePoints / 10) + ($totalOverPoints / 10);
+        $predictedAwayPts += ($awayOdds / 100) + ($spreadAwayPoints / 10) + ($totalUnderPoints / 10);
+
+        return [$predictedHomePts, $predictedAwayPts];
+    }
+
+    public function matchSchedulesWithOdds()
+    {
+        $schedules = NflTeamSchedule::all();
+        \Log::info('Number of schedules fetched: ' . count($schedules));
+        $matchedData = [];
+
+        foreach ($schedules as $schedule) {
+            if ($schedule->game_time == 'TBD') {
+                \Log::info('Skipping schedule with TBD time: ' . $schedule->game_id);
+                continue;
+            }
+
+            $gameDate = $this->parseDate($schedule->game_date);
+            if (!$gameDate) continue;
+
+            $odds = $this->getOddsForGame($schedule->team_id_home, $schedule->team_id_away, $gameDate);
+            if ($odds) {
+                $matchedData[] = [
+                    'schedule' => $schedule,
+                    'odds' => $odds
+                ];
             }
         }
-        return true;
+
+        \Log::info('Matched Data Count: ', ['count' => count($matchedData)]);
+        \Log::info('Matched Data: ', $matchedData);
+
+        return view('matched_schedules', compact('matchedData'));
+    }
+
+    private function parseDate($date)
+    {
+        try {
+            return Carbon::parse($date)->toDateString();
+        } catch (\Exception $e) {
+            \Log::error('Failed to parse date: ' . $date);
+            return null;
+        }
     }
 }
