@@ -14,17 +14,23 @@ class DataPreparationController extends Controller
         $this->dataPreparationService = $dataPreparationService;
     }
 
-    public function fetchData()
+    public function fetchData(Request $request)
     {
-        $result = $this->dataPreparationService->fetchData();
+        $result = $this->dataPreparationService->fetchData($request);
 
         if (isset($result['message'])) {
             return view('data_preparation', ['message' => $result['message']]);
         }
 
+        $teamNames = $this->dataPreparationService->getTeamNames();
+
         return view('data_preparation', [
             'predictions' => $result['predictions'],
-            'winCountsWithNames' => $result['winCountsWithNames']
+            'winCountsWithNames' => $result['winCountsWithNames'],
+            'strengthOfSchedule' => $result['strengthOfSchedule'],
+            'homeTeamsCoverSpreadCount' => $result['homeTeamsCoverSpreadCount'],
+            'teamNames' => $teamNames
         ]);
     }
 }
+
