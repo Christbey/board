@@ -35,6 +35,14 @@
         </option>
     </select>
 
+    <label for="team_id">Team:</label>
+    <select id="team_id" name="team_id">
+        <option value="">All Teams</option>
+        @foreach($teamNames as $id => $name)
+            <option value="{{ $id }}" {{ request('team_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+        @endforeach
+    </select>
+
     <button type="submit">Submit</button>
 </form>
 
@@ -96,6 +104,7 @@
         <p>No predictions available.</p>
     @endif
 @endif
+
 <h2>Strength of Schedule</h2>
 <table>
     <thead>

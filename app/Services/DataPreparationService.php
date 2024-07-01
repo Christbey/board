@@ -16,18 +16,34 @@ use Phpml\Exception\InvalidArgumentException;
 
 class DataPreparationService
 {
+    protected $config;
+
+    public function __construct()
+    {
+        $this->config = config('nfl');
+    }
+
     public function fetchData(Request $request): array
     {
         $seasonYear = $request->input('season_year', 2023);
         $sosMethod = $request->input('sos_method', 'schedule');
+        $teamId = $request->input('team_id'); // Get the selected team ID
 
-        $schedules = NflTeamSchedule::whereYear('game_date', $seasonYear)
+        $query = NflTeamSchedule::whereYear('game_date', $seasonYear)
             ->where(function ($query) {
                 $query->where('game_week', 'not like', '%preseason%')
                     ->whereMonth('game_date', '!=', 8);
-            })
-            ->get()
-            ->toArray();
+            });
+
+        // Apply team filter if a team is selected
+        if ($teamId) {
+            $query->where(function ($query) use ($teamId) {
+                $query->where('team_id_home', $teamId)
+                    ->orWhere('team_id_away', $teamId);
+            });
+        }
+
+        $schedules = $query->get()->toArray();
 
         if (empty($schedules)) {
             return ['message' => 'No data found in nfl_team_schedules table'];
@@ -36,12 +52,12 @@ class DataPreparationService
         $cleanedSchedules = $this->cleanData($schedules);
         [$trainData, $futureGames] = $this->splitData($cleanedSchedules);
 
-        if (empty($trainData)) {
+        if (empty($trainData) || count($trainData) < 2) { // Check if there is sufficient training data
             return ['message' => 'No training data available'];
         }
 
         $model = $this->trainModel($trainData);
-        $predictions = $this->makePredictions($model, $futureGames);
+        $predictions = $this->makePredictions($futureGames);
 
         Log::info('Predictions: ', $predictions);
 
@@ -122,13 +138,12 @@ class DataPreparationService
         return $model;
     }
 
-    private function makePredictions($model, $futureGames): array
+    private function makePredictions($futureGames): array
     {
         $teamAverages = $this->calculateTeamAverages();
         $predictions = [];
 
         foreach ($futureGames as $record) {
-            // Extract team abbreviations from game_id
             preg_match('/(\d{8})_([A-Z]+)@([A-Z]+)/', $record['game_id'], $matches);
             if (count($matches) !== 4) {
                 Log::error('Invalid game_id format', ['game_id' => $record['game_id']]);
@@ -138,7 +153,6 @@ class DataPreparationService
             $homeTeamAbbr = $matches[3];
             $awayTeamAbbr = $matches[2];
 
-            // Fetch team IDs and names based on abbreviations
             $homeTeam = DB::table('nfl_teams')->where('abbreviation', $homeTeamAbbr)->first();
             $awayTeam = DB::table('nfl_teams')->where('abbreviation', $awayTeamAbbr)->first();
 
@@ -174,7 +188,6 @@ class DataPreparationService
                 );
             }
 
-            // Determine the predicted winner
             $predictedWinner = $predictedHomePts > $predictedAwayPts ? 'Home' : 'Away';
 
             $predictions[] = [
@@ -198,7 +211,7 @@ class DataPreparationService
 
     private function calculateTeamAverages(): array
     {
-        $config = $this->getConfig();
+        $config = $this->config;
         $teams = DB::table('nfl_teams')->pluck('id');
         $teamAverages = [];
 
@@ -253,7 +266,7 @@ class DataPreparationService
         $awayTeamId
     ): array
     {
-        $config = $this->getConfig();
+        $config = $this->config;
 
         $totalPoints = $homeAvg['total_point_over'] + $awayAvg['total_point_over'];
         [$homePtsFromTotal, $awayPtsFromTotal] = $this->splitTotalPoints($totalPoints);
@@ -542,7 +555,7 @@ class DataPreparationService
 
     private function calculateStrengthOfScheduleUsingPowerRankings(): array
     {
-        $config = $this->getConfig();
+        $config = $this->config;
         $powerRankings = $config['powerRankings'];
         $strengthOfSchedule = [];
         $teams = DB::table('nfl_teams')->pluck('id');
@@ -584,49 +597,7 @@ class DataPreparationService
 
     private function getConfig(): array
     {
-        return [
-            'scalingFactor' => 0.35,
-            'homeAdjustment' => 2.5,
-            'spreadAdjustment' => 0.5,
-            'powerRankingInfluence' => 0.3,
-            'homePtsMax' => 28,
-            'awayPtsMax' => 24,
-            'powerRankings' => [
-                1 => 25,  // Arizona Cardinals
-                2 => 14,  // Atlanta Falcons
-                3 => 4,   // Baltimore Ravens
-                4 => 8,   // Buffalo Bills
-                5 => 32,  // Carolina Panthers
-                6 => 15,  // Chicago Bears
-                7 => 5,   // Cincinnati Bengals
-                8 => 13,  // Cleveland Browns
-                9 => 9,   // Dallas Cowboys
-                10 => 31, // Denver Broncos
-                11 => 3,  // Detroit Lions
-                12 => 12, // Green Bay Packers
-                13 => 7,  // Houston Texans
-                14 => 18, // Indianapolis Colts
-                15 => 19, // Jacksonville Jaguars
-                16 => 2,  // Kansas City Chiefs
-                17 => 11, // Miami Dolphins
-                18 => 6,  // Minnesota Vikings
-                19 => 29, // New England Patriots
-                20 => 24, // New Orleans Saints
-                21 => 30, // New York Giants
-                22 => 20, // New York Jets
-                23 => 27, // Las Vegas Raiders
-                24 => 10,  // Philadelphia Eagles
-                25 => 17, // Pittsburgh Steelers
-                26 => 21, // Los Angeles Chargers
-                27 => 1, // San Francisco 49ers
-                28 => 28, // Seattle Seahawks
-                29 => 16, // Los Angeles Rams
-                30 => 26, // Tampa Bay Buccaneers
-                31 => 22, // Tennessee Titans
-                32 => 23  // Washington Commanders
-            ],
-            'qbrScalingFactor' => 0.1,  // Scaling factor for QBR influence
-        ];
+        return config('nfl');
     }
 
     private function calculateHomeTeamsCoveringSpread(int $seasonYear): int
@@ -671,4 +642,5 @@ class DataPreparationService
 
         return $homeTeamsCovering;
     }
+
 }
