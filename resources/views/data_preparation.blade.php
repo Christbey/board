@@ -76,8 +76,8 @@
                     <td>{{ $prediction['away_pts'] }}</td>
                     <td>{{ $prediction['home_qbr'] }}</td>
                     <td>{{ $prediction['away_qbr'] }}</td>
-                    <td>{{ $strengthOfSchedule[$prediction['home_team_id']] }}</td>
-                    <td>{{ $strengthOfSchedule[$prediction['away_team_id']] }}</td>
+                    <td>{{ $strengthOfSchedule[$prediction['home_team_id']] ?? 'N/A' }}</td>
+                    <td>{{ $strengthOfSchedule[$prediction['away_team_id']] ?? 'N/A' }}</td>
                 </tr>
             @endforeach
             </tbody>
@@ -106,25 +106,33 @@
 @endif
 
 <h2>Strength of Schedule</h2>
-<table>
-    <thead>
-    <tr>
-        <th>Team Name</th>
-        <th>Strength of Schedule</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach($strengthOfSchedule as $teamId => $sos)
+@if(!empty($strengthOfSchedule))
+    <table>
+        <thead>
         <tr>
-            <td>{{ $teamNames[$teamId] }}</td>
-            <td>{{ $sos }}</td>
+            <th>Team Name</th>
+            <th>Strength of Schedule</th>
         </tr>
-    @endforeach
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        @foreach($strengthOfSchedule as $teamId => $sos)
+            <tr>
+                <td>{{ $teamNames[$teamId] }}</td>
+                <td>{{ $sos }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@else
+    <p>No strength of schedule data available.</p>
+@endif
 
 <h2>Home Teams Covering Spread</h2>
-<p>{{ $homeTeamsCoverSpreadCount }}</p>
+@if(isset($homeTeamsCoverSpreadCount))
+    <p>{{ $homeTeamsCoverSpreadCount }}</p>
+@else
+    <p>No data available for home teams covering the spread.</p>
+@endif
 
 </body>
 </html>

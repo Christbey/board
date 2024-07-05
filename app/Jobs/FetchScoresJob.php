@@ -4,6 +4,14 @@
 
 namespace App\Jobs;
 
+use App\Models\MlbScore;
+use App\Models\MlbTeam;
+use App\Models\NbaScore;
+use App\Models\NbaTeam;
+use App\Models\NcaaScore;
+use App\Models\NcaaTeam;
+use App\Models\NflScore;
+use App\Models\NflTeam;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -56,10 +64,10 @@ class FetchScoresJob implements ShouldQueue
     protected function getModelClass($sport)
     {
         $models = [
-            'mlb' => \App\Models\MlbScore::class,
-            'nba' => \App\Models\NbaScore::class,
-            'nfl' => \App\Models\NflScore::class,
-            'ncaa' => \App\Models\NcaaScore::class,
+            'mlb' => MlbScore::class,
+            'nba' => NbaScore::class,
+            'nfl' => NflScore::class,
+            'ncaa' => NcaaScore::class,
         ];
 
         return $models[$sport] ?? null;
@@ -68,10 +76,10 @@ class FetchScoresJob implements ShouldQueue
     protected function getTeamModelClass($sport): ?string
     {
         $models = [
-            'mlb' => \App\Models\MlbTeam::class,
-            'nba' => \App\Models\NbaTeam::class,
-            'nfl' => \App\Models\NflTeam::class,
-            'ncaa' => \App\Models\NcaaTeam::class,
+            'mlb' => MlbTeam::class,
+            'nba' => NbaTeam::class,
+            'nfl' => NflTeam::class,
+            'ncaa' => NcaaTeam::class,
         ];
 
         return $models[$sport] ?? null;

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Nfl;
 
+use Exception;
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
 use App\Models\NflTeamSchedule;
@@ -42,7 +43,7 @@ class FetchNFLTeamSchedule extends Command
         $this->storeTeamSchedule($scheduleData);
     }
 
-    protected function storeTeamSchedule(array $scheduleData)
+    protected function storeTeamSchedule(array $scheduleData): void
     {
         foreach ($scheduleData as $game) {
             if (!isset($game['gameID'])) {
@@ -74,7 +75,7 @@ class FetchNFLTeamSchedule extends Command
                 );
 
                 $this->info('Team schedule data for game ' . $game['gameID'] . ' has been stored successfully.');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error('Failed to store team schedule for game ' . $game['gameID'] . ': ' . $e->getMessage(), ['game' => $game]);
             }
         }

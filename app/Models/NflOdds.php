@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,7 +28,28 @@ class NflOdds extends Model
         'total_under_price',
         'commence_time',
         'bookmaker_key',
+        'composite_key',
     ];
+
+    protected $dates = ['commence_time'];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($model) {
+            $model->composite_key = static::generateCompositeKey($model);
+        });
+    }
+
+    public static function generateCompositeKey($model)
+    {
+        $date = Carbon::parse($model->commence_time)->format('Ymd');
+        $homeTeam = $model->home_team_id;
+        $awayTeam = $model->away_team_id;
+
+        return "{$date}_{$homeTeam}_{$awayTeam}";
+    }
 
     public function homeTeam()
     {
@@ -46,6 +68,7 @@ class NflOdds extends Model
 
     public function teamSchedule()
     {
-        return $this->belongsTo(NflTeamSchedule::class, 'team_id', 'team_id_home');
+        return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
     }
 }
+

@@ -27,7 +27,7 @@ class DataPreparationService
     {
         $seasonYear = $request->input('season_year', 2023);
         $sosMethod = $request->input('sos_method', 'schedule');
-        $teamId = $request->input('team_id'); // Get the selected team ID
+        $teamId = $request->input('team_id');
 
         $query = NflTeamSchedule::whereYear('game_date', $seasonYear)
             ->where(function ($query) {
@@ -35,7 +35,6 @@ class DataPreparationService
                     ->whereMonth('game_date', '!=', 8);
             });
 
-        // Apply team filter if a team is selected
         if ($teamId) {
             $query->where(function ($query) use ($teamId) {
                 $query->where('team_id_home', $teamId)
@@ -52,7 +51,7 @@ class DataPreparationService
         $cleanedSchedules = $this->cleanData($schedules);
         [$trainData, $futureGames] = $this->splitData($cleanedSchedules);
 
-        if (empty($trainData) || count($trainData) < 2) { // Check if there is sufficient training data
+        if (empty($trainData) || count($trainData) < 2) {
             return ['message' => 'No training data available'];
         }
 
@@ -66,12 +65,9 @@ class DataPreparationService
         }
 
         $winCountsWithNames = $this->calculateWinCounts($predictions);
-
-        if ($sosMethod === 'power_rankings') {
-            $strengthOfSchedule = $this->calculateStrengthOfScheduleUsingPowerRankings();
-        } else {
-            $strengthOfSchedule = $this->calculateStrengthOfSchedule();
-        }
+        $strengthOfSchedule = ($sosMethod === 'power_rankings')
+            ? $this->calculateStrengthOfScheduleUsingPowerRankings()
+            : $this->calculateStrengthOfSchedule($seasonYear);
 
         $homeTeamsCoverSpreadCount = $this->calculateHomeTeamsCoveringSpread($seasonYear);
 
@@ -87,7 +83,7 @@ class DataPreparationService
     {
         return array_map(function ($record) {
             return array_map(function ($value) {
-                return is_null($value) ? 0 : $value;
+                return $value ?? 0;
             }, $record);
         }, $data);
     }
@@ -186,6 +182,10 @@ class DataPreparationService
                     $homeTeamId,
                     $awayTeamId
                 );
+            } else {
+                Log::warning('Odds not found for game', compact('homeTeamId', 'awayTeamId'));
+                $predictedHomePts = $predictedHomePts ?: 'N/A';
+                $predictedAwayPts = $predictedAwayPts ?: 'N/A';
             }
 
             $predictedWinner = $predictedHomePts > $predictedAwayPts ? 'Home' : 'Away';
@@ -211,13 +211,12 @@ class DataPreparationService
 
     private function calculateTeamAverages(): array
     {
-        $config = $this->config;
         $teams = DB::table('nfl_teams')->pluck('id');
         $teamAverages = [];
 
         foreach ($teams as $teamId) {
-            $homeAvg = $this->getAveragePoints($teamId, 'home', $config['homePtsMax']);
-            $awayAvg = $this->getAveragePoints($teamId, 'away', $config['awayPtsMax']);
+            $homeAvg = $this->getAveragePoints($teamId, 'home', $this->config['homePtsMax']);
+            $awayAvg = $this->getAveragePoints($teamId, 'away', $this->config['awayPtsMax']);
             $totalPointOver = $this->getTotalPointOver($teamId);
 
             $teamAverages[$teamId] = [
@@ -266,8 +265,6 @@ class DataPreparationService
         $awayTeamId
     ): array
     {
-        $config = $this->config;
-
         $totalPoints = $homeAvg['total_point_over'] + $awayAvg['total_point_over'];
         [$homePtsFromTotal, $awayPtsFromTotal] = $this->splitTotalPoints($totalPoints);
 
@@ -275,28 +272,24 @@ class DataPreparationService
             [$homePtsFromTotal, $awayPtsFromTotal] = $this->adjustPointsWithOdds(
                 $homePtsFromTotal,
                 $awayPtsFromTotal,
-                $odds,
-                $config
+                $odds
             );
         } else {
             Log::warning('Odds not found for game', compact('homeTeamId', 'awayTeamId'));
         }
 
-        [$homePowerRank, $awayPowerRank] = $this->getPowerRanks($homeTeamId, $awayTeamId, $config);
         [$homePtsFromTotal, $awayPtsFromTotal] = $this->applyPowerRankingInfluence(
             $homePtsFromTotal,
             $awayPtsFromTotal,
-            $homePowerRank,
-            $awayPowerRank,
-            $config
+            $this->getPowerRanks($homeTeamId, $awayTeamId)
         );
 
         $predictedHomePts = $this->applyScalingFactor(
             $homePtsFromTotal,
-            $config['scalingFactor'],
-            $config['homeAdjustment']
+            $this->config['scalingFactor'],
+            $this->config['homeAdjustment']
         );
-        $predictedAwayPts = $this->applyScalingFactor($awayPtsFromTotal, $config['scalingFactor']);
+        $predictedAwayPts = $this->applyScalingFactor($awayPtsFromTotal, $this->config['scalingFactor']);
 
         return [round($predictedHomePts, 2), round($predictedAwayPts, 2)];
     }
@@ -306,43 +299,29 @@ class DataPreparationService
         return [$totalPoints * 0.53, $totalPoints * 0.47];
     }
 
-    private function adjustPointsWithOdds(
-        $homePtsFromTotal,
-        $awayPtsFromTotal,
-        $odds,
-        $config
-    ): array
+    private function adjustPointsWithOdds($homePtsFromTotal, $awayPtsFromTotal, $odds): array
     {
-        $spreadHomePoints = (float)$odds->spread_home_point;
-        $spreadAwayPoints = (float)$odds->spread_away_point;
-
-        if ($spreadHomePoints < 0) {
-            $homePtsFromTotal += $spreadHomePoints + $config['spreadAdjustment'];
-            $awayPtsFromTotal += $spreadAwayPoints;
+        if ($odds->spread_home_point < 0) {
+            $homePtsFromTotal += $odds->spread_home_point + $this->config['spreadAdjustment'];
+            $awayPtsFromTotal += $odds->spread_away_point;
         }
 
         return [$homePtsFromTotal, $awayPtsFromTotal];
     }
 
-    private function getPowerRanks($homeTeamId, $awayTeamId, $config): array
+    private function getPowerRanks($homeTeamId, $awayTeamId): array
     {
-        $homePowerRank = $config['powerRankings'][$homeTeamId] ?? 16;
-        $awayPowerRank = $config['powerRankings'][$awayTeamId] ?? 16;
+        $homePowerRank = $this->config['powerRankings'][$homeTeamId] ?? 16;
+        $awayPowerRank = $this->config['powerRankings'][$awayTeamId] ?? 16;
 
         return [$homePowerRank, $awayPowerRank];
     }
 
-    private function applyPowerRankingInfluence(
-        $homePtsFromTotal,
-        $awayPtsFromTotal,
-        $homePowerRank,
-        $awayPowerRank,
-        $config
-    ): array
+    private function applyPowerRankingInfluence($homePtsFromTotal, $awayPtsFromTotal, $powerRanks): array
     {
-        $powerRankDifference = $awayPowerRank - $homePowerRank;
-        $homePtsFromTotal += $powerRankDifference * $config['powerRankingInfluence'];
-        $awayPtsFromTotal -= $powerRankDifference * $config['powerRankingInfluence'];
+        $powerRankDifference = $powerRanks[1] - $powerRanks[0];
+        $homePtsFromTotal += $powerRankDifference * $this->config['powerRankingInfluence'];
+        $awayPtsFromTotal -= $powerRankDifference * $this->config['powerRankingInfluence'];
 
         return [$homePtsFromTotal, $awayPtsFromTotal];
     }
@@ -354,7 +333,6 @@ class DataPreparationService
 
     private function calculateQBR($teamId): float
     {
-        // Fetch QB stats for the given team, excluding rows with null values
         $qbrStats = NflPlayerStat::join('nfl_players', 'nfl_player_stats.player_id', '=', 'nfl_players.player_id')
             ->where('nfl_players.pos', 'QB')
             ->where('nfl_player_stats.team_id', $teamId)
@@ -363,50 +341,42 @@ class DataPreparationService
             ->whereNotNull('nfl_player_stats.pass_yards')
             ->whereNotNull('nfl_player_stats.pass_td')
             ->whereNotNull('nfl_player_stats.pass_int')
-            ->orderBy('nfl_player_stats.created_at', 'desc') // Get the most recent stats
+            ->orderBy('nfl_player_stats.created_at', 'desc')
             ->first(['pass_attempts', 'pass_completions', 'pass_yards', 'pass_td', 'pass_int']);
 
-        // Log fetched data for debugging
         Log::info('Team ID: ' . $teamId);
         Log::info('Fetched QB stats: ', (array)$qbrStats);
 
-        // If no stats are found, return 0
         if (is_null($qbrStats)) {
             return 0.0;
         }
 
-        // Calculate total stats
         $totalAttempts = $qbrStats->pass_attempts;
         $totalCompletions = $qbrStats->pass_completions;
         $totalYards = $qbrStats->pass_yards;
         $totalTouchdowns = $qbrStats->pass_td;
         $totalInterceptions = $qbrStats->pass_int;
 
-        // Log totals for debugging
         Log::info('Total Attempts: ' . $totalAttempts);
         Log::info('Total Completions: ' . $totalCompletions);
         Log::info('Total Yards: ' . $totalYards);
         Log::info('Total Touchdowns: ' . $totalTouchdowns);
         Log::info('Total Interceptions: ' . $totalInterceptions);
 
-        // If no attempts, return 0
         if ($totalAttempts === 0) {
             return 0.0;
         }
 
-        // Calculate QBR components
         $completionRate = max(0, min(2.375, ($totalCompletions / $totalAttempts - 0.3) * 5));
         $yardsPerAttempt = max(0, min(2.375, (($totalYards / $totalAttempts) - 3) * 0.25));
         $touchdownRate = max(0, min(2.375, ($totalTouchdowns / $totalAttempts) * 20));
         $interceptionRate = max(0, min(2.375, 2.375 - (($totalInterceptions / $totalAttempts) * 25)));
 
-        // Log QBR components for debugging
         Log::info('Completion Rate: ' . $completionRate);
         Log::info('Yards Per Attempt: ' . $yardsPerAttempt);
         Log::info('Touchdown Rate: ' . $touchdownRate);
         Log::info('Interception Rate: ' . $interceptionRate);
 
-        // Calculate and return the final QBR
         $qbr = (($completionRate + $yardsPerAttempt + $touchdownRate + $interceptionRate) / 6) * 100;
         Log::info('Calculated QBR: ' . $qbr);
 
@@ -415,16 +385,10 @@ class DataPreparationService
 
     private function calculateWinCounts(array $predictions): array
     {
-        $winCounts = $this->initializeWinCounts($predictions);
-        return $this->attachTeamNames($winCounts);
-    }
-
-    private function initializeWinCounts(array $predictions): array
-    {
         $winCounts = [];
 
         foreach ($predictions as $prediction) {
-            $winningTeamId = $this->getWinningTeamId($prediction);
+            $winningTeamId = $prediction['predicted_winner'] === 'Home' ? $prediction['home_team_id'] : $prediction['away_team_id'];
 
             if (!isset($winCounts[$winningTeamId])) {
                 $winCounts[$winningTeamId] = 0;
@@ -433,12 +397,7 @@ class DataPreparationService
             $winCounts[$winningTeamId]++;
         }
 
-        return $winCounts;
-    }
-
-    private function getWinningTeamId(array $prediction): int
-    {
-        return $prediction['predicted_winner'] === 'Home' ? $prediction['home_team_id'] : $prediction['away_team_id'];
+        return $this->attachTeamNames($winCounts);
     }
 
     private function attachTeamNames(array $winCounts): array
@@ -496,7 +455,7 @@ class DataPreparationService
         Log::info('Odds Lookup: ', compact('homeTeamId', 'awayTeamId', 'gameDateString', 'odds'));
     }
 
-    private function calculateStrengthOfSchedule($seasonYear = 2023): array
+    private function calculateStrengthOfSchedule($seasonYear = 2024): array
     {
         $strengthOfSchedule = [];
         $teams = DB::table('nfl_teams')->pluck('id');
@@ -555,8 +514,7 @@ class DataPreparationService
 
     private function calculateStrengthOfScheduleUsingPowerRankings(): array
     {
-        $config = $this->config;
-        $powerRankings = $config['powerRankings'];
+        $powerRankings = $this->config['powerRankings'];
         $strengthOfSchedule = [];
         $teams = DB::table('nfl_teams')->pluck('id');
 
@@ -595,16 +553,10 @@ class DataPreparationService
         return ($totalGames > 0) ? $totalPowerRanking / $totalGames : 0;
     }
 
-    private function getConfig(): array
-    {
-        return config('nfl');
-    }
-
     private function calculateHomeTeamsCoveringSpread(int $seasonYear): int
     {
         $homeTeamsCovering = 0;
 
-        // Get all games for the specified season year
         $games = NflTeamSchedule::whereYear('game_date', $seasonYear)
             ->where(function ($query) {
                 $query->where('game_week', 'not like', '%preseason%')
@@ -613,7 +565,6 @@ class DataPreparationService
             ->get();
 
         foreach ($games as $game) {
-            // Find the odds based on home and away team IDs, game date, and game time
             $odds = NflOdds::where('home_team_id', $game->team_id_home)
                 ->where('away_team_id', $game->team_id_away)
                 ->whereDate('commence_time', $game->game_date)
@@ -624,7 +575,6 @@ class DataPreparationService
                 $awayTeamScore = $game->away_pts;
 
                 if (!is_null($homeTeamScore) && !is_null($awayTeamScore)) {
-                    // Calculate if the home team covers the spread
                     $homeCovering = ($homeTeamScore + $odds->spread_home_point) > $awayTeamScore;
                     if ($homeCovering) {
                         $homeTeamsCovering++;
@@ -642,5 +592,4 @@ class DataPreparationService
 
         return $homeTeamsCovering;
     }
-
 }
