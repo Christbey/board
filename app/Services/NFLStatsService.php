@@ -39,10 +39,12 @@ class NFLStatsService
         return $this->makeApiRequest('/getNFLPlayerList');
     }
 
-    public function getBoxScore(string $gameID): array
+    public function getBoxScore(string $gameID, bool $playByPlay = false, bool $fantasyPoints = false): array
     {
         $params = [
-            'gameID' => $gameID
+            'gameID' => $gameID,
+            'playByPlay' => $playByPlay ? 'true' : 'false',
+            'fantasyPoints' => $fantasyPoints ? 'true' : 'false',
         ];
 
         return $this->makeApiRequest('/getNFLBoxScore', $params);
@@ -128,6 +130,7 @@ class NFLStatsService
             return null;
         }
     }
+
     public function getNFLTeamSchedule($teamAbv, $season)
     {
         $params = [

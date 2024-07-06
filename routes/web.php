@@ -63,3 +63,7 @@ Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name
 Route::get('/match-schedules-odds', [DataPreparationController::class, 'matchSchedulesWithOdds'])->name('match.schedules.odds');
 Route::get('/predictions', [DataPreparationController::class, 'makePredictions'])->name('predictions');
 Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name('fetchData');
+
+use App\Http\Controllers\NFLStatsController;
+
+Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore']);
