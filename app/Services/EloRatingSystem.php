@@ -77,6 +77,9 @@ class EloRatingSystem
         $expectedHomeScore = $this->calculateExpectedScore($homeRating, $awayRating, $isPlayoff);
         $expectedAwayScore = 1 - $expectedHomeScore;
 
+        // Log the expected scores
+        echo "Expected Score for {$homeTeam} vs {$awayTeam}: Home: {$expectedHomeScore}, Away: {$expectedAwayScore}\n";
+
         $actualHomeScore = $homeScore > $awayScore ? 1 : ($homeScore < $awayScore ? 0 : 0.5);
         $actualAwayScore = 1 - $actualHomeScore;
 
@@ -144,5 +147,32 @@ class EloRatingSystem
             0.6 * rushing_yards +
             15.9 * rushing_tds
         '));
+    }
+
+    public function calculateExpectedPointSpread($ratingA, $ratingB, $isPlayoff = false)
+    {
+        $eloDiff = $ratingA - $ratingB;
+        if ($isPlayoff) {
+            $eloDiff *= $this->playoffMultiplier;
+        }
+        return $eloDiff / 25; // A typical Elo point spread conversion factor
+    }
+
+    public function getActualScorePrediction($teamA, $teamB, $distance, $neutralSite = false, $noFans = false, $isPlayoff = false)
+    {
+        $eloDiff = $this->ratings[$teamA] - $this->ratings[$teamB] + $this->calculateHomeFieldAdjustment($teamA, $teamB, $distance, $neutralSite, $noFans);
+        if ($isPlayoff) {
+            $eloDiff *= $this->playoffMultiplier;
+        }
+        $pointSpread = $this->calculateExpectedPointSpread($eloDiff, 0, $isPlayoff);
+        $averagePoints = 21; // Average points scored in an NFL game
+
+        $expectedScoreA = $averagePoints + ($pointSpread / 2);
+        $expectedScoreB = $averagePoints - ($pointSpread / 2);
+
+        return [
+            'teamA' => round($expectedScoreA),
+            'teamB' => round($expectedScoreB)
+        ];
     }
 }

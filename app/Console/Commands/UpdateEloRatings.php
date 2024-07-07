@@ -8,9 +8,7 @@ use App\Services\EloRatingSystem;
 class UpdateEloRatings extends Command
 {
     protected $signature = 'elo:update';
-    protected $description = 'Update Elo ratings for NFL teams based on recent game results';
-
-    private $teams = ['TeamA', 'TeamB', 'TeamC', 'TeamD']; // Add your team names here
+    protected $description = 'Update Elo ratings for NFL teams';
 
     public function __construct()
     {
@@ -19,13 +17,13 @@ class UpdateEloRatings extends Command
 
     public function handle()
     {
-        $elo = new EloRatingSystem($this->teams);
+        $teams = ['TeamA', 'TeamB', 'TeamC', 'TeamD'];
+        $elo = new EloRatingSystem($teams);
 
-        // Simulate some games. In a real application, you would fetch these results from your database or an API.
         $games = [
-            ['homeTeam' => 'TeamA', 'awayTeam' => 'TeamB', 'homeScore' => 24, 'awayScore' => 17, 'distance' => 100, 'homeRested' => false, 'awayRested' => false, 'neutralSite' => false, 'noFans' => false, 'isPlayoff' => false, 'homeQbChange' => false, 'awayQbChange' => false],
-            ['homeTeam' => 'TeamC', 'awayTeam' => 'TeamD', 'homeScore' => 21, 'awayScore' => 21, 'distance' => 2000, 'homeRested' => true, 'awayRested' => false, 'neutralSite' => false, 'noFans' => true, 'isPlayoff' => true, 'homeQbChange' => false, 'awayQbChange' => false],
-            ['homeTeam' => 'TeamA', 'awayTeam' => 'TeamC', 'homeScore' => 14, 'awayScore' => 28, 'distance' => 1500, 'homeRested' => false, 'awayRested' => true, 'neutralSite' => true, 'noFans' => false, 'isPlayoff' => false, 'homeQbChange' => true, 'awayQbChange' => false]
+            ['homeTeam' => 'TeamA', 'awayTeam' => 'TeamB', 'homeScore' => 24, 'awayScore' => 17, 'distance' => 1000, 'homeRested' => false, 'awayRested' => false, 'neutralSite' => false, 'noFans' => false, 'isPlayoff' => false, 'homeQbChange' => false, 'awayQbChange' => false],
+            ['homeTeam' => 'TeamC', 'awayTeam' => 'TeamD', 'homeScore' => 21, 'awayScore' => 14, 'distance' => 500, 'homeRested' => false, 'awayRested' => false, 'neutralSite' => false, 'noFans' => false, 'isPlayoff' => false, 'homeQbChange' => false, 'awayQbChange' => false],
+            ['homeTeam' => 'TeamB', 'awayTeam' => 'TeamA', 'homeScore' => 17, 'awayScore' => 24, 'distance' => 1500, 'homeRested' => false, 'awayRested' => false, 'neutralSite' => true, 'noFans' => false, 'isPlayoff' => false, 'homeQbChange' => true, 'awayQbChange' => false]
         ];
 
         foreach ($games as $game) {
@@ -34,6 +32,13 @@ class UpdateEloRatings extends Command
                 $game['distance'], $game['homeRested'], $game['awayRested'], $game['neutralSite'],
                 $game['noFans'], $game['isPlayoff'], $game['homeQbChange'], $game['awayQbChange']
             );
+
+            $expectedScore = $elo->getActualScorePrediction(
+                $game['homeTeam'], $game['awayTeam'], $game['distance'], $game['neutralSite'],
+                $game['noFans'], $game['isPlayoff']
+            );
+
+            $this->info("Expected Actual Score for {$game['homeTeam']} vs {$game['awayTeam']}: Home: {$expectedScore['teamA']}, Away: {$expectedScore['teamB']}");
         }
 
         $this->info('Updated Elo ratings:');
