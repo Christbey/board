@@ -43,21 +43,13 @@ class FetchNFLBoxScore implements ShouldQueue
             return;
         }
 
-        if ($gameDate->isToday()) {
-            if ($updatedAt && Carbon::parse($updatedAt)->diffInMinutes(Carbon::now()) < 60) {
-                Log::info("Data for game {$this->gameID} was fetched within the last hour. Skipping API call.");
-                return;
-            }
-        } else {
-            if (NflPlayerStat::where('game_id', $this->gameID)->exists()) {
-                Log::info("Stats already exist for game {$this->gameID}. Skipping API call.");
-                return;
-            }
+        if ($this->shouldSkipFetching($gameDate, $updatedAt)) {
+            return;
         }
 
         $data = $statsService->getBoxScore($this->gameID);
 
-        if ($data && $data['statusCode'] == 200) {
+        if ($this->isValidResponse($data)) {
             if (isset($data['body']['playerStats'])) {
                 $this->savePlayerStats($data['body']['playerStats']);
                 Log::info("NFL box score data for game {$this->gameID} fetched and stored successfully.");
@@ -67,6 +59,26 @@ class FetchNFLBoxScore implements ShouldQueue
         } else {
             Log::error("Failed to fetch NFL box score data for game {$this->gameID}.");
         }
+    }
+
+    protected function shouldSkipFetching(Carbon $gameDate, ?string $updatedAt): bool
+    {
+        if ($gameDate->isToday()) {
+            if ($updatedAt && Carbon::parse($updatedAt)->diffInMinutes(Carbon::now()) < 60) {
+                Log::info("Data for game {$this->gameID} was fetched within the last hour. Skipping API call.");
+                return true;
+            }
+        } elseif (NflPlayerStat::where('game_id', $this->gameID)->exists()) {
+            Log::info("Stats already exist for game {$this->gameID}. Skipping API call.");
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function isValidResponse($data): bool
+    {
+        return $data && $data['statusCode'] == 200;
     }
 
     protected function savePlayerStats(array $playerStats)
