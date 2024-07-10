@@ -27,9 +27,15 @@ class NflPlayByPlay extends Model
         'rush_yds',
         'carries',
         'down_and_distance',
+        'expected_points_before',
+        'expected_points_after',
+        'team_id',
+        'created_at',
+        'updated_at',
         'fg_attempts',
-        'fg_yds'
+        'fg_yds',
     ];
+
 
     public function player()
     {

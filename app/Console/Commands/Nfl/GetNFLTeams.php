@@ -54,6 +54,4 @@ class GetNFLTeams extends Command
 
         $this->info('---');
     }
-
-
 }

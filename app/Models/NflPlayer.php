@@ -14,7 +14,7 @@ class NflPlayer extends Model
     public $incrementing = true;
 
     protected $fillable = [
-        'player_id', 'long_name', 'team', 'position', 'age', 'longName', 'jerseyNum', 'pos', 'school',  'exp', 'height', 'weight' // and other columns
+        'player_id', 'long_name', 'team', 'position', 'age', 'longName', 'jerseyNum', 'pos', 'school', 'exp', 'height', 'weight' // and other columns
     ];
 
     public function playerStats()

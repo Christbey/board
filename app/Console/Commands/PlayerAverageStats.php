@@ -16,7 +16,7 @@ class PlayerAverageStats extends Command
         parent::__construct();
     }
 
-    public function handle()
+    public function handle(): int
     {
         $playerId = $this->argument('player_id');
         $playPeriods = ['Q1', 'Q2', 'Q3', 'Q4', 'Q1&Q2', 'Q3&Q4'];
@@ -30,7 +30,7 @@ class PlayerAverageStats extends Command
         return 0;
     }
 
-    protected function calculateAverageStats($playerId, $period)
+    protected function calculateAverageStats($playerId, $period): array
     {
         $query = NflPlayByPlay::where('player_id', $playerId);
 
@@ -67,7 +67,7 @@ class PlayerAverageStats extends Command
         return $result;
     }
 
-    protected function displayStats($stats)
+    protected function displayStats($stats): void
     {
         $headers = ['Qtr', 'K.Yds', 'Rec', 'Tar', 'Rec Yds', 'Pass Att', 'Pass Yds', 'Pass Comp', 'Rush Yds', 'Carries'];
         $data = [];
