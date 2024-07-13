@@ -9,6 +9,7 @@ use App\Models\NflPlayByPlay;
 use App\Models\NflTeam;
 use App\Models\NflPlayer;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 class PlayByPlay extends Command
 {
@@ -97,14 +98,30 @@ class PlayByPlay extends Command
                 $expectedPointsBefore = null;
                 $expectedPointsAfter = null;
                 $epa = null;
+                $startYardLine = null;
+                $endYardLine = null;
+                $playType = $this->parsePlayType($playData['play'] ?? '');
 
                 if (isset($playData['downAndDistance']) && isset($playData['play'])) {
                     $startFieldPosition = $this->eloRatingSystem->parseFieldPositionFromDownAndDistance($playData['downAndDistance']);
                     $endFieldPosition = $this->eloRatingSystem->parseFieldPositionFromPlay($playData['play']);
+
+                    if ($playType === 'Incomplete') {
+                        $endFieldPosition = $startFieldPosition; // For incomplete passes, end field position is the same as start field position
+                    }
+
                     $expectedPointsBefore = $this->eloRatingSystem->getExpectedPoints($startFieldPosition);
                     $expectedPointsAfter = $this->eloRatingSystem->getExpectedPoints($endFieldPosition);
                     $epa = $expectedPointsAfter - $expectedPointsBefore;
+                    $startYardLine = $startFieldPosition;
+                    $endYardLine = $endFieldPosition;
                 }
+
+                // Parse additional fields
+                $parsedDownAndDistance = $this->parseDownDistance($playData['downAndDistance'] ?? '');
+                $down = $parsedDownAndDistance['down'] ?? null;
+                $distance = $parsedDownAndDistance['distance'] ?? null;
+                $yardLine = $parsedDownAndDistance['yard_line'] ?? null;
 
                 NflPlayByPlay::updateOrCreate(
                     [
@@ -130,9 +147,45 @@ class PlayByPlay extends Command
                         'team_id' => $teamId, // Store the team_id
                         'expected_points_before' => $expectedPointsBefore,
                         'expected_points_after' => $expectedPointsAfter,
+                        'epa' => $epa,
+                        'down' => $down, // Store the down
+                        'distance' => $distance, // Store the distance
+                        'yard_line' => $yardLine, // Store the yard line
+                        'play_type' => $playType, // Store the play type
+                        'start_yard_line' => $startYardLine, // Store the start yard line
+                        'end_yard_line' => $endYardLine // Store the end yard line
                     ]
                 );
             }
         }
+    }
+
+    protected function parseDownDistance(string $downAndDistance): array
+    {
+        $downDistancePattern = '/(\d+)(?:st|nd|rd|th)\s*&\s*(\d+|Goal)\s*at\s*([A-Z]{2,3})\s*(\d+)/i';
+        preg_match($downDistancePattern, $downAndDistance, $matches);
+
+        return [
+            'down' => $matches[1] ?? null,
+            'distance' => $matches[2] ?? null,
+            'yard_line' => $matches[4] ?? null,
+        ];
+    }
+
+    protected function parsePlayType(string $playDescription): string
+    {
+        $playTypePatterns = Config::get('nfl.playTypePatterns');
+
+        if (str_contains(strtolower($playDescription), 'touchdown')) {
+            return 'Touchdown';
+        }
+
+        foreach ($playTypePatterns as $pattern => $type) {
+            if (str_contains(strtolower($playDescription), $pattern)) {
+                return $type;
+            }
+        }
+
+        return 'Unknown';
     }
 }

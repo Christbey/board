@@ -38,7 +38,9 @@ class NflPlayByPlay extends Model
         'play_type',
         'down',
         'yard_line',
-        'distance'
+        'distance',
+        'start_yard_line',
+        'end_yard_line'
     ];
 
 
