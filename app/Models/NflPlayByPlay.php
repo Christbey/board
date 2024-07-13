@@ -34,6 +34,11 @@ class NflPlayByPlay extends Model
         'updated_at',
         'fg_attempts',
         'fg_yds',
+        'epa',
+        'play_type',
+        'down',
+        'yard_line',
+        'distance'
     ];
 
 
