@@ -95,7 +95,7 @@ class EloRatingSystem
                 false, // Example rested flag, replace with actual logic
                 false, // Example neutral site flag, replace with actual logic
                 false, // Example no fans flag, replace with actual logic
-                $game->season_type === 'playoff'
+                $game->season_type === 'Playoff'
             );
 
             if ($predictedRatings === null) {
@@ -135,7 +135,7 @@ class EloRatingSystem
                 $distance,
                 false, // Example neutral site flag, replace with actual logic
                 false, // Example no fans flag, replace with actual logic,
-                $game->season_type === 'playoff'
+                $game->season_type === 'Playoff'
             );
 
             $logMessage = sprintf(
@@ -160,19 +160,6 @@ class EloRatingSystem
                 'season_type' => $game->season_type,
             ]);
         }
-    }
-
-    private function logGamePredictions($game, $predictedRatings): void
-    {
-        $logMessage = sprintf(
-            "Game ID: %s - Expected Winning Percentage for %s vs %s: Home: %.2f%%, Away: %.2f%%\n" .
-            "Game ID: %s - Predicted Score: Home: %d (%.2f%%), Away: %d (%.2f%%)\n",
-            $game->game_id, $game->team_id_home, $game->team_id_away,
-            $predictedRatings['home_win_percentage'], $predictedRatings['away_win_percentage'],
-            $game->game_id, $predictedRatings['home_pts'], $predictedRatings['home_win_percentage'], $predictedRatings['away_pts'], $predictedRatings['away_win_percentage']
-        );
-
-        echo $logMessage;
     }
 
     public function getActualScorePrediction($teamA, $teamB, $distance, $neutralSite = false, $noFans = false, $isPlayoff = false): array
