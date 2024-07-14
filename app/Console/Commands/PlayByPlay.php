@@ -103,8 +103,8 @@ class PlayByPlay extends Command
                 $playType = $this->parsePlayType($playData['play'] ?? '');
 
                 if (isset($playData['downAndDistance']) && isset($playData['play'])) {
-                    $startFieldPosition = $this->eloRatingSystem->parseFieldPositionFromDownAndDistance($playData['downAndDistance']);
-                    $endFieldPosition = $this->eloRatingSystem->parseFieldPositionFromPlay($playData['play']);
+                    $startFieldPosition = $this->parseFieldPositionFromDownAndDistance($playData['downAndDistance']);
+                    $endFieldPosition = $this->parseEndFieldPositionFromPlay($playData['play'], $startFieldPosition, $playType);
 
                     if ($playType === 'Incomplete') {
                         $endFieldPosition = $startFieldPosition; // For incomplete passes, end field position is the same as start field position
@@ -175,7 +175,21 @@ class PlayByPlay extends Command
     protected function parsePlayType(string $playDescription): string
     {
         $playTypePatterns = Config::get('nfl.playTypePatterns');
+        $penaltyPatterns = Config::get('nfl.penaltyPatterns');
 
+        // Check for penalties first
+        foreach ($penaltyPatterns as $pattern) {
+            if (str_contains(strtolower($playDescription), $pattern)) {
+                return 'Penalty';
+            }
+        }
+
+        // Check for touchbacks
+        if (str_contains(strtolower($playDescription), 'touchback')) {
+            return 'Touchback';
+        }
+
+        // Check for other play types
         if (str_contains(strtolower($playDescription), 'touchdown')) {
             return 'Touchdown';
         }
@@ -187,5 +201,45 @@ class PlayByPlay extends Command
         }
 
         return 'Unknown';
+    }
+
+    protected function parseFieldPositionFromDownAndDistance(string $downAndDistance): int
+    {
+        // Extract the starting yard line from the down and distance
+        $pattern = '/at [A-Z]{2,3} (\d+)/';
+        preg_match($pattern, $downAndDistance, $matches);
+
+        return isset($matches[1]) ? (int)$matches[1] : 0;
+    }
+
+    protected function parseEndFieldPositionFromPlay(string $playDescription, int $startFieldPosition, string $playType): int
+    {
+        // Pattern to extract the ending yard line from the play description
+        $endFieldPositionPattern = '/pushed ob at [A-Z]{2,3} (\d+)/i';
+        preg_match($endFieldPositionPattern, $playDescription, $matches);
+
+        if (isset($matches[1])) {
+            return (int)$matches[1];
+        }
+
+        // Fallback to handle other cases
+        $endFieldPositionPatternFallback = '/at [A-Z]{2,3} (\d+)/i';
+        preg_match($endFieldPositionPatternFallback, $playDescription, $matches);
+
+        if (isset($matches[1])) {
+            return (int)$matches[1];
+        }
+
+        // For kickoffs and touchbacks, determine the end yard line based on specific rules
+        if ($playType === 'Touchback') {
+            return 25; // Touchback
+        }
+
+        // Calculate end position based on yardage gained if no other information is available
+        if (preg_match('/for (\d+) yards/', $playDescription, $yardMatches)) {
+            return max($startFieldPosition - (int)$yardMatches[1], 0);
+        }
+
+        return 0;
     }
 }
