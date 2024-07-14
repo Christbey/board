@@ -30,7 +30,7 @@ class TeamRatingManager
         return $this->ratings;
     }
 
-    public function updateRatings($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested = false, $awayRested = false, $neutralSite = false, $noFans = false, $isPlayoff = false, $homeQbChange = false, $awayQbChange = false): void
+    public function updateRatings($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested = false, $awayRested = false, $neutralSite = false, $noFans = false, $isPlayoff = false, $homeQbChange = false, $awayQbChange = false)
     {
         $homeFieldAdjustment = $this->eloCalculator->calculateHomeFieldAdjustment($homeTeam, $awayTeam, $distance, $neutralSite, $noFans);
         $homeRating = $this->ratings[$homeTeam] + $homeFieldAdjustment;
