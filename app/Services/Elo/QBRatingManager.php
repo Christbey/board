@@ -2,6 +2,8 @@
 
 namespace App\Services\Elo;
 
+use Illuminate\Support\Facades\DB;
+
 class QBRatingManager
 {
     private array $qbRatings;
@@ -10,6 +12,11 @@ class QBRatingManager
     {
         $teams = $this->getAllTeams();
         $this->qbRatings = array_fill_keys($teams, 0);
+    }
+
+    public function getAllTeams(): array
+    {
+        return DB::table('nfl_teams')->pluck('id')->toArray();
     }
 
     public function setQbRating($team, $rating): void

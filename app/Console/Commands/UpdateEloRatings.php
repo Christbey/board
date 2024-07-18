@@ -22,6 +22,8 @@ class UpdateEloRatings extends Command
 
     public function handle()
     {
+        $this->info('Starting Elo ratings update...');
+
         // Train Elo ratings with past seasons
         $this->eloRatingSystem->trainRatingsWithPastSeasons();
 
@@ -31,10 +33,14 @@ class UpdateEloRatings extends Command
             ->where('game_status', 'scheduled')
             ->get();
 
+        // Fetch all stadiums to minimize queries
+        $stadiums = NFLStadium::whereIn('team_id', $futureGames->pluck('team_id_home')->merge($futureGames->pluck('team_id_away'))->unique())->get()->keyBy('team_id');
+
         // Log expected winning percentages and predicted scores
+        $this->info('Logging expected winning percentages and predicted scores for future games...');
         foreach ($futureGames as $game) {
-            $homeStadium = NFLStadium::find($game->team_id_home);
-            $awayStadium = NFLStadium::find($game->team_id_away);
+            $homeStadium = $stadiums->get($game->team_id_home);
+            $awayStadium = $stadiums->get($game->team_id_away);
 
             $this->eloRatingSystem->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium);
         }
@@ -42,28 +48,19 @@ class UpdateEloRatings extends Command
         // Get updated Elo ratings
         $ratings = $this->eloRatingSystem->getRatings();
 
-        echo "Updated Elo ratings:\n";
+        $this->info('Updated Elo ratings:');
         foreach ($ratings as $team => $rating) {
-            echo "Team ID {$team}: {$rating}\n";
+            $this->line("Team ID {$team}: {$rating}");
         }
 
         // Calculate expected wins for teams
         $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
 
-        echo "\nExpected Wins:\n";
+        $this->info("\nExpected Wins:");
         foreach ($expectedWins as $teamId => $wins) {
-            echo "Team ID {$teamId}: " . round($wins, 2) . " expected wins\n";
+            $this->line("Team ID {$teamId}: " . round($wins, 2) . ' expected wins');
         }
 
-        // Calculate and log EPA ratings for completed games
-        $completedGames = NflTeamSchedule::whereNotNull('home_result')
-            ->whereNotNull('away_result')
-            ->where('game_status', 'completed')
-            ->get();
-
-        echo "\nEPA Ratings:\n";
-        foreach ($completedGames as $game) {
-            $this->eloRatingSystem->updateEPARatingsAfterGame($game->id);
-        }
+        $this->info('Elo ratings update completed.');
     }
 }

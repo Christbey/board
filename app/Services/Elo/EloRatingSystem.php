@@ -5,6 +5,7 @@ namespace App\Services\Elo;
 use App\Models\NflPrediction;
 use App\Models\NflTeamSchedule;
 use App\Models\NflPlayByPlay;
+use App\Models\NflOdds;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,16 +28,32 @@ class EloRatingSystem
         $this->dataStorage = new DataStorage();
 
         $this->teamRatingManager->initializeRatings();
+        $this->qbRatingManager->initializeQbRatings();
         $this->trainRatingsWithPastSeasons();
         $this->dataStorage->storeRatingsInDb($this->teamRatingManager->getRatings());
     }
 
-    public function updateRatings($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested = false, $awayRested = false, $neutralSite = false, $noFans = false, $isPlayoff = false, $homeQbChange = false, $awayQbChange = false): array
+    public function updateRatings(
+        int   $homeTeam,
+        int   $awayTeam,
+        int   $homeScore,
+        int   $awayScore,
+        float $distance,
+        bool  $homeRested = false,
+        bool  $awayRested = false,
+        bool  $neutralSite = false,
+        bool  $noFans = false,
+        bool  $isPlayoff = false,
+        bool  $homeQbChange = false,
+        bool  $awayQbChange = false,
+        float $homeOdds = 0.0,
+        float $awayOdds = 0.0
+    ): array
     {
-        $predictedHomePts = $this->calculatePredictedPoints($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange);
-        $predictedAwayPts = $this->calculatePredictedPoints($awayTeam, $homeTeam, $awayScore, $homeScore, $distance, $awayRested, $homeRested, $neutralSite, $noFans, $isPlayoff, $awayQbChange, $homeQbChange);
+        $predictedHomePts = $this->calculatePredictedPoints($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange, $homeOdds);
+        $predictedAwayPts = $this->calculatePredictedPoints($awayTeam, $homeTeam, $awayScore, $homeScore, $distance, $awayRested, $homeRested, $neutralSite, $noFans, $isPlayoff, $awayQbChange, $homeQbChange, -$awayOdds);
 
-        $homeWinPercentage = $this->calculateWinningPercentage($homeTeam, $awayTeam, $homeScore, $awayScore);
+        $homeWinPercentage = $this->calculateWinningPercentage($homeTeam, $awayTeam, $homeOdds, $awayOdds);
         $awayWinPercentage = 100 - $homeWinPercentage;
 
         $this->teamRatingManager->updateRatings($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange);
@@ -49,24 +66,57 @@ class EloRatingSystem
         ];
     }
 
-    private function calculatePredictedPoints($team1, $team2, $score1, $score2, $distance, $rested1, $rested2, $neutralSite, $noFans, $isPlayoff, $qbChange1, $qbChange2)
+    private function calculatePredictedPoints(
+        int   $team1,
+        int   $team2,
+        int   $score1,
+        int   $score2,
+        float $distance,
+        bool  $rested1,
+        bool  $rested2,
+        bool  $neutralSite,
+        bool  $noFans,
+        bool  $isPlayoff,
+        bool  $qbChange1,
+        bool  $qbChange2,
+        float $odds
+    ): float
     {
-        // Implement your logic to calculate the predicted points
-        // Example:
-        $predictedPoints = $score1 + 1; // Replace with actual prediction logic
+        $rating1 = $this->teamRatingManager->getRatings()[$team1];
+        $rating2 = $this->teamRatingManager->getRatings()[$team2];
+
+        $homeFieldAdjustment = $this->eloCalculator->calculateHomeFieldAdjustment($team1, $team2, $distance, $neutralSite, $noFans);
+        $restAdjustment = ($rested1 ? $this->eloCalculator->restBonus : 0) - ($rested2 ? $this->eloCalculator->restBonus : 0);
+        $qbAdjustment = ($qbChange1 ? -20 : 0) + ($qbChange2 ? 20 : 0);
+        $playoffAdjustment = $isPlayoff ? $this->eloCalculator->playoffMultiplier : 1;
+        $oddsAdjustment = $odds * $this->eloCalculator->oddsMultiplier; // Use multiplier from config
+
+        $adjustedRating1 = $rating1 + $homeFieldAdjustment + $restAdjustment + $qbAdjustment + $oddsAdjustment;
+        $adjustedRating2 = $rating2 - $restAdjustment - $qbAdjustment - $oddsAdjustment;
+
+        $pointSpread = ($adjustedRating1 - $adjustedRating2) * $playoffAdjustment;
+
+        $averagePoints = $this->eloCalculator->averagePoints;
+        $predictedPoints = $averagePoints + ($pointSpread / 2);
+
         return $predictedPoints;
     }
 
-    private function calculateWinningPercentage($homeTeam, $awayTeam, $homeScore, $awayScore)
+    private function calculateWinningPercentage(int $homeTeam, int $awayTeam, float $homeOdds, float $awayOdds): float
     {
-        // Implement your logic to calculate the winning percentage
-        // Example:
-        $homeWinPercentage = 50; // Replace with actual calculation logic
-        return $homeWinPercentage;
+        $rating1 = $this->teamRatingManager->getRatings()[$homeTeam];
+        $rating2 = $this->teamRatingManager->getRatings()[$awayTeam];
+
+        $oddsAdjustment = ($homeOdds - $awayOdds) * $this->eloCalculator->oddsMultiplier; // Use multiplier from config
+        $expectedScore1 = $this->eloCalculator->calculateExpectedScore($rating1 + $oddsAdjustment, $rating2 - $oddsAdjustment);
+
+        return $expectedScore1 * 100;
     }
 
     public function trainRatingsWithPastSeasons(): void
     {
+        $restedFlagService = new RestedFlagService();
+
         $pastSeasons = NflTeamSchedule::where(function ($query) {
             $query->whereYear('game_date', '<', now()->year)
                 ->orWhere(function ($query) {
@@ -80,10 +130,15 @@ class EloRatingSystem
             ->get();
 
         foreach ($pastSeasons as $game) {
-            $homeStadium = $game->homeStadium;
-            $awayStadium = $game->awayStadium;
+            $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
 
-            $distance = $this->distanceCalculator->calculateDistance($homeStadium, $awayStadium);
+            $homeRested = $restedFlagService->isTeamRested($game->team_id_home, $game->game_date);
+            $awayRested = $restedFlagService->isTeamRested($game->team_id_away, $game->game_date);
+
+            // Fetch odds for the game using the composite key
+            $odds = NflOdds::where('composite_key', $game->composite_key)->first();
+            $homeOdds = $odds ? $odds->h2h_home_price : 0.0;
+            $awayOdds = $odds ? $odds->h2h_away_price : 0.0;
 
             $predictedRatings = $this->updateRatings(
                 $game->team_id_home,
@@ -91,30 +146,33 @@ class EloRatingSystem
                 $game->home_pts,
                 $game->away_pts,
                 $distance,
-                false, // Example rested flag, replace with actual logic
-                false, // Example rested flag, replace with actual logic
-                false, // Example neutral site flag, replace with actual logic
-                false, // Example no fans flag, replace with actual logic
-                $game->season_type === 'Playoff'
+                $homeRested,
+                $awayRested,
+                false,
+                false,
+                $game->season_type === 'Playoff',
+                false,
+                false,
+                $homeOdds,
+                $awayOdds
             );
 
             if ($predictedRatings === null) {
-                \Log::error('Predicted ratings are null for game ID: ' . $game->game_id);
+                Log::error('Predicted ratings are null for game ID: ' . $game->game_id);
                 continue;
             }
 
             if (!isset($predictedRatings['home_pts']) || !isset($predictedRatings['away_pts'])) {
-                \Log::error('Missing keys in predicted ratings for game ID: ' . $game->game_id);
+                Log::error('Missing keys in predicted ratings for game ID: ' . $game->game_id);
                 continue;
             }
 
-            //$this->logGamePredictions($game, $predictedRatings);
+            // $this->logGamePredictions($game, $predictedRatings);
         }
     }
 
-    public function logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium): void
+    public function logExpectedWinningPercentageAndPredictedScore(NflTeamSchedule $game, $homeStadium, $awayStadium): void
     {
-        // Only process games with dates after 03-01-2024 and not in preseason
         $cutoffDate = Carbon::createFromFormat('Y-m-d', '2024-03-01');
 
         if (is_null($game->home_result) && is_null($game->away_result) &&
@@ -129,13 +187,20 @@ class EloRatingSystem
             );
             $expectedAwayScore = 1 - $expectedHomeScore;
 
+            // Fetch odds for the game using the composite key
+            $odds = NflOdds::where('composite_key', $game->composite_key)->first();
+            $homeOdds = $odds ? $odds->h2h_home_price : 0.0;
+            $awayOdds = $odds ? $odds->h2h_away_price : 0.0;
+
             $prediction = $this->getActualScorePrediction(
                 $game->team_id_home,
                 $game->team_id_away,
                 $distance,
-                false, // Example neutral site flag, replace with actual logic
-                false, // Example no fans flag, replace with actual logic,
-                $game->season_type === 'Playoff'
+                false,
+                false,
+                $game->season_type === 'Playoff',
+                $homeOdds,
+                $awayOdds
             );
 
             $logMessage = sprintf(
@@ -148,27 +213,30 @@ class EloRatingSystem
 
             echo $logMessage;
 
-            NflPrediction::createOrUpdate([
-                'game_id' => $game->game_id,
-                'team_id_home' => $game->team_id_home,
-                'team_id_away' => $game->team_id_away,
-                'game_date' => $game->game_date,
-                'home_pts_prediction' => $prediction['teamA'],
-                'away_pts_prediction' => $prediction['teamB'],
-                'home_win_percentage' => round($expectedHomeScore * 100, 2),
-                'away_win_percentage' => round($expectedAwayScore * 100, 2),
-                'season_type' => $game->season_type,
-            ]);
+            NflPrediction::updateOrCreate(
+                ['game_id' => $game->game_id],
+                [
+                    'team_id_home' => $game->team_id_home,
+                    'team_id_away' => $game->team_id_away,
+                    'game_date' => $game->game_date,
+                    'home_pts_prediction' => $prediction['teamA'],
+                    'away_pts_prediction' => $prediction['teamB'],
+                    'home_win_percentage' => round($expectedHomeScore * 100, 2),
+                    'away_win_percentage' => round($expectedAwayScore * 100, 2),
+                    'season_type' => $game->season_type,
+                ]
+            );
         }
     }
 
-    public function getActualScorePrediction($teamA, $teamB, $distance, $neutralSite = false, $noFans = false, $isPlayoff = false): array
+    public function getActualScorePrediction(int $teamA, int $teamB, float $distance, bool $neutralSite = false, bool $noFans = false, bool $isPlayoff = false, float $homeOdds = 0.0, float $awayOdds = 0.0): array
     {
         $eloDiff = $this->teamRatingManager->getRatings()[$teamA] - $this->teamRatingManager->getRatings()[$teamB] + $this->eloCalculator->calculateHomeFieldAdjustment($teamA, $teamB, $distance, $neutralSite, $noFans);
         if ($isPlayoff) {
             $eloDiff *= $this->eloCalculator->playoffMultiplier;
         }
-        $pointSpread = $this->eloCalculator->calculateExpectedPointSpread($eloDiff);
+        $oddsAdjustment = ($homeOdds - $awayOdds) * $this->eloCalculator->oddsMultiplier; // Use multiplier from config
+        $pointSpread = $this->eloCalculator->calculateExpectedPointSpread($eloDiff + $oddsAdjustment);
         $averagePoints = $this->eloCalculator->averagePoints;
 
         $expectedScoreA = $averagePoints + ($pointSpread / 2);
@@ -195,14 +263,21 @@ class EloRatingSystem
         $expectedWins = array_fill_keys(array_keys($this->teamRatingManager->getRatings()), 0);
 
         foreach ($futureGames as $game) {
-            $homeStadium = $game->homeStadium;
-            $awayStadium = $game->awayStadium;
+            $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
 
-            $distance = $this->distanceCalculator->calculateDistance($homeStadium, $awayStadium);
+            $homeTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_home];
+            $awayTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_away];
+
+            $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
+            $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
+
+            $homeRatingWithRecord = $homeTeamRating * (1 + $homeWinRecord);
+            $awayRatingWithRecord = $awayTeamRating * (1 + $awayWinRecord);
 
             $expectedHomeWinProbability = $this->eloCalculator->calculateExpectedScore(
-                $this->teamRatingManager->getRatings()[$game->team_id_home],
-                $this->teamRatingManager->getRatings()[$game->team_id_away]
+                $homeRatingWithRecord,
+                $awayRatingWithRecord,
+                false
             );
 
             $expectedAwayWinProbability = 1 - $expectedHomeWinProbability;
@@ -214,7 +289,7 @@ class EloRatingSystem
         return $expectedWins;
     }
 
-    public function updateEPARatingsAfterGame($gameId): void
+    public function updateEPARatingsAfterGame(int $gameId): void
     {
         $game = NflTeamSchedule::find($gameId);
 
@@ -224,28 +299,22 @@ class EloRatingSystem
         $this->logEPARatings($game->team_id_home, $homeEPA, $game->team_id_away, $awayEPA);
     }
 
-    public function calculateTotalEPAForTeam($teamId, $gameId): float|int
+    public function calculateTotalEPAForTeam(int $teamId, int $gameId): float
     {
         $plays = $this->getPlaysForTeamInGame($teamId, $gameId);
 
-        $totalEPA = 0;
-        foreach ($plays as $play) {
-            $totalEPA += $this->calculateEPA($play);
-        }
-
-        return $totalEPA;
+        return array_reduce($plays, fn($totalEPA, $play) => $totalEPA + $this->calculateEPA($play), 0);
     }
 
-    public function getPlaysForTeamInGame($teamId, $gameId): array
+    public function getPlaysForTeamInGame(int $teamId, int $gameId): array
     {
         return NflPlayByPlay::where('team_id', $teamId)
             ->where('game_id', $gameId)
-            ->select('play')
-            ->get()
+            ->pluck('play')
             ->toArray();
     }
 
-    public function calculateEPA($playData): float
+    public function calculateEPA(array $playData): float
     {
         $startFieldPosition = $this->parseFieldPositionFromPlay($playData['play']);
         $endFieldPosition = $this->parseFieldPositionFromPlay($playData['play']);
@@ -256,31 +325,31 @@ class EloRatingSystem
         return $expectedPointsAfter - $expectedPointsBefore;
     }
 
-    public function parseFieldPositionFromPlay($playDescription): int|string
+    public function parseFieldPositionFromPlay(string $playDescription): int
     {
         if (preg_match('/to\s[A-Z]{2,3}\s(\d{1,2})/', $playDescription, $matches)) {
-            return $matches[1]; // Return the yard line
+            return (int)$matches[1];
         }
 
         return 0; // Fallback if extraction fails
     }
 
-    public function parseFieldPositionFromDownAndDistance($downAndDistance): int|string
+    public function parseFieldPositionFromDownAndDistance(string $downAndDistance): int
     {
         if (preg_match('/at\s[A-Z]{2,3}\s(\d{1,2})/', $downAndDistance, $matches)) {
-            return $matches[1]; // Return the yard line
+            return (int)$matches[1];
         }
 
         return 0; // Fallback if extraction fails
     }
 
-    public function getExpectedPoints($fieldPosition): float
+    public function getExpectedPoints(int $fieldPosition): float
     {
         $expectedPointsTable = Config::get('nfl.expectedPointsTable');
         return $expectedPointsTable[$fieldPosition] ?? 0.0;
     }
 
-    public function logEPARatings($homeTeamId, $homeEPA, $awayTeamId, $awayEPA): void
+    public function logEPARatings(int $homeTeamId, float $homeEPA, int $awayTeamId, float $awayEPA): void
     {
         Log::info("EPA Ratings: Home Team ($homeTeamId): $homeEPA, Away Team ($awayTeamId): $awayEPA");
     }

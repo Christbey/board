@@ -34,12 +34,15 @@ class PlayerAverageStats extends Command
     {
         $query = NflPlayByPlay::where('player_id', $playerId);
 
-        if ($period === 'Q1&Q2') {
-            $query->whereIn('play_period', ['Q1', 'Q2']);
-        } elseif ($period === 'Q3&Q4') {
-            $query->whereIn('play_period', ['Q3', 'Q4']);
-        } else {
-            $query->where('play_period', $period);
+        switch ($period) {
+            case 'Q1&Q2':
+                $query->whereIn('play_period', ['Q1', 'Q2']);
+                break;
+            case 'Q3&Q4':
+                $query->whereIn('play_period', ['Q3', 'Q4']);
+                break;
+            default:
+                $query->where('play_period', $period);
         }
 
         $totalStats = $query->select(
@@ -55,31 +58,47 @@ class PlayerAverageStats extends Command
             DB::raw('COUNT(DISTINCT game_id) as game_count')
         )->first();
 
-        $result = [];
-        $gameCount = $totalStats->game_count ?: 1;
+        $gameCount = max($totalStats->game_count, 1); // Ensure we don't divide by zero
+        $stats = [
+            'kick_yards' => $totalStats->kick_yards / $gameCount,
+            'receptions' => $totalStats->receptions / $gameCount,
+            'targets' => $totalStats->targets / $gameCount,
+            'rec_yds' => $totalStats->rec_yds / $gameCount,
+            'pass_attempts' => $totalStats->pass_attempts / $gameCount,
+            'pass_yds' => $totalStats->pass_yds / $gameCount,
+            'pass_completions' => $totalStats->pass_completions / $gameCount,
+            'rush_yds' => $totalStats->rush_yds / $gameCount,
+            'carries' => $totalStats->carries / $gameCount,
+        ];
 
-        foreach (['kick_yards', 'receptions', 'targets', 'rec_yds', 'pass_attempts', 'pass_yds', 'pass_completions', 'rush_yds', 'carries'] as $stat) {
-            if ($totalStats->$stat !== null) {
-                $result[$stat] = $totalStats->$stat / $gameCount;
-            }
-        }
-
-        return $result;
+        return $stats;
     }
 
-    protected function displayStats($stats): void
+    protected function displayStats(array $stats): void
     {
-        $headers = ['Qtr', 'K.Yds', 'Rec', 'Tar', 'Rec Yds', 'Pass Att', 'Pass Yds', 'Pass Comp', 'Rush Yds', 'Carries'];
+        $headers = ['Period', 'Kick Yards', 'Receptions', 'Targets', 'Rec Yards', 'Pass Attempts', 'Pass Yards', 'Pass Completions', 'Rush Yards', 'Carries'];
         $data = [];
 
         foreach ($stats as $period => $stat) {
-            $row = [$period === 'Q1&Q2' ? 'Half 1' : ($period === 'Q3&Q4' ? 'Half 2' : $period)];
+            $row = [$this->formatPeriod($period)];
             foreach (['kick_yards', 'receptions', 'targets', 'rec_yds', 'pass_attempts', 'pass_yds', 'pass_completions', 'rush_yds', 'carries'] as $key) {
-                $row[] = $stat[$key] ?? 'N/A';
+                $row[] = round($stat[$key], 2) ?? 'N/A';
             }
             $data[] = $row;
         }
 
         $this->table($headers, $data);
+    }
+
+    protected function formatPeriod(string $period): string
+    {
+        switch ($period) {
+            case 'Q1&Q2':
+                return 'Half 1';
+            case 'Q3&Q4':
+                return 'Half 2';
+            default:
+                return $period;
+        }
     }
 }

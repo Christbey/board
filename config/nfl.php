@@ -3,9 +3,6 @@
 // config/nfl.php
 
 return [
-    'scalingFactor' => 0.35,
-    'homeAdjustment' => 2.5,
-    'spreadAdjustment' => 0.5,
     'powerRankingInfluence' => 0.3,
     'homePtsMax' => 28,
     'awayPtsMax' => 24,
@@ -98,5 +95,17 @@ return [
         'unsportsmanlike conduct',
         'roughing the passer',
         'illegal block'
+    ],
+    'elo' => [
+        'home_field_advantage' => 48,
+        'k_factor' => 20,
+        'distance_factor' => 4,
+        'rest_bonus' => 25,
+        'playoff_multiplier' => 1.2,
+        'average_points' => 20.5,
+        'odds_multiplier' => 0.1, // Multiplier for odds adjustment
+        'scaling_factor' => 0.35,
+        'home_adjustment' => 2.5,
+        'spread_adjustment' => 0.5,
     ],
 ];
