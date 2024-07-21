@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use GuzzleHttp\Client;
@@ -10,7 +11,7 @@ use Carbon\Carbon;
 
 class FetchStadiumWeather extends Command
 {
-    protected $signature = 'fetch:stadium-weather {year}';
+    protected $signature = '{year}';
     protected $description = 'Fetch historical weather data for NFL games from the Open-Meteo API';
 
     private $client;
@@ -98,7 +99,7 @@ class FetchStadiumWeather extends Command
             }
         } catch (RequestException $e) {
             $this->handleRequestException($e, $stadium->stadium_name);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error("Failed to fetch weather data for {$stadium->stadium_name}: " . $e->getMessage());
         }
     }
