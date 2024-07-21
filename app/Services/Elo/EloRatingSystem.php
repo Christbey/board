@@ -46,8 +46,8 @@ class EloRatingSystem
         bool  $isPlayoff = false,
         bool  $homeQbChange = false,
         bool  $awayQbChange = false,
-        float $homeOdds = 0.0,
-        float $awayOdds = 0.0
+        float $homeOdds,
+        float $awayOdds,
     ): array
     {
         $predictedHomePts = $this->calculatePredictedPoints($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange, $homeOdds);
@@ -153,8 +153,8 @@ class EloRatingSystem
                 $game->season_type === 'Playoff',
                 false,
                 false,
-                $homeOdds,
-                $awayOdds
+                $homeOdds ?? 0.0,
+                $awayOdds ?? 0.0
             );
 
             if ($predictedRatings === null) {

@@ -1,37 +1,33 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Livewire;
 
+use Livewire\Component;
 use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
 use App\Models\NflOdds;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Services\Elo\EloRatingSystem;
 
-class NflController extends Controller
+class NflTeams extends Component
 {
-    protected string $apiKey;
-    protected string $baseUrl;
-    protected EloRatingSystem $eloRatingSystem;
+    public $teams;
+    public $expectedWins;
+    public $nextOpponents = [];
+    public $selectedTeam;
+    public $showModal = false;
 
-    public function __construct(EloRatingSystem $eloRatingSystem)
-    {
-        $this->apiKey = config('services.oddsapi.key');
-        $this->baseUrl = config('services.oddsapi.base_url');
-        $this->eloRatingSystem = $eloRatingSystem;
-    }
+    protected $listeners = ['openModal' => 'openModal'];
 
-    public function index()
+    public function mount(EloRatingSystem $eloRatingSystem)
     {
-        $teams = NflTeam::all();
-        $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
+        $this->teams = NflTeam::all();
+        $this->expectedWins = $eloRatingSystem->calculateExpectedWinsForTeams();
 
         $seasonStartDate = Carbon::parse('2024-09-01');
         $seasonEndDate = Carbon::parse('2024-12-31');
 
-        $nextOpponents = [];
-        foreach ($teams as $team) {
+        foreach ($this->teams as $team) {
             $schedules = NflTeamSchedule::where(function ($query) use ($team) {
                 $query->where('team_id_home', $team->id)
                     ->orWhere('team_id_away', $team->id);
@@ -44,20 +40,31 @@ class NflController extends Controller
                 ->get(['id', 'game_date', 'home', 'away', 'team_id_home', 'team_id_away']);
 
             foreach ($schedules as $schedule) {
-                // Generate composite key using the method in the model
                 $compositeKey = NflTeamSchedule::generateCompositeKey($schedule);
-
-                // Fetch odds using the composite key
                 $odds = NflOdds::where('composite_key', $compositeKey)->first(['spread_home_point', 'spread_away_point']);
 
-                $schedule->composite_key = $compositeKey; // Store the composite key in the schedule
+                $schedule->composite_key = $compositeKey;
                 $schedule->spread_home = $odds ? $odds->spread_home_point : null;
                 $schedule->spread_away = $odds ? $odds->spread_away_point : null;
             }
 
-            $nextOpponents[$team->id] = $schedules;
+            $this->nextOpponents[$team->id] = $schedules;
         }
+    }
 
-        return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
+    public function openModal($teamId)
+    {
+        $this->selectedTeam = $this->teams->find($teamId);
+        $this->showModal = true;
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+    }
+
+    public function render()
+    {
+        return view('livewire.nfl-teams');
     }
 }

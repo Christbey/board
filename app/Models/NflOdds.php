@@ -42,14 +42,20 @@ class NflOdds extends Model
         });
     }
 
-    public static function generateCompositeKey($model)
+    public static function generateCompositeKey($model): string
     {
-        $date = Carbon::parse($model->commence_time)->format('Ymd');
-        $homeTeam = $model->home_team_id;
-        $awayTeam = $model->away_team_id;
+        $year = Carbon::parse($model->commence_time)->format('Y');
 
-        return "{$date}_{$homeTeam}_{$awayTeam}";
+        // Fetch team abbreviations using the team IDs
+        $homeTeam = NflTeam::find($model->home_team_id);
+        $awayTeam = NflTeam::find($model->away_team_id);
+
+        $homeTeamAbv = $homeTeam ? $homeTeam->abbreviation : 'UNK'; // 'UNK' for unknown abbreviation
+        $awayTeamAbv = $awayTeam ? $awayTeam->abbreviation : 'UNK';
+
+        return "{$year}_{$homeTeamAbv}_{$awayTeamAbv}";
     }
+
 
     public function homeTeam()
     {
@@ -67,6 +73,11 @@ class NflOdds extends Model
     }
 
     public function teamSchedule()
+    {
+        return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
+    }
+
+    public function schedule()
     {
         return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
     }

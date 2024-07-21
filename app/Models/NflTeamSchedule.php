@@ -41,12 +41,18 @@ class NflTeamSchedule extends Model
 
     public static function generateCompositeKey($model): string
     {
-        $date = Carbon::parse($model->game_date)->format('Ymd');
-        $homeTeam = $model->team_id_home;
-        $awayTeam = $model->team_id_away;
+        $year = Carbon::parse($model->game_date)->format('Y');
 
-        return "{$date}_{$homeTeam}_{$awayTeam}";
+        // Fetch team abbreviations using the team IDs
+        $homeTeam = NflTeam::find($model->team_id_home);
+        $awayTeam = NflTeam::find($model->team_id_away);
+
+        $homeTeamAbv = $homeTeam ? $homeTeam->abbreviation : 'UNK'; // 'UNK' for unknown abbreviation
+        $awayTeamAbv = $awayTeam ? $awayTeam->abbreviation : 'UNK';
+
+        return "{$year}_{$homeTeamAbv}_{$awayTeamAbv}";
     }
+
 
     public function homeTeam()
     {
