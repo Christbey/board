@@ -3,26 +3,27 @@
     use Carbon\Carbon;
 @endphp
 
-<div x-data="{ showModal: @entangle('showModal') }" class="container mx-auto p-6"
+<div x-data="{ showModal: @entangle('showModal') }" class="container mx-auto p-4 sm:p-6"
      @keydown.escape.window="showModal = false">
-    <h1 class="text-3xl font-bold mb-8 text-center">NFL Teams</h1>
-    <div class="bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-6 text-center">NFL Teams</h1>
+    <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team Name
+                <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Team Name
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected
-                    Wins
+                <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Expected Wins
                 </th>
             </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
             @foreach ($teams as $team)
                 <tr wire:click="openModal({{ $team->id }})" class="cursor-pointer hover:bg-gray-100">
-                    <td class="px-6 py-4 whitespace-nowrap"
+                    <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap"
                         style="color: {{ $team->primary_color }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $expectedWins[$team->id] ?? 'N/A' }}</td>
+                    <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ $expectedWins[$team->id] ?? 'N/A' }}</td>
                 </tr>
             @endforeach
             </tbody>
@@ -32,12 +33,12 @@
     <!-- Custom Modal -->
     <div x-show="showModal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
          aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen text-center sm:block sm:p-0">
+        <div class="flex items-center justify-center min-h-screen text-center sm:block sm:p-0">
             <div x-show="showModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                  aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div x-show="showModal" x-cloak
-                 class="inline-block align-bottom bg-white rounded-lg px-6 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                 class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:px-6 sm:pt-6 sm:pb-5">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900"
                         id="modal-title">{{ $selectedTeam->name ?? '' }}</h3>
@@ -59,13 +60,13 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Opponent
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Date
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Spread
                                     </th>
                                 </tr>
@@ -74,15 +75,15 @@
                                 @if(isset($nextOpponents[$selectedTeam->id]))
                                     @foreach($nextOpponents[$selectedTeam->id] as $opponent)
                                         <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-3 py-2 whitespace-nowrap">
                                                 @if($opponent->team_id_home == $selectedTeam->id)
                                                     vs. {{ $opponent->away }}
                                                 @else
                                                     @ {{ $opponent->home }}
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ Carbon::parse($opponent->game_date)->toFormattedDateString() }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-3 py-2 whitespace-nowrap">{{ Carbon::parse($opponent->game_date)->toFormattedDateString() }}</td>
+                                            <td class="px-3 py-2 whitespace-nowrap">
                                                 @if($opponent->team_id_home == $selectedTeam->id)
                                                     {{ $opponent->odds->spread_home_point ?? 'N/A' }}
                                                 @else
@@ -98,10 +99,10 @@
                     </div>
                 @endif
                 <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <button @click="showModal = false" type="button" wire:click="closeModal"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Close
-                    </button>
+                    <a href="{{ route('nfl.show', ['team' => $selectedTeam->id]) }}"
+                       class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        View Team
+                    </a>
                 </div>
             </div>
         </div>

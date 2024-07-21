@@ -67,3 +67,6 @@ Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name
 use App\Http\Controllers\NFLStatsController;
 
 Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore']);
+
+
+Route::get('/nfl/teams/{team}', [NflController::class, 'show'])->name('nfl.show');

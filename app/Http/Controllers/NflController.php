@@ -60,4 +60,12 @@ class NflController extends Controller
 
         return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }
+
+    public function show(NflTeam $team)
+    {
+        // Fetch additional data if needed
+        // For example, the team's schedule or stats
+
+        return view('nfl.show', compact('team'));
+    }
 }
