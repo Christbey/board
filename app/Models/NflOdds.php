@@ -77,6 +77,7 @@ class NflOdds extends Model
         return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
     }
 
+
     public function schedule()
     {
         return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');

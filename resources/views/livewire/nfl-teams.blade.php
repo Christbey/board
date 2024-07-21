@@ -1,5 +1,6 @@
 @php
-    use App\Helpers\ColorHelper;use Carbon\Carbon;
+    use App\Helpers\ColorHelper;
+    use Carbon\Carbon;
 @endphp
 
 <div x-data="{ showModal: @entangle('showModal') }">
@@ -26,9 +27,9 @@
             </tbody>
         </table>
 
-        <!-- Modal -->
-        <div wire:ignore.self class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
-             aria-modal="true" x-show="showModal">
+        <!-- Custom Modal -->
+        <div x-show="showModal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+             aria-modal="true">
             <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div x-show="showModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                      aria-hidden="true"></div>
@@ -77,8 +78,8 @@
                                                     <tr>
                                                         <td class="px-6 py-4 whitespace-nowrap">{{ $opponent->team_id_home == $selectedTeam->id ? $opponent->away : $opponent->home }}</td>
                                                         <td class="px-6 py-4 whitespace-nowrap">{{ Carbon::parse($opponent->game_date)->toFormattedDateString() }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap">{{ $opponent->spread_home }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap">{{ $opponent->spread_away }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap">{{ $opponent->odds->spread_home_point ?? 'N/A' }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap">{{ $opponent->odds->spread_away_point ?? 'N/A' }}</td>
                                                     </tr>
                                                 @endforeach
                                             @endif

@@ -11,23 +11,10 @@ class NflTeamSchedule extends Model
     use HasFactory;
 
     protected $fillable = [
-        'game_id',
-        'season_type',
-        'away',
-        'team_id_home',
-        'game_date',
-        'game_status',
-        'game_week',
-        'team_id_away',
-        'home',
-        'away_result',
-        'home_pts',
-        'game_time',
-        'home_result',
-        'away_pts',
-        'composite_key',
+        'game_id', 'season_type', 'away', 'team_id_home', 'game_date', 'game_status',
+        'game_week', 'team_id_away', 'home', 'away_result', 'home_pts', 'game_time',
+        'home_result', 'away_pts', 'composite_key'
     ];
-
     protected $dates = ['game_date'];
 
     protected static function boot()
@@ -69,8 +56,10 @@ class NflTeamSchedule extends Model
         return $this->hasMany(NflPlayerStat::class, 'game_id', 'game_id');
     }
 
+    // In NflTeamSchedule.php
     public function odds()
     {
         return $this->hasOne(NflOdds::class, 'composite_key', 'composite_key');
     }
+
 }

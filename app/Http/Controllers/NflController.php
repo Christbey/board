@@ -40,7 +40,7 @@ class NflController extends Controller
                 ->whereNull('home_result')
                 ->whereNull('away_result')
                 ->orderBy('game_date')
-                ->take(3)
+                ->take(5)
                 ->get(['id', 'game_date', 'home', 'away', 'team_id_home', 'team_id_away']);
 
             foreach ($schedules as $schedule) {
