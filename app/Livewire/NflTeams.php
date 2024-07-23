@@ -4,55 +4,59 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\NflTeam;
-use App\Models\NflPrediction;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
+use App\Models\NflTeamSchedule;
+use App\Models\NflOdds;
+use Carbon\Carbon;
+use App\Services\Elo\EloRatingSystem;
 
 class NflTeams extends Component
 {
     public $teams;
     public $expectedWins;
+    public $nextOpponents = [];
+    public $selectedTeam;
+    public $showModal = false;
 
-    public function mount()
+    protected $listeners = ['openModal' => 'openModal'];
+
+    public function mount(EloRatingSystem $eloRatingSystem)
     {
-        // Dispatch the command to log expected winning percentage and predicted scores
-        Artisan::call('log:predicted-scores');
-
         $this->teams = NflTeam::all();
-
-        // Calculate expected wins for each team
-        $this->expectedWins = $this->calculateExpectedWinsForAllTeams($this->teams);
-
-        Log::info('Expected Wins:', $this->expectedWins);
+        $this->expectedWins = $eloRatingSystem->calculateExpectedWinsForTeams();
     }
 
-    private function calculateExpectedWins($teamId)
+    public function openModal($teamId)
     {
-        $homePredictions = NflPrediction::where('team_id_home', $teamId)->get();
-        $awayPredictions = NflPrediction::where('team_id_away', $teamId)->get();
+        $this->selectedTeam = NflTeam::find($teamId);
 
-        $expectedWins = $homePredictions->sum('home_win_percentage') / 100 +
-            $awayPredictions->sum('away_win_percentage') / 100;
+        if ($this->selectedTeam) {
+            $seasonStartDate = Carbon::parse('2024-09-01');
+            $seasonEndDate = Carbon::parse('2024-12-31');
 
-        return $expectedWins;
-    }
+            $schedules = NflTeamSchedule::with('odds')
+                ->where(function ($query) use ($teamId) {
+                    $query->where('team_id_home', $teamId)
+                        ->orWhere('team_id_away', $teamId);
+                })
+                ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+                ->whereNull('home_result')
+                ->whereNull('away_result')
+                ->orderBy('game_date')
+                ->take(3)
+                ->get();
 
-    private function calculateExpectedWinsForAllTeams($teams)
-    {
-        $expectedWins = [];
-
-        foreach ($teams as $team) {
-            $expectedWins[$team->id] = $this->calculateExpectedWins($team->id);
+            $this->nextOpponents[$teamId] = $schedules;
+            $this->showModal = true;
         }
+    }
 
-        return $expectedWins;
+    public function closeModal()
+    {
+        $this->showModal = false;
     }
 
     public function render()
     {
-        return view('livewire.nfl-teams', [
-            'teams' => $this->teams,
-            'expectedWins' => $this->expectedWins
-        ]);
+        return view('livewire.nfl-teams');
     }
 }

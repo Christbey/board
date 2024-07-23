@@ -3,76 +3,71 @@
 namespace App\Http\Controllers;
 
 use App\Models\NflTeam;
-use App\Models\NflPrediction;
+use App\Models\NflTeamSchedule;
+use App\Models\NflOdds;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Artisan;
+use Carbon\Carbon;
+use App\Services\Elo\EloRatingSystem;
 
 class NflController extends Controller
 {
     protected string $apiKey;
     protected string $baseUrl;
+    protected EloRatingSystem $eloRatingSystem;
 
-    public function __construct()
+    public function __construct(EloRatingSystem $eloRatingSystem)
     {
         $this->apiKey = config('services.oddsapi.key');
         $this->baseUrl = config('services.oddsapi.base_url');
+        $this->eloRatingSystem = $eloRatingSystem;
     }
 
     public function index()
     {
-        // Dispatch the command to log expected winning percentage and predicted scores
-        Artisan::call('log:predicted-scores');
-
         $teams = NflTeam::all();
+        $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
 
-        // Calculate expected wins for each team
-        $expectedWins = $this->calculateExpectedWinsForAllTeams($teams);
+        $seasonStartDate = Carbon::parse('2024-09-01');
+        $seasonEndDate = Carbon::parse('2024-12-31');
 
-        Log::info('Expected Wins:', $expectedWins);
+        $nextOpponents = [];
+        foreach ($teams as $team) {
+            $schedules = NflTeamSchedule::where(function ($query) use ($team) {
+                $query->where('team_id_home', $team->id)
+                    ->orWhere('team_id_away', $team->id);
+            })
+                ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+                ->whereNull('home_result')
+                ->whereNull('away_result')
+                ->orderBy('game_date')
+                ->take(5)
+                ->get(['id', 'game_date', 'home', 'away', 'team_id_home', 'team_id_away']);
 
-        return view('nfl.teams', compact('teams', 'expectedWins'));
+            foreach ($schedules as $schedule) {
+                // Generate composite key using the method in the model
+                $compositeKey = NflTeamSchedule::generateCompositeKey($schedule);
+
+                // Fetch odds using the composite key
+                $odds = NflOdds::where('composite_key', $compositeKey)->first(['spread_home_point', 'spread_away_point']);
+
+                $schedule->composite_key = $compositeKey; // Store the composite key in the schedule
+                $schedule->spread_home = $odds ? $odds->spread_home_point : null;
+                $schedule->spread_away = $odds ? $odds->spread_away_point : null;
+            }
+
+            $nextOpponents[$team->id] = $schedules;
+        }
+
+        return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }
 
-    public function show($teamId)
+
+    public function show($teamId, EloRatingSystem $eloRatingSystem)
     {
-        // Dispatch the command to log expected winning percentage and predicted scores
-        Artisan::call('log:predicted-scores');
-
-        Log::info('Showing team with ID:', ['teamId' => $teamId]);
-
         $team = NflTeam::findOrFail($teamId);
-        Log::info('Team:', ['team' => $team]);
-
-        $homePredictions = NflPrediction::where('team_id_home', $team->id)->get();
-        $awayPredictions = NflPrediction::where('team_id_away', $team->id)->get();
-
-        $expectedWins = $homePredictions->sum('home_win_percentage') / 100 +
-            $awayPredictions->sum('away_win_percentage') / 100;
-        Log::info('Expected Wins:', ['expectedWins' => $expectedWins]);
-
+        $expectedWins = $eloRatingSystem->calculateExpectedWins($team->id);
         return view('nfl.show', compact('team', 'expectedWins'));
     }
 
-    private function calculateExpectedWins($teamId)
-    {
-        $homePredictions = NflPrediction::where('team_id_home', $teamId)->get();
-        $awayPredictions = NflPrediction::where('team_id_away', $teamId)->get();
 
-        $expectedWins = $homePredictions->sum('home_win_percentage') / 100 +
-            $awayPredictions->sum('away_win_percentage') / 100;
-
-        return $expectedWins;
-    }
-
-    private function calculateExpectedWinsForAllTeams($teams)
-    {
-        $expectedWins = [];
-
-        foreach ($teams as $team) {
-            $expectedWins[$team->id] = $this->calculateExpectedWins($team->id);
-        }
-
-        return $expectedWins;
-    }
 }
