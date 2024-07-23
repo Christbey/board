@@ -1,6 +1,5 @@
 <?php
 
-// In NflTeams.php
 namespace App\Livewire;
 
 use Livewire\Component;
@@ -9,6 +8,7 @@ use App\Models\NflTeamSchedule;
 use App\Models\NflOdds;
 use Carbon\Carbon;
 use App\Services\Elo\EloRatingSystem;
+use App\Helpers\NflHelper;
 
 class NflTeams extends Component
 {
@@ -24,15 +24,19 @@ class NflTeams extends Component
     {
         $this->teams = NflTeam::all();
         $this->expectedWins = $eloRatingSystem->calculateExpectedWinsForTeams();
+    }
 
-        $seasonStartDate = Carbon::parse('2024-09-01');
-        $seasonEndDate = Carbon::parse('2024-12-31');
+    public function openModal($teamId)
+    {
+        $this->selectedTeam = NflTeam::find($teamId);
 
-        foreach ($this->teams as $team) {
+        if ($this->selectedTeam) {
+            [$seasonStartDate, $seasonEndDate] = NflHelper::getSeasonDateRange(2024);
+
             $schedules = NflTeamSchedule::with('odds')
-                ->where(function ($query) use ($team) {
-                    $query->where('team_id_home', $team->id)
-                        ->orWhere('team_id_away', $team->id);
+                ->where(function ($query) use ($teamId) {
+                    $query->where('team_id_home', $teamId)
+                        ->orWhere('team_id_away', $teamId);
                 })
                 ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
                 ->whereNull('home_result')
@@ -41,20 +45,9 @@ class NflTeams extends Component
                 ->take(3)
                 ->get();
 
-            // Debugging
-            logger()->info('Schedules for team:', ['team' => $team->name, 'schedules' => $schedules]);
-
-            $this->nextOpponents[$team->id] = $schedules;
+            $this->nextOpponents[$teamId] = $schedules;
+            $this->showModal = true;
         }
-
-        // Debugging
-        logger()->info('Next opponents:', ['nextOpponents' => $this->nextOpponents]);
-    }
-
-    public function openModal($teamId)
-    {
-        $this->selectedTeam = $this->teams->find($teamId);
-        $this->showModal = true;
     }
 
     public function closeModal()

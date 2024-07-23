@@ -51,8 +51,8 @@ class NflController extends Controller
                 $odds = NflOdds::where('composite_key', $compositeKey)->first(['spread_home_point', 'spread_away_point']);
 
                 $schedule->composite_key = $compositeKey; // Store the composite key in the schedule
-                $schedule->spread_home = $odds ? $odds->spread_home_point : null;
-                $schedule->spread_away = $odds ? $odds->spread_away_point : null;
+                $schedule->spread_home = $odds?->spread_home_point;
+                $schedule->spread_away = $odds?->spread_away_point;
             }
 
             $nextOpponents[$team->id] = $schedules;
@@ -61,11 +61,13 @@ class NflController extends Controller
         return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }
 
-    public function show(NflTeam $team)
-    {
-        // Fetch additional data if needed
-        // For example, the team's schedule or stats
 
-        return view('nfl.show', compact('team'));
+    public function show($teamId, EloRatingSystem $eloRatingSystem)
+    {
+        $team = NflTeam::findOrFail($teamId);
+        $expectedWins = $eloRatingSystem->calculateExpectedWins($team->id);
+        return view('nfl.show', compact('team', 'expectedWins'));
     }
+
+
 }

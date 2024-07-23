@@ -1,10 +1,10 @@
 @php
     use App\Helpers\ColorHelper;
     use Carbon\Carbon;
+    use App\Helpers\FormatHelper;
 @endphp
 
-<div x-data="{ showModal: @entangle('showModal') }" class="container mx-auto p-4 sm:p-6"
-     @keydown.escape.window="showModal = false">
+<div x-data="{ showModal: @entangle('showModal') }" class="container mx-auto p-4 sm:p-6">
     <h1 class="text-2xl sm:text-3xl font-bold mb-6 text-center">NFL Teams</h1>
     <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
         <table class="min-w-full divide-y divide-gray-200">
@@ -22,7 +22,7 @@
             @foreach ($teams as $team)
                 <tr wire:click="openModal({{ $team->id }})" class="cursor-pointer hover:bg-gray-100">
                     <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap"
-                        style="color: {{ $team->primary_color }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
+                        style="color: {{ $team->primary_color ?? '#000000' }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
                     <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ $expectedWins[$team->id] ?? 'N/A' }}</td>
                 </tr>
             @endforeach
@@ -32,7 +32,7 @@
 
     <!-- Custom Modal -->
     <div x-show="showModal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
-         aria-modal="true">
+         aria-modal="true" @keydown.escape.window="showModal = false">
         <div class="flex items-center justify-center min-h-screen text-center sm:block sm:p-0">
             <div x-show="showModal" x-cloak class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                  aria-hidden="true"></div>
@@ -53,7 +53,7 @@
                 </div>
                 @if($selectedTeam)
                     <div class="mt-2">
-                        <p class="text-sm text-gray-500">{{ 'Stadium: ' . ($selectedTeam->stadium ?? '') }}</p>
+                        <p class="text-sm text-gray-500">{{ 'Stadium: ' . ($selectedTeam->stadium ?? 'N/A') }}</p>
                         <p class="text-sm text-gray-500">{{ 'Expected Wins: ' . ($expectedWins[$selectedTeam->id] ?? 'N/A') }}</p>
                         <!-- Next Opponents Table -->
                         <div class="mt-4">
@@ -76,13 +76,9 @@
                                     @foreach($nextOpponents[$selectedTeam->id] as $opponent)
                                         <tr>
                                             <td class="px-3 py-2 whitespace-nowrap">
-                                                @if($opponent->team_id_home == $selectedTeam->id)
-                                                    vs. {{ $opponent->away }}
-                                                @else
-                                                    @ {{ $opponent->home }}
-                                                @endif
+                                                {{ FormatHelper::formatOpponent($opponent, $selectedTeam->id) }}
                                             </td>
-                                            <td class="px-3 py-2 whitespace-nowrap">{{ Carbon::parse($opponent->game_date)->toFormattedDateString() }}</td>
+                                            <td class="px-3 py-2 whitespace-nowrap">{{ Carbon::parse($opponent->game_date ?? now())->toFormattedDateString() }}</td>
                                             <td class="px-3 py-2 whitespace-nowrap">
                                                 @if($opponent->team_id_home == $selectedTeam->id)
                                                     {{ $opponent->odds->spread_home_point ?? 'N/A' }}
@@ -97,13 +93,13 @@
                             </table>
                         </div>
                     </div>
+                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                        <a href="{{ $selectedTeam ? route('nfl.show', ['team' => $selectedTeam->id]) : '#' }}"
+                           class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            View Team
+                        </a>
+                    </div>
                 @endif
-                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                    <a href="{{ route('nfl.show', ['team' => $selectedTeam->id]) }}"
-                       class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        View Team
-                    </a>
-                </div>
             </div>
         </div>
     </div>

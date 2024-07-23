@@ -18,4 +18,17 @@ class FormatHelper
                 return $value;
         }
     }
+
+    public static function formatOpponent($opponent, $selectedTeamId)
+    {
+        if (!$opponent) {
+            return 'Unknown Opponent';
+        }
+
+        if ($opponent->team_id_home == $selectedTeamId) {
+            return 'vs. ' . ($opponent->away ?? 'Unknown Team');
+        } else {
+            return '@ ' . ($opponent->home ?? 'Unknown Team');
+        }
+    }
 }

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\Elo\EloRatingSystem;
 use App\Models\NflTeamSchedule;
-use App\Models\NFLStadium;
+use App\Models\NflStadium;
 
 class UpdateEloRatings extends Command
 {
@@ -34,7 +34,7 @@ class UpdateEloRatings extends Command
             ->get();
 
         // Fetch all stadiums to minimize queries
-        $stadiums = NFLStadium::whereIn('team_id', $futureGames->pluck('team_id_home')->merge($futureGames->pluck('team_id_away'))->unique())->get()->keyBy('team_id');
+        $stadiums = NflStadium::whereIn('team_id', $futureGames->pluck('team_id_home')->merge($futureGames->pluck('team_id_away'))->unique())->get()->keyBy('team_id');
 
         // Log expected winning percentages and predicted scores
         $this->info('Logging expected winning percentages and predicted scores for future games...');

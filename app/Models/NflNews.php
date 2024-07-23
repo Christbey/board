@@ -10,6 +10,6 @@ class NflNews extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'link'
-];
+        'title', 'link', 'team_id', 'player_id',
+    ];
 }

@@ -353,4 +353,10 @@ class EloRatingSystem
     {
         Log::info("EPA Ratings: Home Team ($homeTeamId): $homeEPA, Away Team ($awayTeamId): $awayEPA");
     }
+
+    public function calculateExpectedWins($teamId): float
+    {
+        $expectedWins = $this->calculateExpectedWinsForTeams();
+        return $expectedWins[$teamId] ?? 0.0;
+    }
 }
