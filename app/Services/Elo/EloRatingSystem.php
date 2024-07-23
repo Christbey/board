@@ -255,11 +255,18 @@ class EloRatingSystem
 
     public function calculateExpectedWinsForTeams(): array
     {
-        $futureGames = NflTeamSchedule::whereNull('home_result')
-            ->whereNull('away_result')
+        $futureGames = NflTeamSchedule::where(function ($query) {
+            $query->whereNull('home_result')
+                ->orWhere('home_result', '');
+        })
+            ->where(function ($query) {
+                $query->whereNull('away_result')
+                    ->orWhere('away_result', '');
+            })
             ->where('game_status', 'scheduled')
             ->get();
 
+        Log::info('Fetched Future Games Count', ['count' => $futureGames->count()]);
         Log::info('Fetched Future Games', ['futureGames' => $futureGames]);
 
         $expectedWins = array_fill_keys(array_keys($this->teamRatingManager->getRatings()), 0);
