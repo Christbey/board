@@ -24,39 +24,38 @@ class NflController extends Controller
 
     public function index()
     {
-        $teams = NflTeam::all();
-        $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
-
-        $seasonStartDate = Carbon::parse('2024-09-01');
-        $seasonEndDate = Carbon::parse('2024-12-31');
-
-        $nextOpponents = [];
-        foreach ($teams as $team) {
-            $schedules = NflTeamSchedule::where(function ($query) use ($team) {
-                $query->where('team_id_home', $team->id)
-                    ->orWhere('team_id_away', $team->id);
-            })
-                ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+        $teams = NflTeam::with(['schedules' => function ($query) {
+            $seasonStartDate = Carbon::parse('2024-09-01');
+            $seasonEndDate = Carbon::parse('2024-12-31');
+            $query->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
                 ->whereNull('home_result')
                 ->whereNull('away_result')
                 ->orderBy('game_date')
-                ->take(5)
-                ->get(['id', 'game_date', 'home', 'away', 'team_id_home', 'team_id_away']);
+                ->take(5);
+        }])->get();
 
-            foreach ($schedules as $schedule) {
-                // Generate composite key using the method in the model
-                $compositeKey = NflTeamSchedule::generateCompositeKey($schedule);
+        $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
 
-                // Fetch odds using the composite key
-                $odds = NflOdds::where('composite_key', $compositeKey)->first(['spread_home_point', 'spread_away_point']);
+        $schedules = $teams->flatMap->schedules;
 
-                $schedule->composite_key = $compositeKey; // Store the composite key in the schedule
-                $schedule->spread_home = $odds ? $odds->spread_home_point : null;
-                $schedule->spread_away = $odds ? $odds->spread_away_point : null;
-            }
+        // Generate composite keys for all schedules
+        $compositeKeys = $schedules->map(function ($schedule) {
+            return NflTeamSchedule::generateCompositeKey($schedule);
+        });
 
-            $nextOpponents[$team->id] = $schedules;
-        }
+        // Fetch all odds in a single query
+        $odds = NflOdds::whereIn('composite_key', $compositeKeys)->get()->keyBy('composite_key');
+
+        // Attach the odds to the schedules
+        $schedules->each(function ($schedule) use ($odds) {
+            $compositeKey = NflTeamSchedule::generateCompositeKey($schedule);
+            $schedule->spread_home = $odds->get($compositeKey)->spread_home_point ?? null;
+            $schedule->spread_away = $odds->get($compositeKey)->spread_away_point ?? null;
+        });
+
+        $nextOpponents = $teams->mapWithKeys(function ($team) {
+            return [$team->id => $team->schedules];
+        });
 
         return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }

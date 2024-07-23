@@ -62,4 +62,5 @@ class NflTeamSchedule extends Model
         return $this->hasOne(NflOdds::class, 'composite_key', 'composite_key');
     }
 
+
 }

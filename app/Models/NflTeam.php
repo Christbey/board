@@ -40,6 +40,7 @@ class NflTeam extends Model
     {
         return $this->hasMany(Odds::class, 'away_team_id');
     }
+
     public function rankings()
     {
         return $this->hasMany(NflRanking::class, 'team_id');
@@ -53,5 +54,11 @@ class NflTeam extends Model
     public function injuries()
     {
         return $this->hasMany(NflInjury::class, 'team_id');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(NflTeamSchedule::class, 'team_id_home')
+            ->orWhere('team_id_away', $this->id);
     }
 }
