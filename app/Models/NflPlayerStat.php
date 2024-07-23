@@ -23,8 +23,9 @@ class NflPlayerStat extends Model
 
     public function player()
     {
-        return $this->belongsTo(NFLPlayer::class, 'player_id', 'player_id');
+        return $this->belongsTo(NflPlayer::class, 'player_id', 'player_id');
     }
+
     public function gameSchedule()
     {
         return $this->belongsTo(NflTeamSchedule::class, 'game_id', 'game_id');
