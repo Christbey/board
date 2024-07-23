@@ -189,8 +189,8 @@ class EloRatingSystem
 
             // Fetch odds for the game using the composite key
             $odds = NflOdds::where('composite_key', $game->composite_key)->first();
-            $homeOdds = $odds ? $odds->h2h_home_price : 0.0;
-            $awayOdds = $odds ? $odds->h2h_away_price : 0.0;
+            $homeOdds = $odds ? (float)$odds->h2h_home_price : 0.0;
+            $awayOdds = $odds ? (float)$odds->h2h_away_price : 0.0;
 
             $prediction = $this->getActualScorePrediction(
                 $game->team_id_home,
@@ -260,31 +260,48 @@ class EloRatingSystem
             ->where('game_status', 'scheduled')
             ->get();
 
-        $expectedWins = array_fill_keys(array_keys($this->teamRatingManager->getRatings()), 0);
+        $teamRatings = $this->teamRatingManager->getRatings();
+        Log::info('Team Ratings:', $teamRatings);
 
-        foreach ($futureGames as $game) {
-            $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
+        $expectedWins = array_fill_keys(array_keys($teamRatings), 0);
 
-            $homeTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_home];
-            $awayTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_away];
+        $batchSize = 100; // Define batch size
+        $batches = $futureGames->chunk($batchSize);
 
-            $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
-            $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
+        foreach ($batches as $batch) {
+            foreach ($batch as $game) {
+                $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
+                Log::info('Game:', ['game_id' => $game->id, 'home_team' => $game->team_id_home, 'away_team' => $game->team_id_away, 'distance' => $distance]);
 
-            $homeRatingWithRecord = $homeTeamRating * (1 + $homeWinRecord);
-            $awayRatingWithRecord = $awayTeamRating * (1 + $awayWinRecord);
+                $homeTeamRating = $teamRatings[$game->team_id_home] ?? 0;
+                $awayTeamRating = $teamRatings[$game->team_id_away] ?? 0;
 
-            $expectedHomeWinProbability = $this->eloCalculator->calculateExpectedScore(
-                $homeRatingWithRecord,
-                $awayRatingWithRecord,
-                false
-            );
+                Log::info('Ratings:', ['home_team' => $game->team_id_home, 'rating' => $homeTeamRating, 'away_team' => $game->team_id_away, 'rating' => $awayTeamRating]);
 
-            $expectedAwayWinProbability = 1 - $expectedHomeWinProbability;
+                $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
+                $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
 
-            $expectedWins[$game->team_id_home] += $expectedHomeWinProbability;
-            $expectedWins[$game->team_id_away] += $expectedAwayWinProbability;
+                $homeRatingWithRecord = $homeTeamRating * (1 + $homeWinRecord);
+                $awayRatingWithRecord = $awayTeamRating * (1 + $awayWinRecord);
+
+                $expectedHomeWinProbability = $this->eloCalculator->calculateExpectedScore(
+                    $homeRatingWithRecord,
+                    $awayRatingWithRecord,
+                    false
+                );
+
+                Log::info('Expected Win Probability:', ['home_team' => $game->team_id_home, 'probability' => $expectedHomeWinProbability]);
+
+                $expectedAwayWinProbability = 1 - $expectedHomeWinProbability;
+
+                $expectedWins[$game->team_id_home] += $expectedHomeWinProbability;
+                $expectedWins[$game->team_id_away] += $expectedAwayWinProbability;
+
+                Log::info('Accumulated Expected Wins:', ['home_team' => $game->team_id_home, 'expected_wins' => $expectedWins[$game->team_id_home], 'away_team' => $game->team_id_away, 'expected_wins' => $expectedWins[$game->team_id_away]]);
+            }
         }
+
+        Log::info('Final Expected Wins:', $expectedWins);
 
         return $expectedWins;
     }
