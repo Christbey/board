@@ -60,13 +60,10 @@ class NflController extends Controller
         return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }
 
-
     public function show($teamId, EloRatingSystem $eloRatingSystem)
     {
         $team = NflTeam::findOrFail($teamId);
         $expectedWins = $eloRatingSystem->calculateExpectedWins($team->id);
         return view('nfl.show', compact('team', 'expectedWins'));
     }
-
-
 }
