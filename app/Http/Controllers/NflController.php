@@ -8,6 +8,7 @@ use App\Models\NflOdds;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Services\Elo\EloRatingSystem;
+use Illuminate\Support\Facades\Log;
 
 class NflController extends Controller
 {
@@ -25,7 +26,10 @@ class NflController extends Controller
     public function index()
     {
         $teams = NflTeam::all();
+        Log::info('Teams:', $teams->toArray());
+
         $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
+        Log::info('Expected Wins:', $expectedWins);
 
         $seasonStartDate = Carbon::parse('2024-09-01');
         $seasonEndDate = Carbon::parse('2024-12-31');
@@ -42,6 +46,7 @@ class NflController extends Controller
                 ->orderBy('game_date')
                 ->take(5)
                 ->get(['id', 'game_date', 'home', 'away', 'team_id_home', 'team_id_away']);
+            Log::info('Schedules for team ' . $team->id, $schedules->toArray());
 
             foreach ($schedules as $schedule) {
                 // Generate composite key using the method in the model
@@ -58,16 +63,21 @@ class NflController extends Controller
             $nextOpponents[$team->id] = $schedules;
         }
 
+        Log::info('Next Opponents:', $nextOpponents);
+
         return view('nfl.teams', compact('teams', 'expectedWins', 'nextOpponents'));
     }
 
-
     public function show($teamId, EloRatingSystem $eloRatingSystem)
     {
+        Log::info('Showing team with ID:', ['teamId' => $teamId]);
+
         $team = NflTeam::findOrFail($teamId);
+        Log::info('Team:', ['team' => $team]);
+
         $expectedWins = $eloRatingSystem->calculateExpectedWins($team->id);
+        Log::info('Expected Wins:', ['expectedWins' => $expectedWins]);
+
         return view('nfl.show', compact('team', 'expectedWins'));
     }
-
-
 }
