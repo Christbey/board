@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Config;
 
 class EloRatingSystem
 {
-    private EloCalculator $eloCalculator;
-    private TeamRatingManager $teamRatingManager;
+    public EloCalculator $eloCalculator;
+    public TeamRatingManager $teamRatingManager;
     private QBRatingManager $qbRatingManager;
-    private DistanceCalculator $distanceCalculator;
+    public DistanceCalculator $distanceCalculator;
     private DataStorage $dataStorage;
 
     public function __construct()
