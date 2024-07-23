@@ -55,6 +55,7 @@
                     <p class="text-sm text-gray-500"
                        x-text="'Expected Wins: ' + (expectedWins[selectedTeam.id] ?? 'N/A')"></p>
                     <!-- Next Opponents Table -->
+                  
                 </div>
             </div>
         </div>

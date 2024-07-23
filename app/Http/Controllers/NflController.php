@@ -18,8 +18,12 @@ class NflController extends Controller
     public function index()
     {
         $data = $this->nflService->getTeamsWithSchedulesAndOdds();
+
+        dd($data['expectedWins']); // Add this line to debug
         return view('nfl.teams', $data);
+
     }
+
 
     public function show($teamId)
     {
