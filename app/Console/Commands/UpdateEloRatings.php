@@ -42,7 +42,11 @@ class UpdateEloRatings extends Command
             $homeStadium = $stadiums->get($game->team_id_home);
             $awayStadium = $stadiums->get($game->team_id_away);
 
-            $this->eloRatingSystem->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium);
+            // Ensure homeOdds and awayOdds are valid floats, you may need to fetch them from your data source
+            $homeOdds = 0.0; // Replace with actual value
+            $awayOdds = 0.0; // Replace with actual value
+
+            $this->eloRatingSystem->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium, $homeOdds, $awayOdds);
         }
 
         // Get updated Elo ratings

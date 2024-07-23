@@ -189,8 +189,8 @@ class EloRatingSystem
 
             // Fetch odds for the game using the composite key
             $odds = NflOdds::where('composite_key', $game->composite_key)->first();
-            $homeOdds = $odds ? $odds->h2h_home_price : 0.0;
-            $awayOdds = $odds ? $odds->h2h_away_price : 0.0;
+            $homeOdds = $odds->h2h_home_price ?? 0.0;
+            $awayOdds = $odds->h2h_away_price ?? 0.0;
 
             $prediction = $this->getActualScorePrediction(
                 $game->team_id_home,
