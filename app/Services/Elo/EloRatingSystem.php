@@ -265,8 +265,17 @@ class EloRatingSystem
         foreach ($futureGames as $game) {
             $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
 
-            $homeTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_home];
-            $awayTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_away];
+            $homeTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_home] ?? null;
+            $awayTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_away] ?? null;
+
+            if ($homeTeamRating === null || $awayTeamRating === null) {
+                Log::error('Missing team rating for game', [
+                    'game_id' => $game->game_id,
+                    'team_id_home' => $game->team_id_home,
+                    'team_id_away' => $game->team_id_away,
+                ]);
+                continue;
+            }
 
             $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
             $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
@@ -284,6 +293,14 @@ class EloRatingSystem
 
             $expectedWins[$game->team_id_home] += $expectedHomeWinProbability;
             $expectedWins[$game->team_id_away] += $expectedAwayWinProbability;
+
+            Log::info('Calculated expected win probabilities for game', [
+                'game_id' => $game->game_id,
+                'team_id_home' => $game->team_id_home,
+                'team_id_away' => $game->team_id_away,
+                'expected_home_win_probability' => $expectedHomeWinProbability,
+                'expected_away_win_probability' => $expectedAwayWinProbability,
+            ]);
         }
 
         return $expectedWins;
