@@ -20,19 +20,32 @@ class NflTeams extends Component
 
         $this->teams = NflTeam::all();
 
-        // Initialize expectedWins array
-        $this->expectedWins = array_fill_keys($this->teams->pluck('id')->toArray(), 0);
-
-        // Retrieve predictions and calculate expected wins
-        foreach ($this->teams as $team) {
-            $homePredictions = NflPrediction::where('team_id_home', $team->id)->get();
-            $awayPredictions = NflPrediction::where('team_id_away', $team->id)->get();
-
-            $this->expectedWins[$team->id] = $homePredictions->sum('home_win_percentage') / 100 +
-                $awayPredictions->sum('away_win_percentage') / 100;
-        }
+        // Calculate expected wins for each team
+        $this->expectedWins = $this->calculateExpectedWinsForAllTeams($this->teams);
 
         Log::info('Expected Wins:', $this->expectedWins);
+    }
+
+    private function calculateExpectedWins($teamId)
+    {
+        $homePredictions = NflPrediction::where('team_id_home', $teamId)->get();
+        $awayPredictions = NflPrediction::where('team_id_away', $teamId)->get();
+
+        $expectedWins = $homePredictions->sum('home_win_percentage') / 100 +
+            $awayPredictions->sum('away_win_percentage') / 100;
+
+        return $expectedWins;
+    }
+
+    private function calculateExpectedWinsForAllTeams($teams)
+    {
+        $expectedWins = [];
+
+        foreach ($teams as $team) {
+            $expectedWins[$team->id] = $this->calculateExpectedWins($team->id);
+        }
+
+        return $expectedWins;
     }
 
     public function render()
