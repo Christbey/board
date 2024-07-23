@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Config;
 
 class EloRatingSystem
 {
-    private EloCalculator $eloCalculator;
-    private TeamRatingManager $teamRatingManager;
+    public EloCalculator $eloCalculator;
+    public TeamRatingManager $teamRatingManager;
     private QBRatingManager $qbRatingManager;
-    private DistanceCalculator $distanceCalculator;
+    public DistanceCalculator $distanceCalculator;
     private DataStorage $dataStorage;
 
     public function __construct()
@@ -255,51 +255,54 @@ class EloRatingSystem
 
     public function calculateExpectedWinsForTeams(): array
     {
-        $futureGames = NflTeamSchedule::whereNull('home_result')
-            ->whereNull('away_result')
-            ->where('game_status', 'scheduled')
-            ->get();
+        ini_set('memory_limit', '512M'); // Increase memory limit to 512M
 
         $teamRatings = $this->teamRatingManager->getRatings();
         Log::info('Team Ratings:', $teamRatings);
 
         $expectedWins = array_fill_keys(array_keys($teamRatings), 0);
 
-        $batchSize = 100; // Define batch size
-        $batches = $futureGames->chunk($batchSize);
+        // Process future games in chunks
+        NflTeamSchedule::whereNull('home_result')
+            ->whereNull('away_result')
+            ->where('game_status', 'scheduled')
+            ->select(['id', 'team_id_home', 'team_id_away', 'game_date', 'season_type', 'composite_key']) // Select only necessary fields
+            ->chunk(100, function ($games) use (&$expectedWins, $teamRatings) {
+                foreach ($games as $game) {
+                    $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
+                    Log::info('Game:', ['game_id' => $game->id, 'home_team' => $game->team_id_home, 'away_team' => $game->team_id_away, 'distance' => $distance]);
 
-        foreach ($batches as $batch) {
-            foreach ($batch as $game) {
-                $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
-                Log::info('Game:', ['game_id' => $game->id, 'home_team' => $game->team_id_home, 'away_team' => $game->team_id_away, 'distance' => $distance]);
+                    $homeTeamRating = $teamRatings[$game->team_id_home] ?? 0;
+                    $awayTeamRating = $teamRatings[$game->team_id_away] ?? 0;
 
-                $homeTeamRating = $teamRatings[$game->team_id_home] ?? 0;
-                $awayTeamRating = $teamRatings[$game->team_id_away] ?? 0;
+                    Log::info('Ratings:', ['home_team' => $game->team_id_home, 'rating' => $homeTeamRating, 'away_team' => $game->team_id_away, 'rating' => $awayTeamRating]);
 
-                Log::info('Ratings:', ['home_team' => $game->team_id_home, 'rating' => $homeTeamRating, 'away_team' => $game->team_id_away, 'rating' => $awayTeamRating]);
+                    $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
+                    $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
 
-                $homeWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_home);
-                $awayWinRecord = $this->eloCalculator->getCurrentSeasonWinningRecord($game->team_id_away);
+                    $homeRatingWithRecord = $homeTeamRating * (1 + $homeWinRecord);
+                    $awayRatingWithRecord = $awayTeamRating * (1 + $awayWinRecord);
 
-                $homeRatingWithRecord = $homeTeamRating * (1 + $homeWinRecord);
-                $awayRatingWithRecord = $awayTeamRating * (1 + $awayWinRecord);
+                    $expectedHomeWinProbability = $this->eloCalculator->calculateExpectedScore(
+                        $homeRatingWithRecord,
+                        $awayRatingWithRecord,
+                        false
+                    );
 
-                $expectedHomeWinProbability = $this->eloCalculator->calculateExpectedScore(
-                    $homeRatingWithRecord,
-                    $awayRatingWithRecord,
-                    false
-                );
+                    Log::info('Expected Win Probability:', ['home_team' => $game->team_id_home, 'probability' => $expectedHomeWinProbability]);
 
-                Log::info('Expected Win Probability:', ['home_team' => $game->team_id_home, 'probability' => $expectedHomeWinProbability]);
+                    $expectedAwayWinProbability = 1 - $expectedHomeWinProbability;
 
-                $expectedAwayWinProbability = 1 - $expectedHomeWinProbability;
+                    $expectedWins[$game->team_id_home] += $expectedHomeWinProbability;
+                    $expectedWins[$game->team_id_away] += $expectedAwayWinProbability;
 
-                $expectedWins[$game->team_id_home] += $expectedHomeWinProbability;
-                $expectedWins[$game->team_id_away] += $expectedAwayWinProbability;
+                    Log::info('Accumulated Expected Wins:', ['home_team' => $game->team_id_home, 'expected_wins' => $expectedWins[$game->team_id_home], 'away_team' => $game->team_id_away, 'expected_wins' => $expectedWins[$game->team_id_away]]);
+                }
 
-                Log::info('Accumulated Expected Wins:', ['home_team' => $game->team_id_home, 'expected_wins' => $expectedWins[$game->team_id_home], 'away_team' => $game->team_id_away, 'expected_wins' => $expectedWins[$game->team_id_away]]);
-            }
-        }
+                // Free up memory after processing each chunk
+                unset($games);
+                gc_collect_cycles(); // Force garbage collection
+            });
 
         Log::info('Final Expected Wins:', $expectedWins);
 

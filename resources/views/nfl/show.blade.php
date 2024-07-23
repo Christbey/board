@@ -8,7 +8,8 @@
         </div>
         <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
             <p class="text-lg mb-4"><strong>Stadium:</strong> {{ $team->stadium }}</p>
-            <p class="text-lg mb-4"><strong>Expected Wins:</strong> {{ $expectedWins }}</p>
+            <p class="text-lg mb-4"><strong>Expected Wins:</strong>{{ $expectedWins[$team->id] ?? 0 }}
+            </p>
             <!-- Add more details as needed -->
         </div>
     </div>
