@@ -70,3 +70,5 @@ Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore
 
 
 Route::get('/nfl/teams/{team}', [NflController::class, 'show'])->name('nfl.show');
+
+Route::get('/nfl/teams/{teamId}/next-opponents', [NflController::class, 'getNextOpponents']);

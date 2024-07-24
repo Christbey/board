@@ -8,6 +8,7 @@ use App\Models\NflTeamSchedule;
 use App\Models\NflOdds;
 use App\Services\Elo\EloRatingSystem;
 use Carbon\Carbon;
+use Log;
 
 class NflPredictionService
 {
@@ -26,8 +27,7 @@ class NflPredictionService
             $query->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
                 ->whereNull('home_result')
                 ->whereNull('away_result')
-                ->orderBy('game_date')
-                ->take(5);
+                ->orderBy('game_date');
         }])->get();
 
         $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
@@ -50,8 +50,30 @@ class NflPredictionService
         });
 
         $nextOpponents = $teams->mapWithKeys(function ($team) {
-            return [$team->id => $team->schedules];
+            $schedules = NflTeamSchedule::where('team_id_home', $team->id)
+                ->orWhere('team_id_away', $team->id)
+                ->whereBetween('game_date', [Carbon::now(), Carbon::parse('2024-12-31')])
+                ->orderBy('game_date')
+                ->take(3)
+                ->get();
+
+            return [$team->id => $schedules->map(function ($schedule) use ($team) {
+                $opponentId = $schedule->team_id_home === $team->id ? $schedule->team_id_away : $schedule->team_id_home;
+                $opponent = NflTeam::find($opponentId);
+
+                // Ensure game_date is a Carbon instance
+                $gameDate = Carbon::parse($schedule->game_date);
+
+                return [
+                    'id' => $opponent->id,
+                    'name' => $opponent->name,
+                    'game_date' => $gameDate->format('Y-m-d'),
+                ];
+            })];
         });
+
+        // Log nextOpponents for debugging
+        Log::info('Next Opponents:', $nextOpponents->toArray());
 
         return compact('teams', 'expectedWins', 'nextOpponents');
     }

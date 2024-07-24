@@ -2,32 +2,35 @@
     use App\Helpers\ColorHelper;
     use App\Helpers\FormatHelper;
 @endphp
-<x-app-layout>
 
-    <div x-data="teamData()" class="container mx-auto p-4 sm:p-6">
+<x-app-layout>
+    <div x-data="teamData({{ json_encode($teams) }}, {{ json_encode($expectedWins) }}, {{ json_encode($nextOpponents) }})"
+         class="container mx-auto p-4 sm:p-6">
         <h1 class="text-2xl sm:text-3xl font-bold mb-6 text-center">NFL Teams</h1>
         <div class="bg-white shadow-md rounded-lg p-4 sm:p-6">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Team Name
-                    </th>
-                    <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Expected Wins
-                    </th>
-                </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                @foreach ($teams as $team)
-                    <tr @click="openModal({{ json_encode($team) }})" class="cursor-pointer hover:bg-gray-100">
-                        <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap"
-                            style="color: {{ $team->primary_color ?? '#000000' }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
-                        <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ $expectedWins[$team->id] ?? 'N/A' }}</td>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Team Name
+                        </th>
+                        <th class="px-3 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Expected Wins
+                        </th>
                     </tr>
-                @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach ($teams as $team)
+                        <tr @click="openModal({{ $team->id }})" class="cursor-pointer hover:bg-gray-100">
+                            <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap"
+                                style="color: {{ $team->primary_color ?? '#000000' }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
+                            <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ number_format($expectedWins[$team->id] ?? 'N/A', 2) }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Custom Modal -->
@@ -53,8 +56,24 @@
                     <div class="mt-2" x-show="selectedTeam">
                         <p class="text-sm text-gray-500" x-text="'Stadium: ' + (selectedTeam.stadium ?? 'N/A')"></p>
                         <p class="text-sm text-gray-500"
-                           x-text="'Expected Wins: ' + (expectedWins[selectedTeam.id] ?? 'N/A')"></p>
+                           x-text="'Expected Wins: ' + (Number(expectedWins[selectedTeam.id]).toFixed(2) ?? 'N/A')"></p>
                         <!-- Next Opponents Table -->
+                        <div class="mt-4">
+                            <h4 class="text-md font-medium text-gray-900 mb-2">Next Opponents</h4>
+                            <ul>
+                                <template x-for="opponent in nextOpponents[selectedTeam.id]" :key="opponent.id">
+                                    <li class="text-sm text-gray-700"
+                                        x-text="opponent.name + ' - ' + opponent.game_date"></li>
+                                </template>
+                            </ul>
+                        </div>
+                        <!-- Button to link to team page -->
+                        <div class="mt-4">
+                            <a :href="'/nfl/teams/' + selectedTeam.id"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                View Team Page
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -62,12 +81,18 @@
     </div>
 
     <script>
-        function teamData() {
+        function teamData(teams, expectedWins, nextOpponents) {
+            console.log('nextOpponents:', nextOpponents); // Log the nextOpponents to verify the structure
             return {
                 showModal: false,
                 selectedTeam: null,
-                openModal(team) {
-                    this.selectedTeam = team;
+                teams: teams,
+                expectedWins: expectedWins,
+                nextOpponents: nextOpponents,
+                openModal(teamId) {
+                    this.selectedTeam = this.teams.find(team => team.id === teamId);
+                    console.log('Selected team:', this.selectedTeam);
+                    console.log('Next opponents:', this.nextOpponents[this.selectedTeam.id]); // Log the next opponents for the selected team
                     this.showModal = true;
                 },
             }
