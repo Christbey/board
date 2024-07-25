@@ -1,12 +1,12 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\NflPrediction;
 use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
 use App\Services\NflPredictionService;
+use App\Helpers\FormatHelper;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -125,6 +125,12 @@ class NflController extends Controller
 
             $expectedWins = $predictions->sum(function ($prediction) use ($team) {
                 return ($prediction->team_id_home == $team->id ? $prediction->home_win_percentage : $prediction->away_win_percentage) / 100;
+            });
+
+            $predictions->each(function ($prediction) {
+                [$homeScore, $awayScore] = FormatHelper::calculateScoreBasedOnWinPercentage($prediction->home_win_percentage, $prediction->away_win_percentage);
+                $prediction->home_pts_prediction = $homeScore;
+                $prediction->away_pts_prediction = $awayScore;
             });
 
             $nextOpponents = $team->schedules->take(3)->map(function ($schedule) use ($team) {

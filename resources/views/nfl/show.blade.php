@@ -43,11 +43,6 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                     @foreach ($predictions as $prediction)
-                        @php
-                            $opponentTeam = $prediction->team_id_home == $team->id
-                                ? App\Models\NflTeam::find($prediction->team_id_away)
-                                : App\Models\NflTeam::find($prediction->team_id_home);
-                        @endphp
                         <tr>
                             <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ $prediction->game_date }}</td>
                             <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">

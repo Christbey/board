@@ -7,6 +7,7 @@ use App\Models\NflTeamSchedule;
 use App\Models\NflOdds;
 use App\Services\Elo\EloRatingSystem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 class NflPredictionService
@@ -84,26 +85,12 @@ class NflPredictionService
             );
             $expectedAwayScore = 1 - $expectedHomeScore;
 
-            $prediction = $this->eloRatingSystem->getActualScorePrediction(
-                $game->team_id_home,
-                $game->team_id_away,
-                $distance,
-                false,
-                false,
-                $game->season_type === 'Playoff',
-                $homeOdds,
-                $awayOdds
-            );
+            // Calculate predicted scores based on win percentages
+            $homePtsMax = Config::get('nfl.homePtsMax');
+            $awayPtsMax = Config::get('nfl.awayPtsMax');
 
-            $logMessage = sprintf(
-                "Game ID: %s - Expected Winning Percentage for %s vs %s: Home: %.2f%%, Away: %.2f%%\n" .
-                "Game ID: %s - Predicted Score: Home: %d (%.2f%%), Away: %d (%.2f%%)\n",
-                $game->game_id, $game->team_id_home, $game->team_id_away,
-                round($expectedHomeScore * 100, 2), round($expectedAwayScore * 100, 2),
-                $game->game_id, $prediction['teamA'], round($expectedHomeScore * 100, 2), $prediction['teamB'], round($expectedAwayScore * 100, 2)
-            );
-
-            $this->logMessage($logMessage);
+            $predictedHomePoints = round($expectedHomeScore * $homePtsMax);
+            $predictedAwayPoints = round($expectedAwayScore * $awayPtsMax);
 
             NflPrediction::updateOrCreate(
                 ['game_id' => $game->game_id],
@@ -111,8 +98,8 @@ class NflPredictionService
                     'team_id_home' => $game->team_id_home,
                     'team_id_away' => $game->team_id_away,
                     'game_date' => $game->game_date,
-                    'home_pts_prediction' => $prediction['teamA'],
-                    'away_pts_prediction' => $prediction['teamB'],
+                    'home_pts_prediction' => $predictedHomePoints,
+                    'away_pts_prediction' => $predictedAwayPoints,
                     'home_win_percentage' => round($expectedHomeScore * 100, 2),
                     'away_win_percentage' => round($expectedAwayScore * 100, 2),
                     'season_type' => $game->season_type,
@@ -133,16 +120,12 @@ class NflPredictionService
 
     private function logFinalExpectedWins(array $expectedWins)
     {
-        Log::info('Final Expected Wins:', $expectedWins);
-        foreach ($expectedWins as $teamId => $wins) {
-            $this->logMessage("Team ID {$teamId}: " . round($wins, 2) . ' expected wins');
-        }
+
     }
 
     private function logMessage($message)
     {
-        Log::info($message);
-        echo $message . "\n";
+
     }
 
     public function calculateExpectedWins()

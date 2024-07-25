@@ -24,12 +24,22 @@ class FormatHelper
     public static function formatOpponent($prediction, $selectedTeamId)
     {
         if ($prediction->team_id_home == $selectedTeamId) {
-            $opponent = NflTeam::find($prediction->team_id_away);
-            return 'vs. ' . ($opponent->name ?? 'Unknown Team');
+            $opponentTeam = NflTeam::find($prediction->team_id_away);
+            return 'vs. ' . ($opponentTeam->name ?? 'Unknown Team');
         } else {
-            $opponent = NflTeam::find($prediction->team_id_home);
-            return '@ ' . ($opponent->name ?? 'Unknown Team');
+            $opponentTeam = NflTeam::find($prediction->team_id_home);
+            return '@ ' . ($opponentTeam->name ?? 'Unknown Team');
         }
     }
-}
 
+    public static function calculateScoreBasedOnWinPercentage($homeWinPercentage, $awayWinPercentage)
+    {
+        $homePtsMax = config('nfl.homePtsMax');
+        $awayPtsMax = config('nfl.awayPtsMax');
+
+        $homeScore = round(($homeWinPercentage / 100) * $homePtsMax);
+        $awayScore = round(($awayWinPercentage / 100) * $awayPtsMax);
+
+        return [$homeScore, $awayScore];
+    }
+}
