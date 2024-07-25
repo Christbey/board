@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\NflTeam;
+
 class FormatHelper
 {
     public static function formatOdds($value, $type = 'default')
@@ -19,16 +21,15 @@ class FormatHelper
         }
     }
 
-    public static function formatOpponent($opponent, $selectedTeamId)
+    public static function formatOpponent($prediction, $selectedTeamId)
     {
-        if (!$opponent) {
-            return 'Unknown Opponent';
-        }
-
-        if ($opponent->team_id_home == $selectedTeamId) {
-            return 'vs. ' . ($opponent->away ?? 'Unknown Team');
+        if ($prediction->team_id_home == $selectedTeamId) {
+            $opponent = NflTeam::find($prediction->team_id_away);
+            return 'vs. ' . ($opponent->name ?? 'Unknown Team');
         } else {
-            return '@ ' . ($opponent->home ?? 'Unknown Team');
+            $opponent = NflTeam::find($prediction->team_id_home);
+            return '@ ' . ($opponent->name ?? 'Unknown Team');
         }
     }
 }
+

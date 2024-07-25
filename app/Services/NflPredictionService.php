@@ -3,12 +3,11 @@
 namespace App\Services;
 
 use App\Models\NflPrediction;
-use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
 use App\Models\NflOdds;
 use App\Services\Elo\EloRatingSystem;
 use Carbon\Carbon;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class NflPredictionService
 {
@@ -19,94 +18,64 @@ class NflPredictionService
         $this->eloRatingSystem = $eloRatingSystem;
     }
 
-    public function getTeamsWithSchedulesAndOdds()
-    {
-        $teams = NflTeam::with(['schedules' => function ($query) {
-            $seasonStartDate = Carbon::parse('2024-09-01');
-            $seasonEndDate = Carbon::parse('2024-12-31');
-            $query->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
-                ->whereNull('home_result')
-                ->whereNull('away_result')
-                ->orderBy('game_date');
-        }])->get();
-
-        $expectedWins = $this->eloRatingSystem->calculateExpectedWinsForTeams();
-
-        $schedules = $teams->flatMap->schedules;
-
-        // Generate composite keys for all schedules
-        $compositeKeys = $schedules->map(function ($schedule) {
-            return NflTeamSchedule::generateCompositeKey($schedule);
-        });
-
-        // Fetch all odds in a single query
-        $odds = NflOdds::whereIn('composite_key', $compositeKeys)->get()->keyBy('composite_key');
-
-        // Attach the odds to the schedules
-        $schedules->each(function ($schedule) use ($odds) {
-            $compositeKey = NflTeamSchedule::generateCompositeKey($schedule);
-            $schedule->spread_home = $odds->get($compositeKey)->spread_home_point ?? null;
-            $schedule->spread_away = $odds->get($compositeKey)->spread_away_point ?? null;
-        });
-
-        $nextOpponents = $teams->mapWithKeys(function ($team) {
-            $schedules = NflTeamSchedule::where('team_id_home', $team->id)
-                ->orWhere('team_id_away', $team->id)
-                ->whereBetween('game_date', [Carbon::now(), Carbon::parse('2024-12-31')])
-                ->orderBy('game_date')
-                ->take(3)
-                ->get();
-
-            return [$team->id => $schedules->map(function ($schedule) use ($team) {
-                $opponentId = $schedule->team_id_home === $team->id ? $schedule->team_id_away : $schedule->team_id_home;
-                $opponent = NflTeam::find($opponentId);
-
-                // Ensure game_date is a Carbon instance
-                $gameDate = Carbon::parse($schedule->game_date);
-
-                return [
-                    'id' => $opponent->id,
-                    'name' => $opponent->name,
-                    'game_date' => $gameDate->format('Y-m-d'),
-                ];
-            })];
-        });
-
-        // Log nextOpponents for debugging
-        Log::info('Next Opponents:', $nextOpponents->toArray());
-
-        return compact('teams', 'expectedWins', 'nextOpponents');
-    }
-
-    public function logPredictedScores()
+    public function logPredictedScores(): string
     {
         $cutoffDate = Carbon::createFromFormat('Y-m-d', '2024-03-01');
+        $games = $this->getFutureGames($cutoffDate);
+        $expectedWins = $this->initializeExpectedWins();
 
-        $games = NflTeamSchedule::whereNull('home_result')
+        foreach ($games as $game) {
+            $homeStadium = $game->homeStadium;
+            $awayStadium = $game->awayStadium;
+
+            $odds = $this->getOdds($game->team_id_home, $game->team_id_away);
+            $homeOdds = $odds['home'] ?? 0.0;
+            $awayOdds = $odds['away'] ?? 0.0;
+
+            if (!$odds) {
+                $this->logMessage("Missing odds information for game ID {$game->game_id} between team {$game->team_id_home} and team {$game->team_id_away}. Using default odds.");
+            } else {
+                $this->logMessage("Logging odds for game ID {$game->game_id} between team {$game->team_id_home} and team {$game->team_id_away}.");
+            }
+
+            $this->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium, $homeOdds, $awayOdds, $expectedWins);
+        }
+
+        $this->logFinalExpectedWins($expectedWins);
+
+        return 'Predicted scores logged successfully.';
+    }
+
+    private function getFutureGames($cutoffDate)
+    {
+        return NflTeamSchedule::whereNull('home_result')
             ->whereNull('away_result')
             ->where('game_status', 'scheduled')
             ->whereDate('game_date', '>', $cutoffDate)
             ->where('season_type', '<>', 'Preseason')
             ->get();
-
-        foreach ($games as $game) {
-            $homeStadium = $game->homeStadium; // Assuming you have these relationships
-            $awayStadium = $game->awayStadium;
-
-            $this->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium);
-        }
-
-        return 'Predicted scores logged successfully.';
     }
 
-    private function logExpectedWinningPercentageAndPredictedScore(NflTeamSchedule $game, $homeStadium, $awayStadium): void
+    private function getOdds(int $homeTeamId, int $awayTeamId): array
     {
-        $cutoffDate = Carbon::createFromFormat('Y-m-d', '2024-03-01');
+        $odds = NflOdds::where('home_team_id', $homeTeamId)
+            ->where('away_team_id', $awayTeamId)
+            ->first();
 
-        if (is_null($game->home_result) && is_null($game->away_result) &&
-            Carbon::parse($game->game_date)->greaterThan($cutoffDate) &&
-            $game->season_type !== 'Preseason') {
+        if ($odds) {
+            return [
+                'home' => $odds->h2h_home_price ?? 0.0,
+                'away' => $odds->h2h_away_price ?? 0.0,
+            ];
+        }
 
+        Log::warning("Missing odds information for game between team $homeTeamId and team $awayTeamId. Using default odds.");
+        return [];
+    }
+
+    private function logExpectedWinningPercentageAndPredictedScore(NflTeamSchedule $game, $homeStadium, $awayStadium, float $homeOdds, float $awayOdds, array &$expectedWins): void
+    {
+        if (is_null($game->home_result) && is_null($game->away_result) && $game->season_type !== 'Preseason') {
             $distance = $this->eloRatingSystem->distanceCalculator->calculateDistance($homeStadium, $awayStadium);
 
             $expectedHomeScore = $this->eloRatingSystem->eloCalculator->calculateExpectedScore(
@@ -114,11 +83,6 @@ class NflPredictionService
                 $this->eloRatingSystem->teamRatingManager->getRatings()[$game->team_id_away]
             );
             $expectedAwayScore = 1 - $expectedHomeScore;
-
-            // Fetch odds for the game using the composite key
-            $odds = NflOdds::where('composite_key', $game->composite_key)->first();
-            $homeOdds = $odds ? (float)$odds->h2h_home_price : 0.0;
-            $awayOdds = $odds ? (float)$odds->h2h_away_price : 0.0;
 
             $prediction = $this->eloRatingSystem->getActualScorePrediction(
                 $game->team_id_home,
@@ -139,7 +103,7 @@ class NflPredictionService
                 $game->game_id, $prediction['teamA'], round($expectedHomeScore * 100, 2), $prediction['teamB'], round($expectedAwayScore * 100, 2)
             );
 
-            Log::info($logMessage);
+            $this->logMessage($logMessage);
 
             NflPrediction::updateOrCreate(
                 ['game_id' => $game->game_id],
@@ -154,6 +118,42 @@ class NflPredictionService
                     'season_type' => $game->season_type,
                 ]
             );
+
+            // Add to expected wins
+            $expectedWins[$game->team_id_home] += $expectedHomeScore;
+            $expectedWins[$game->team_id_away] += $expectedAwayScore;
         }
+    }
+
+    private function initializeExpectedWins(): array
+    {
+        $teamRatings = $this->eloRatingSystem->teamRatingManager->getRatings();
+        return array_fill_keys(array_keys($teamRatings), 0);
+    }
+
+    private function logFinalExpectedWins(array $expectedWins)
+    {
+        Log::info('Final Expected Wins:', $expectedWins);
+        foreach ($expectedWins as $teamId => $wins) {
+            $this->logMessage("Team ID {$teamId}: " . round($wins, 2) . ' expected wins');
+        }
+    }
+
+    private function logMessage($message)
+    {
+        Log::info($message);
+        echo $message . "\n";
+    }
+
+    public function calculateExpectedWins()
+    {
+        // Add logic to calculate expected wins for all teams
+    }
+
+    public function calculateExpectedWinsForTeam($teamId)
+    {
+        $homeWins = NflPrediction::where('team_id_home', $teamId)->sum('home_win_percentage');
+        $awayWins = NflPrediction::where('team_id_away', $teamId)->sum('away_win_percentage');
+        return ($homeWins + $awayWins) / 100;
     }
 }

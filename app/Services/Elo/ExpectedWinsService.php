@@ -3,6 +3,8 @@
 namespace App\Services\Elo;
 
 use App\Models\NflTeamSchedule;
+use App\Models\NflStadium;
+use App\Models\NflOdds;
 use Illuminate\Support\Facades\Log;
 
 class ExpectedWinsService
@@ -36,11 +38,44 @@ class ExpectedWinsService
 
         $expectedWins = array_fill_keys(array_keys($this->teamRatingManager->getRatings()), 0);
 
+        // Fetch all stadiums to minimize queries
+        $stadiums = NflStadium::whereIn('team_id', $futureGames->pluck('team_id_home')->merge($futureGames->pluck('team_id_away'))->unique())->get()->keyBy('team_id');
+        Log::info('Fetched Stadiums', ['stadiums' => $stadiums]);
+
         foreach ($futureGames as $game) {
             Log::info('Processing Game', ['game_id' => $game->game_id, 'team_id_home' => $game->team_id_home, 'team_id_away' => $game->team_id_away]);
 
-            $distance = $this->distanceCalculator->calculateDistance($game->homeStadium, $game->awayStadium);
+            $homeStadium = $stadiums->get($game->team_id_home);
+            $awayStadium = $stadiums->get($game->team_id_away);
+
+            if (!$homeStadium || !$awayStadium) {
+                Log::error('Missing stadium information for game', [
+                    'game_id' => $game->game_id,
+                    'home_stadium' => $homeStadium,
+                    'away_stadium' => $awayStadium,
+                ]);
+                continue;
+            }
+
+            $distance = $this->distanceCalculator->calculateDistance($homeStadium, $awayStadium);
             Log::info('Calculated Distance', ['distance' => $distance]);
+
+            $odds = NflOdds::where('home_team_id', $game->team_id_home)
+                ->where('away_team_id', $game->team_id_away)
+                ->first();
+
+            if (!$odds) {
+                Log::error('Missing odds information for game', [
+                    'game_id' => $game->game_id,
+                    'home_team_id' => $game->team_id_home,
+                    'away_team_id' => $game->team_id_away,
+                ]);
+                continue;
+            }
+
+            $homeOdds = $odds->h2h_home_price ?? 0.0;
+            $awayOdds = $odds->h2h_away_price ?? 0.0;
+            Log::info('Fetched Odds', ['homeOdds' => $homeOdds, 'awayOdds' => $awayOdds]);
 
             $homeTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_home] ?? null;
             $awayTeamRating = $this->teamRatingManager->getRatings()[$game->team_id_away] ?? null;

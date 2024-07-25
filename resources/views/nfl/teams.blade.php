@@ -25,7 +25,7 @@
                         <tr @click="openModal({{ $team->id }})" class="cursor-pointer hover:bg-gray-100">
                             <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap"
                                 style="color: {{ $team->primary_color ?? '#000000' }}; background-color: rgba({{ ColorHelper::hex2rgb($team->secondary_color ?? '#ffffff') }}, 0.2);">{{ $team->name }}</td>
-                            <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ number_format($expectedWins[$team->id] ?? 'N/A', 2) }}</td>
+                            <td class="px-3 py-2 sm:px-6 sm:py-4 whitespace-nowrap">{{ number_format($expectedWins[$team->id] ?? 0, 2) }}</td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -82,7 +82,6 @@
 
     <script>
         function teamData(teams, expectedWins, nextOpponents) {
-            console.log('nextOpponents:', nextOpponents); // Log the nextOpponents to verify the structure
             return {
                 showModal: false,
                 selectedTeam: null,
@@ -91,11 +90,10 @@
                 nextOpponents: nextOpponents,
                 openModal(teamId) {
                     this.selectedTeam = this.teams.find(team => team.id === teamId);
-                    console.log('Selected team:', this.selectedTeam);
-                    console.log('Next opponents:', this.nextOpponents[this.selectedTeam.id]); // Log the next opponents for the selected team
                     this.showModal = true;
                 },
             }
         }
     </script>
+
 </x-app-layout>

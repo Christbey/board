@@ -61,8 +61,8 @@ class EloRatingSystem
         float $awayOdds
     ): array
     {
-        $predictedHomePts = $this->calculatePredictedPoints($homeTeam, $awayTeam, $homeScore, $awayScore, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange, $homeOdds);
-        $predictedAwayPts = $this->calculatePredictedPoints($awayTeam, $homeTeam, $awayScore, $homeScore, $distance, $awayRested, $homeRested, $neutralSite, $noFans, $isPlayoff, $awayQbChange, $homeQbChange, -$awayOdds);
+        $predictedHomePts = $this->calculatePredictedPoints($homeTeam, $awayTeam, $distance, $homeRested, $awayRested, $neutralSite, $noFans, $isPlayoff, $homeQbChange, $awayQbChange, $homeOdds);
+        $predictedAwayPts = $this->calculatePredictedPoints($awayTeam, $homeTeam, $distance, $awayRested, $homeRested, $neutralSite, $noFans, $isPlayoff, $awayQbChange, $homeQbChange, -$awayOdds);
 
         $homeWinPercentage = $this->calculateWinningPercentage($homeTeam, $awayTeam, $homeOdds, $awayOdds);
         $awayWinPercentage = 100 - $homeWinPercentage;
@@ -80,8 +80,6 @@ class EloRatingSystem
     private function calculatePredictedPoints(
         int   $team1,
         int   $team2,
-        int   $score1,
-        int   $score2,
         float $distance,
         bool  $rested1,
         bool  $rested2,
@@ -106,9 +104,7 @@ class EloRatingSystem
         $adjustedRating2 = $rating2 - $restAdjustment - $qbAdjustment - $oddsAdjustment;
 
         $pointSpread = ($adjustedRating1 - $adjustedRating2) * $playoffAdjustment;
-        $predictedPoints = $this->eloCalculator->averagePoints + ($pointSpread / 2);
-
-        return $predictedPoints;
+        return $this->eloCalculator->averagePoints + ($pointSpread / 2);
     }
 
     private function calculateWinningPercentage(int $homeTeam, int $awayTeam, float $homeOdds, float $awayOdds): float

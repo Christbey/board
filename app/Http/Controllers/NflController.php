@@ -1,7 +1,9 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
+use App\Models\NflPrediction;
 use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
 use App\Services\NflPredictionService;
@@ -23,7 +25,7 @@ class NflController extends Controller
     {
         try {
             $data = $this->getTeamsWithSchedulesAndOdds();
-            Log::info('Expected Wins Data:', $data['expectedWins']);
+            Log::info('Expected Wins Data:', ['expectedWins' => $data['expectedWins']]);
             return view('nfl.teams', $data);
         } catch (Exception $e) {
             Log::error('Error fetching teams with schedules and odds: ' . $e->getMessage(), [
@@ -38,8 +40,25 @@ class NflController extends Controller
         try {
             $teams = NflTeam::all();
 
-            // Calculate expected wins
-            $expectedWins = $this->nflPredictionService->eloRatingSystem->calculateExpectedWinsForTeams();
+            // Calculate expected wins from the nfl_predictions table
+            $expectedWins = NflPrediction::selectRaw('team_id_home, SUM(home_win_percentage / 100) as home_expected_wins')
+                ->groupBy('team_id_home')
+                ->pluck('home_expected_wins', 'team_id_home')
+                ->toArray();
+
+            $awayExpectedWins = NflPrediction::selectRaw('team_id_away, SUM(away_win_percentage / 100) as away_expected_wins')
+                ->groupBy('team_id_away')
+                ->pluck('away_expected_wins', 'team_id_away')
+                ->toArray();
+
+            // Combine home and away expected wins
+            foreach ($awayExpectedWins as $teamId => $wins) {
+                if (isset($expectedWins[$teamId])) {
+                    $expectedWins[$teamId] += $wins;
+                } else {
+                    $expectedWins[$teamId] = $wins;
+                }
+            }
 
             // Fetch schedules directly from nfl_team_schedules
             $schedules = NflTeamSchedule::whereBetween('game_date', [Carbon::parse('2024-09-01'), Carbon::parse('2024-12-31')])
@@ -77,7 +96,7 @@ class NflController extends Controller
             });
 
             // Log nextOpponents for debugging
-            Log::info('Next Opponents:', $nextOpponents->toArray());
+            Log::info('Next Opponents:', ['nextOpponents' => $nextOpponents]);
 
             return compact('teams', 'expectedWins', 'nextOpponents');
         } catch (Exception $e) {
@@ -87,7 +106,6 @@ class NflController extends Controller
             throw new Exception('Unable to fetch teams with schedules and odds');
         }
     }
-
 
     public function show($teamId)
     {
@@ -101,7 +119,14 @@ class NflController extends Controller
                     ->orderBy('game_date');
             }])->findOrFail($teamId);
 
-            $expectedWins = $this->nflPredictionService->eloRatingSystem->calculateExpectedWins($team->id);
+            $predictions = NflPrediction::where('team_id_home', $team->id)
+                ->orWhere('team_id_away', $team->id)
+                ->get();
+
+            $expectedWins = $predictions->sum(function ($prediction) use ($team) {
+                return ($prediction->team_id_home == $team->id ? $prediction->home_win_percentage : $prediction->away_win_percentage) / 100;
+            });
+
             $nextOpponents = $team->schedules->take(3)->map(function ($schedule) use ($team) {
                 $opponentId = $schedule->team_id_home === $team->id ? $schedule->team_id_away : $schedule->team_id_home;
                 $opponent = NflTeam::find($opponentId);
@@ -116,7 +141,7 @@ class NflController extends Controller
                 ];
             });
 
-            return view('nfl.show', compact('team', 'expectedWins', 'nextOpponents'));
+            return view('nfl.show', compact('team', 'expectedWins', 'nextOpponents', 'predictions'));
         } catch (Exception $e) {
             Log::error('Error fetching team details: ' . $e->getMessage(), [
                 'exception' => $e,
