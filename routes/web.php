@@ -29,6 +29,8 @@ Route::resource('tasks', TaskController::class);
 Route::prefix('nfl')->group(function () {
     Route::get('teams', [NflController::class, 'index'])->name('nfl.teams');
     Route::get('event', [NflController::class, 'event'])->name('nfl.event');
+    Route::get('teams/{team}', [NflController::class, 'show'])->name('nfl.show');
+    Route::get('teams/{teamId}/next-opponents', [NflController::class, 'getNextOpponents']);
 });
 
 // NCAA routes
@@ -57,8 +59,6 @@ Route::get('/forge-servers', function () {
 use App\Http\Controllers\DataPreparationController;
 
 Route::get('/data-preparation', [DataPreparationController::class, 'fetchData']);
-
-
 Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name('fetch.data');
 Route::get('/match-schedules-odds', [DataPreparationController::class, 'matchSchedulesWithOdds'])->name('match.schedules.odds');
 Route::get('/predictions', [DataPreparationController::class, 'makePredictions'])->name('predictions');
@@ -67,8 +67,3 @@ Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name
 use App\Http\Controllers\NFLStatsController;
 
 Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore']);
-
-
-Route::get('/nfl/teams/{team}', [NflController::class, 'show'])->name('nfl.show');
-
-Route::get('/nfl/teams/{teamId}/next-opponents', [NflController::class, 'getNextOpponents']);

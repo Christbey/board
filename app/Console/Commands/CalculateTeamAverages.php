@@ -3,8 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\NflTeamSchedule;
-use App\Models\NflTeam;
+use App\Services\TeamAverageService;
 use App\Helpers\NflHelper;
 
 class CalculateTeamAverages extends Command
@@ -12,9 +11,12 @@ class CalculateTeamAverages extends Command
     protected $signature = 'calculate:team-averages {team_id1?} {team_id2?} {year?}';
     protected $description = 'Calculate average points for NFL teams based on given team IDs and optional year';
 
-    public function __construct()
+    protected TeamAverageService $teamAverageService;
+
+    public function __construct(TeamAverageService $teamAverageService)
     {
         parent::__construct();
+        $this->teamAverageService = $teamAverageService;
     }
 
     public function handle(): void
@@ -38,45 +40,33 @@ class CalculateTeamAverages extends Command
 
     private function calculateMatchupAverages($teamId1, $teamId2, $seasonRange): void
     {
-        $team1HomeAvg = $this->getAveragePointsForMatchup($teamId1, $teamId2, 'home', $seasonRange);
-        $team1AwayAvg = $this->getAveragePointsForMatchup($teamId1, $teamId2, 'away', $seasonRange);
-        $team2HomeAvg = $this->getAveragePointsForMatchup($teamId2, $teamId1, 'home', $seasonRange);
-        $team2AwayAvg = $this->getAveragePointsForMatchup($teamId2, $teamId1, 'away', $seasonRange);
+        $team1HomeAvg = $this->teamAverageService->getAveragePointsForMatchup($teamId1, $teamId2, 'home', $seasonRange);
+        $team1AwayAvg = $this->teamAverageService->getAveragePointsForMatchup($teamId1, $teamId2, 'away', $seasonRange);
+        $team2HomeAvg = $this->teamAverageService->getAveragePointsForMatchup($teamId2, $teamId1, 'home', $seasonRange);
+        $team2AwayAvg = $this->teamAverageService->getAveragePointsForMatchup($teamId2, $teamId1, 'away', $seasonRange);
 
-        if ($team1HomeAvg > 0) {
-            $this->info("Team $teamId1 Home Avg Against Team $teamId2: $team1HomeAvg");
-        }
-        if ($team1AwayAvg > 0) {
-            $this->info("Team $teamId1 Away Avg Against Team $teamId2: $team1AwayAvg");
-        }
-        if ($team2HomeAvg > 0) {
-            $this->info("Team $teamId2 Home Avg Against Team $teamId1: $team2HomeAvg");
-        }
-        if ($team2AwayAvg > 0) {
-            $this->info("Team $teamId2 Away Avg Against Team $teamId1: $team2AwayAvg");
-        }
+        $this->displayAverage("Team $teamId1 Home Avg Against Team $teamId2: $team1HomeAvg", $team1HomeAvg);
+        $this->displayAverage("Team $teamId1 Away Avg Against Team $teamId2: $team1AwayAvg", $team1AwayAvg);
+        $this->displayAverage("Team $teamId2 Home Avg Against Team $teamId1: $team2HomeAvg", $team2HomeAvg);
+        $this->displayAverage("Team $teamId2 Away Avg Against Team $teamId1: $team2AwayAvg", $team2AwayAvg);
     }
 
     private function calculateSingleTeamAverages($teamId, $seasonRange): void
     {
-        $homeAvg = $this->getAveragePoints($teamId, 'home', $seasonRange);
-        $awayAvg = $this->getAveragePoints($teamId, 'away', $seasonRange);
+        $homeAvg = $this->teamAverageService->getAveragePoints($teamId, 'home', $seasonRange);
+        $awayAvg = $this->teamAverageService->getAveragePoints($teamId, 'away', $seasonRange);
 
-        if ($homeAvg > 0) {
-            $this->info("Home Avg: $homeAvg");
-        }
-        if ($awayAvg > 0) {
-            $this->info("Away Avg: $awayAvg");
-        }
+        $this->displayAverage("Home Avg: $homeAvg", $homeAvg);
+        $this->displayAverage("Away Avg: $awayAvg", $awayAvg);
     }
 
     private function calculateAllTeamsAverages($seasonRange): void
     {
-        $teams = NflTeam::pluck('id');
+        $teams = $this->teamAverageService->getTeamIds();
 
         foreach ($teams as $teamId) {
-            $homeAvg = $this->getAveragePoints($teamId, 'home', $seasonRange);
-            $awayAvg = $this->getAveragePoints($teamId, 'away', $seasonRange);
+            $homeAvg = $this->teamAverageService->getAveragePoints($teamId, 'home', $seasonRange);
+            $awayAvg = $this->teamAverageService->getAveragePoints($teamId, 'away', $seasonRange);
 
             if ($homeAvg > 0 || $awayAvg > 0) {
                 $this->info("Team ID: $teamId -> Home Avg: $homeAvg, Away Avg: $awayAvg");
@@ -84,38 +74,10 @@ class CalculateTeamAverages extends Command
         }
     }
 
-    private function getAveragePointsForMatchup($teamId1, $teamId2, $type, $seasonRange): float
+    private function displayAverage(string $message, float $average): void
     {
-        $oppositeType = $type === 'home' ? 'away' : 'home';
-
-        $query = NflTeamSchedule::where("team_id_{$type}", $teamId1)
-            ->where("team_id_{$oppositeType}", $teamId2)
-            ->whereNotNull("{$type}_pts")
-            ->where('game_status', 'Completed');
-
-        if ($seasonRange) {
-            $query->whereBetween('game_date', $seasonRange);
+        if ($average > 0) {
+            $this->info($message);
         }
-
-        $totalPoints = $query->sum("{$type}_pts");
-        $totalGames = $query->count();
-
-        return $totalGames > 0 ? (float)$totalPoints / $totalGames : 0;
-    }
-
-    private function getAveragePoints($teamId, $type, $seasonRange): float
-    {
-        $query = NflTeamSchedule::where("team_id_{$type}", $teamId)
-            ->whereNotNull("{$type}_pts")
-            ->where('game_status', 'Completed');
-
-        if ($seasonRange) {
-            $query->whereBetween('game_date', $seasonRange);
-        }
-
-        $totalPoints = $query->sum("{$type}_pts");
-        $totalGames = $query->count();
-
-        return $totalGames > 0 ? (float)$totalPoints / $totalGames : 0;
     }
 }

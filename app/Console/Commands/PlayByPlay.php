@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\NFLStatsService;
 use App\Services\Elo\EloRatingSystem;
+use App\Services\ParsingService;
 use App\Models\NflPlayByPlay;
 use App\Models\NflTeam;
 use App\Models\NflPlayer;
@@ -18,12 +19,14 @@ class PlayByPlay extends Command
 
     protected NFLStatsService $statsService;
     protected EloRatingSystem $eloRatingSystem;
+    protected ParsingService $parsingService;
 
-    public function __construct(NFLStatsService $statsService, EloRatingSystem $eloRatingSystem)
+    public function __construct(NFLStatsService $statsService, EloRatingSystem $eloRatingSystem, ParsingService $parsingService)
     {
         parent::__construct();
         $this->statsService = $statsService;
         $this->eloRatingSystem = $eloRatingSystem;
+        $this->parsingService = $parsingService;
     }
 
     public function handle(): void
@@ -34,33 +37,20 @@ class PlayByPlay extends Command
 
         $data = $this->statsService->getBoxScore($gameID, $playByPlay, $fantasyPoints);
 
-        // Log the raw response for debugging
         Log::info('Box Score Response:', ['data' => $data]);
 
         if ($data && $data['statusCode'] == 200) {
             $body = $data['body'];
 
-            // Extract and process team stats
-            $teamStats = $body['teamStats'] ?? [];
-            Log::info('Team Stats:', $teamStats);
+            Log::info('Team Stats:', $body['teamStats'] ?? []);
+            Log::info('Scoring Plays:', $body['scoringPlays'] ?? []);
+            Log::info('All Play By Play:', $body['allPlayByPlay'] ?? []);
 
-            // Extract and process scoring plays
-            $scoringPlays = $body['scoringPlays'] ?? [];
-            Log::info('Scoring Plays:', $scoringPlays);
-
-            // Extract and process play-by-play data
-            $allPlayByPlay = $body['allPlayByPlay'] ?? [];
-            Log::info('All Play By Play:', $allPlayByPlay);
-
-            $this->storePlayByPlayData($gameID, $allPlayByPlay);
-
-            // Extract player stats if available
-            $playerStats = $body['playerStats'] ?? [];
-            Log::info('Player Stats:', $playerStats);
+            $this->storePlayByPlayData($gameID, $body['allPlayByPlay'] ?? []);
+            Log::info('Player Stats:', $body['playerStats'] ?? []);
 
             $this->info('Play-by-play data fetched and stored successfully.');
         } else {
-            // Log the error response
             Log::error('Failed to fetch box score data:', ['response' => $data]);
             $this->error('Failed to fetch data.');
         }
@@ -72,42 +62,36 @@ class PlayByPlay extends Command
             $playerStats = $playData['playerStats'] ?? [];
 
             foreach ($playerStats as $playerId => $stats) {
-                // Check if player exists and get the team_id
                 $player = NflPlayer::where('player_id', $playerId)->first();
 
                 if (!$player) {
                     Log::warning("Player ID $playerId not found in nfl_players table. Skipping.");
-                    continue; // Skip if player does not exist
+                    continue;
                 }
 
-                // Log player team abbreviation
                 Log::info("Player ID: $playerId, Team Abbreviation: {$player->team}");
 
-                // Find the team_id using the team abbreviation
                 $teamId = NflTeam::where('abbreviation', $player->team)->value('id');
-
-                // Log the fetched team_id
                 Log::info("Team Abbreviation: {$player->team}, Team ID: $teamId");
 
                 if (!$teamId) {
                     Log::warning("Team abbreviation {$player->team} for player ID $playerId not found in nfl_teams table. Skipping.");
-                    continue; // Skip if team does not exist
+                    continue;
                 }
 
-                // Calculate EPA if 'downAndDistance' and 'play' keys exist
                 $expectedPointsBefore = null;
                 $expectedPointsAfter = null;
                 $epa = null;
                 $startYardLine = null;
                 $endYardLine = null;
-                $playType = $this->parsePlayType($playData['play'] ?? '');
+                $playType = $this->parsingService->parsePlayType($playData['play'] ?? '');
 
                 if (isset($playData['downAndDistance']) && isset($playData['play'])) {
-                    $startFieldPosition = $this->parseFieldPositionFromDownAndDistance($playData['downAndDistance']);
-                    $endFieldPosition = $this->parseEndFieldPositionFromPlay($playData['play'], $startFieldPosition, $playType);
+                    $startFieldPosition = $this->parsingService->parseFieldPositionFromDownAndDistance($playData['downAndDistance']);
+                    $endFieldPosition = $this->parsingService->parseEndFieldPositionFromPlay($playData['play'], $startFieldPosition, $playType);
 
                     if ($playType === 'Incomplete') {
-                        $endFieldPosition = $startFieldPosition; // For incomplete passes, end field position is the same as start field position
+                        $endFieldPosition = $startFieldPosition;
                     }
 
                     $expectedPointsBefore = $this->eloRatingSystem->getExpectedPoints($startFieldPosition);
@@ -117,15 +101,14 @@ class PlayByPlay extends Command
                     $endYardLine = $endFieldPosition;
                 }
 
-                // Parse additional fields
-                $parsedDownAndDistance = $this->parseDownDistance($playData['downAndDistance'] ?? '');
+                $parsedDownAndDistance = $this->parsingService->parseDownDistance($playData['downAndDistance'] ?? '');
                 $down = $parsedDownAndDistance['down'] ?? null;
                 $distance = $parsedDownAndDistance['distance'] ?? null;
                 $yardLine = $parsedDownAndDistance['yard_line'] ?? null;
 
                 NflPlayByPlay::updateOrCreate(
                     [
-                        'game_id' => (string)$gameID, // Cast to string
+                        'game_id' => (string)$gameID,
                         'player_id' => $playerId,
                         'play_period' => $playData['playPeriod'] ?? null,
                         'play_clock' => $playData['playClock'] ?? null,
@@ -144,102 +127,19 @@ class PlayByPlay extends Command
                         'rush_yds' => $stats['Rushing']['rushYds'] ?? null,
                         'carries' => $stats['Rushing']['carries'] ?? null,
                         'down_and_distance' => $playData['downAndDistance'] ?? null,
-                        'team_id' => $teamId, // Store the team_id
+                        'team_id' => $teamId,
                         'expected_points_before' => $expectedPointsBefore,
                         'expected_points_after' => $expectedPointsAfter,
                         'epa' => $epa,
-                        'down' => $down, // Store the down
-                        'distance' => $distance, // Store the distance
-                        'yard_line' => $yardLine, // Store the yard line
-                        'play_type' => $playType, // Store the play type
-                        'start_yard_line' => $startYardLine, // Store the start yard line
-                        'end_yard_line' => $endYardLine // Store the end yard line
+                        'down' => $down,
+                        'distance' => $distance,
+                        'yard_line' => $yardLine,
+                        'play_type' => $playType,
+                        'start_yard_line' => $startYardLine,
+                        'end_yard_line' => $endYardLine
                     ]
                 );
             }
         }
-    }
-
-    protected function parseDownDistance(string $downAndDistance): array
-    {
-        $downDistancePattern = '/(\d+)(?:st|nd|rd|th)\s*&\s*(\d+|Goal)\s*at\s*([A-Z]{2,3})\s*(\d+)/i';
-        preg_match($downDistancePattern, $downAndDistance, $matches);
-
-        return [
-            'down' => $matches[1] ?? null,
-            'distance' => $matches[2] ?? null,
-            'yard_line' => $matches[4] ?? null,
-        ];
-    }
-
-    protected function parsePlayType(string $playDescription): string
-    {
-        $playTypePatterns = Config::get('nfl.playTypePatterns');
-        $penaltyPatterns = Config::get('nfl.penaltyPatterns');
-
-        // Check for penalties first
-        foreach ($penaltyPatterns as $pattern) {
-            if (str_contains(strtolower($playDescription), $pattern)) {
-                return 'Penalty';
-            }
-        }
-
-        // Check for touchbacks
-        if (str_contains(strtolower($playDescription), 'touchback')) {
-            return 'Touchback';
-        }
-
-        // Check for other play types
-        if (str_contains(strtolower($playDescription), 'touchdown')) {
-            return 'Touchdown';
-        }
-
-        foreach ($playTypePatterns as $pattern => $type) {
-            if (str_contains(strtolower($playDescription), $pattern)) {
-                return $type;
-            }
-        }
-
-        return 'Unknown';
-    }
-
-    protected function parseFieldPositionFromDownAndDistance(string $downAndDistance): int
-    {
-        // Extract the starting yard line from the down and distance
-        $pattern = '/at [A-Z]{2,3} (\d+)/';
-        preg_match($pattern, $downAndDistance, $matches);
-
-        return isset($matches[1]) ? (int)$matches[1] : 0;
-    }
-
-    protected function parseEndFieldPositionFromPlay(string $playDescription, int $startFieldPosition, string $playType): int
-    {
-        // Pattern to extract the ending yard line from the play description
-        $endFieldPositionPattern = '/pushed ob at [A-Z]{2,3} (\d+)/i';
-        preg_match($endFieldPositionPattern, $playDescription, $matches);
-
-        if (isset($matches[1])) {
-            return (int)$matches[1];
-        }
-
-        // Fallback to handle other cases
-        $endFieldPositionPatternFallback = '/at [A-Z]{2,3} (\d+)/i';
-        preg_match($endFieldPositionPatternFallback, $playDescription, $matches);
-
-        if (isset($matches[1])) {
-            return (int)$matches[1];
-        }
-
-        // For kickoffs and touchbacks, determine the end yard line based on specific rules
-        if ($playType === 'Touchback') {
-            return 25; // Touchback
-        }
-
-        // Calculate end position based on yardage gained if no other information is available
-        if (preg_match('/for (\d+) yards/', $playDescription, $yardMatches)) {
-            return max($startFieldPosition - (int)$yardMatches[1], 0);
-        }
-
-        return 0;
     }
 }

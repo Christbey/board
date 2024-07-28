@@ -61,4 +61,9 @@ class NflTeam extends Model
         return $this->hasMany(NflTeamSchedule::class, 'team_id_home')
             ->orWhere('team_id_away', $this->id);
     }
+
+    public function players()
+    {
+        return $this->hasMany(NflPlayer::class, 'team_id');
+    }
 }

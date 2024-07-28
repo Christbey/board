@@ -26,4 +26,9 @@ class NflPlayer extends Model
     {
         return $this->hasMany(NflInjury::class, 'player_id', 'player_id');
     }
+
+    public function team()
+    {
+        return $this->belongsTo(NflTeam::class, 'team_id');
+    }
 }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class DVOAService
 {
-    public function calculateTeamDVOA($teamId)
+    public function calculateTeamDVOA($teamId): float|int
     {
         // Total rush yards and plays for the team
         $teamTotalRushYards = DB::table('nfl_play_by_play')

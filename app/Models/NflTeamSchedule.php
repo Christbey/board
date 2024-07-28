@@ -62,5 +62,62 @@ class NflTeamSchedule extends Model
         return $this->hasOne(NflOdds::class, 'composite_key', 'composite_key');
     }
 
+    public static function calculateWins($teamId, $seasonStartDate, $seasonEndDate)
+    {
+        // Count the number of games where the given team was the home team and won in the specified season
+        $homeWins = self::where('team_id_home', $teamId)
+            ->where('home_result', 'W')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Count the number of games where the given team was the away team and won in the specified season
+        $awayWins = self::where('team_id_away', $teamId)
+            ->where('away_result', 'W')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Return the total number of wins
+        return $homeWins + $awayWins;
+    }
+
+    public static function calculateWinsAndLosses($teamId, $seasonStartDate, $seasonEndDate)
+    {
+        // Count the number of games where the given team was the home team and won in the specified season
+        $homeWins = self::where('team_id_home', $teamId)
+            ->where('home_result', 'W')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Count the number of games where the given team was the away team and won in the specified season
+        $awayWins = self::where('team_id_away', $teamId)
+            ->where('away_result', 'W')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Count the number of games where the given team was the home team and lost in the specified season
+        $homeLosses = self::where('team_id_home', $teamId)
+            ->where('home_result', 'L')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Count the number of games where the given team was the away team and lost in the specified season
+        $awayLosses = self::where('team_id_away', $teamId)
+            ->where('away_result', 'L')
+            ->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            ->where('season_type', 'Regular Season')
+            ->count();
+
+        // Calculate total wins and losses
+        $wins = $homeWins + $awayWins;
+        $losses = $homeLosses + $awayLosses;
+
+        return ['wins' => $wins, 'losses' => $losses];
+    }
+
 
 }

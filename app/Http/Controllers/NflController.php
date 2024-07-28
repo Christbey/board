@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NflHelper;
 
 class NflController extends Controller
 {
@@ -107,17 +108,33 @@ class NflController extends Controller
         }
     }
 
-    public function show($teamId)
+    public function show($teamId, Request $request)
     {
         try {
-            $team = NflTeam::with(['schedules' => function ($query) {
-                $seasonStartDate = Carbon::parse('2024-09-01');
-                $seasonEndDate = Carbon::parse('2024-12-31');
-                $query->whereBetween('game_date', [$seasonStartDate, $seasonEndDate])
+            $position = $request->input('position');
+
+            // Get current season date range
+            $currentSeasonYear = Carbon::now()->year;
+            [$currentSeasonStartDate, $currentSeasonEndDate] = NflHelper::getSeasonDateRange($currentSeasonYear);
+
+            // Get previous season date range
+            $previousSeasonYear = $currentSeasonYear - 1;
+            [$previousSeasonStartDate, $previousSeasonEndDate] = NflHelper::getSeasonDateRange($previousSeasonYear);
+
+            $team = NflTeam::with(['schedules' => function ($query) use ($currentSeasonStartDate, $currentSeasonEndDate) {
+                $query->whereBetween('game_date', [$currentSeasonStartDate, $currentSeasonEndDate])
                     ->whereNull('home_result')
                     ->whereNull('away_result')
+                    ->where('season_type', 'Regular Season')
                     ->orderBy('game_date');
+            }, 'players' => function ($query) use ($position) {
+                if ($position) {
+                    $query->where('pos', $position);
+                }
             }])->findOrFail($teamId);
+
+            // Debugging code
+            Log::info('Team Players:', ['players' => $team->players->toArray()]);
 
             $predictions = NflPrediction::where('team_id_home', $team->id)
                 ->orWhere('team_id_away', $team->id)
@@ -147,7 +164,17 @@ class NflController extends Controller
                 ];
             });
 
-            return view('nfl.show', compact('team', 'expectedWins', 'nextOpponents', 'predictions'));
+            // Calculate the wins and losses for the team for the current and previous seasons
+            $currentSeasonRecord = NflTeamSchedule::calculateWinsAndLosses($team->id, $currentSeasonStartDate, $currentSeasonEndDate);
+            $previousSeasonRecord = NflTeamSchedule::calculateWinsAndLosses($team->id, $previousSeasonStartDate, $previousSeasonEndDate);
+
+            // Get all positions for the filter
+            $positions = NflTeam::findOrFail($teamId)->players()->distinct()->pluck('pos')->toArray();
+
+            // Get players
+            $players = $team->players;
+
+            return view('nfl.show', compact('team', 'expectedWins', 'nextOpponents', 'predictions', 'currentSeasonRecord', 'previousSeasonRecord', 'players', 'positions', 'position'));
         } catch (Exception $e) {
             Log::error('Error fetching team details: ' . $e->getMessage(), [
                 'exception' => $e,
