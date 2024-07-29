@@ -67,3 +67,11 @@ Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name
 use App\Http\Controllers\NFLStatsController;
 
 Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore']);
+
+use App\Http\Controllers\EspnController;
+
+Route::get('/espn/depth-chart', [EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
+Route::get('/espn/team/{team_id}', [EspnController::class, 'showTeamData'])->name('espn.team-data');
+Route::get('/espn/schedule', [EspnController::class, 'showNflSchedule'])->name('espn.schedule');
+Route::get('/espn/team/{team_id}/schedule', [EspnController::class, 'showNflSchedule'])->name('espn.schedule');
+Route::get('/espn/team/{team_id}/details', [EspnController::class, 'showTeamDetails'])->name('espn.team-details');
