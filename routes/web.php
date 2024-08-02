@@ -70,7 +70,6 @@ Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore
 
 use App\Http\Controllers\EspnController;
 
-Route::get('/espn/team/{team_id}/depth-chart', [App\Http\Controllers\EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
 Route::get('/espn/team/{team_id}/schedule', [EspnController::class, 'showNflSchedule'])->name('espn.schedule');
 Route::get('/espn/team/{team_id}/details', [App\Http\Controllers\EspnController::class, 'showTeamDetails'])->name('espn.team-details');
 Route::post('/espn/team/details/filter', [App\Http\Controllers\EspnController::class, 'filterTeam'])->name('filter_team');
