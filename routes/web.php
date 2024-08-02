@@ -70,6 +70,20 @@ Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore
 
 use App\Http\Controllers\EspnController;
 
-Route::get('/espn/depth-chart', [EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
+Route::get('/espn/team/{team_id}/depth-chart', [App\Http\Controllers\EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
 Route::get('/espn/team/{team_id}/schedule', [EspnController::class, 'showNflSchedule'])->name('espn.schedule');
-Route::get('/espn/team/{team_id}/details', [EspnController::class, 'showTeamDetails'])->name('espn.team-details');
+Route::get('/espn/team/{team_id}/details', [App\Http\Controllers\EspnController::class, 'showTeamDetails'])->name('espn.team-details');
+Route::post('/espn/team/details/filter', [App\Http\Controllers\EspnController::class, 'filterTeam'])->name('filter_team');
+Route::get('/espn-nfl-odds', [EspnController::class, 'showNflOdds']);
+Route::get('/espn-nfl-scoreboard', [EspnController::class, 'showNflScoreboard']);
+Route::get('/espn-nfl-team-projection', [EspnController::class, 'showNflTeamProjection']);
+
+use App\Http\Controllers\DynamicNFLController;
+
+
+Route::get('/nfl/fetch', [DynamicNFLController::class, 'fetch']);
+
+// routes/web.php
+Route::get('/espn/events', [App\Http\Controllers\EspnEventController::class, 'index'])->name('espn.events');
+Route::post('/espn/events/filter', [App\Http\Controllers\EspnEventController::class, 'filter'])->name('espn.events.filter');
+Route::get('/espn/depth-chart', [EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
