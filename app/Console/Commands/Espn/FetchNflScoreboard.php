@@ -35,7 +35,7 @@ class FetchNflScoreboard extends Command
 
         foreach ($seasonTypes as $seasontype) {
             foreach ($weeks as $week) {
-                $url = "{$baseUrl}?dates={$year}&seasontype={$seasontype}&week={$week}";
+                $url = "{$baseUrl}?dates={$year}&seasontype=2&week=2";
 
                 try {
                     $this->info("Fetching data from: $url");

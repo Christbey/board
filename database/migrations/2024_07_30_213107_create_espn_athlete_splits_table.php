@@ -312,7 +312,7 @@ class CreateEspnAthleteSplitsTable extends Migration
             $table->timestamps();
 
             // Foreign key constraint
-            $table->foreign('athlete_id')->references('id')->on('nfl_espn_athletes')->onDelete('cascade');
+            $table->foreign('athlete_id')->references('athlete_id')->on('nfl_espn_athletes')->onDelete('cascade');
         });
     }
 
