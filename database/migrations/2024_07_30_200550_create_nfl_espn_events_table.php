@@ -11,7 +11,7 @@ class CreateNflEspnEventsTable extends Migration
         Schema::create('nfl_espn_events', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('week_id');
-            $table->string('event_id');
+            $table->string('event_id')->unique();
             $table->string('uid')->nullable();
             $table->dateTime('date')->nullable();
             $table->string('name')->nullable();

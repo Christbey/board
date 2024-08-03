@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Console\Commands\Espn;
+namespace App\Console\Commands\Espn\Teams;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use App\Models\EspnNflDepthChart;
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnTeam;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 
 class EspnNflPlayerDepthChart extends Command
 {

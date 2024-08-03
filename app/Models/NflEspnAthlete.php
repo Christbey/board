@@ -8,6 +8,10 @@ class NflEspnAthlete extends Model
 {
     protected $table = 'nfl_espn_athletes';
 
+    protected $primaryKey = 'athlete_id';
+
+    public $incrementing = false;
+
     protected $fillable = [
         'athlete_id',
         'team_id',

@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Espn;
 
+use App\Models\NflEspnEvent;
+use App\Models\NflEspnWeek;
+use Carbon\Carbon;
 use Exception;
-use Illuminate\Console\Command;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use App\Models\NflEspnWeek;
-use App\Models\NflEspnEvent;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class FetchNflScoreboard extends Command
 {

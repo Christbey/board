@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Espn;
+namespace App\Console\Commands\Espn\Teams;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;

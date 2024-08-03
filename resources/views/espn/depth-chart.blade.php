@@ -42,8 +42,8 @@
                     @foreach($depthChartData as $entry)
                         <tr class="bg-white">
                             <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->position }}</td>
-                            <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->athlete->full_name }}</td>
-                            <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->athlete->jersey }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->athlete->full_name ?? null }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->athlete->jersey ?? null }}</td>
                             <td class="py-2 px-4 border-b border-gray-200 text-sm">{{ $entry->depth }}</td>
                         </tr>
                     @endforeach

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EspnNflDepthChart;
+use App\Models\NflEspnInjury;
 use App\Models\NflEspnTeam;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
@@ -165,5 +166,21 @@ class EspnController extends Controller
 
         return redirect()->route('espn.team-details', ['team_id' => $teamId]);
     }
+    
+    public function showInjuries(Request $request)
+    {
+        $teamId = $request->input('team_id');
+        $teams = NflEspnTeam::all();
+
+        if ($teamId) {
+            $injuries = NflEspnInjury::with(['team', 'athlete'])->where('team_id', $teamId)->get();
+        } else {
+            $injuries = NflEspnInjury::with(['team', 'athlete'])->get();
+        }
+
+        return view('espn.injuries', compact('injuries', 'teams', 'teamId'));
+    }
+
+
 }
 

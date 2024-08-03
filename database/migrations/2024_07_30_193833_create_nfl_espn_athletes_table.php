@@ -9,9 +9,10 @@ class CreateNflEspnAthletesTable extends Migration
     public function up()
     {
         Schema::create('nfl_espn_athletes', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('athlete_id')->unique();
+            // Remove the id() method and define athlete_id as the primary key
+            $table->unsignedBigInteger('athlete_id')->primary();
             $table->unsignedBigInteger('team_id');
+            $table->string('jersey')->nullable();
             $table->integer('season_year');
             $table->string('uid')->nullable();
             $table->string('guid')->nullable();
@@ -29,7 +30,6 @@ class CreateNflEspnAthletesTable extends Migration
             $table->integer('debut_year')->nullable();
             $table->string('position')->nullable();
             $table->string('status')->nullable();
-            $table->string('jersey')->nullable();
             $table->timestamps();
 
             $table->foreign('team_id')->references('team_id')->on('nfl_espn_teams')->onDelete('cascade');

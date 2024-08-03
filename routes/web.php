@@ -86,3 +86,4 @@ Route::get('/nfl/fetch', [DynamicNFLController::class, 'fetch']);
 Route::get('/espn/events', [App\Http\Controllers\EspnEventController::class, 'index'])->name('espn.events');
 Route::post('/espn/events/filter', [App\Http\Controllers\EspnEventController::class, 'filter'])->name('espn.events.filter');
 Route::get('/espn/depth-chart', [EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
+Route::get('/espn/injuries', [EspnController::class, 'showInjuries'])->name('espn.injuries');

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Espn;
 
-use Exception;
-use Illuminate\Console\Command;
-use GuzzleHttp\Client;
 use App\Models\NflEspnEventLog;
+use Exception;
+use GuzzleHttp\Client;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class FetchNflEventLog extends Command
