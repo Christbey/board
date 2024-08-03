@@ -45,6 +45,7 @@ class EspnNflTeams extends Command
                     'slug' => $team['team']['slug'],
                     'abbreviation' => $team['team']['abbreviation'],
                     'displayName' => $team['team']['displayName'],
+                    'shortDisplayName' => $team['team']['shortDisplayName'],
                     'name' => $team['team']['name'],
                     'nickname' => $team['team']['nickname'],
                     'location' => $team['team']['location'],
