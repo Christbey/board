@@ -3,14 +3,15 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\NflEspnTeam;
 
 class TeamDetails extends Component
 {
-    public $teamData;
+    public $team;
 
-    public function mount($teamData)
+    public function mount($teamId)
     {
-        $this->teamData = $teamData;
+        $this->team = NflEspnTeam::findOrFail($teamId);
     }
 
     public function render()

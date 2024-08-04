@@ -2,10 +2,13 @@
 
 namespace App\Console\Commands\Espn;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class StoreAthleteSplits extends Command
 {
@@ -15,8 +18,7 @@ class StoreAthleteSplits extends Command
     public function __construct()
     {
         parent::__construct();
-        // Set the memory limit
-        ini_set('memory_limit', '1024M'); // You can adjust the memory limit as needed
+        ini_set('memory_limit', '1024M'); // Adjust the memory limit as needed
     }
 
     public function handle()
@@ -57,59 +59,82 @@ class StoreAthleteSplits extends Command
 
         foreach ($statisticsData['splits']['categories'] as $category) {
             $categoryName = $category['name'] ?? 'N/A';
-            foreach ($category['athletes'] as $athlete) {
-                $athleteUrl = $athlete['athlete']['$ref'];
-                $athleteResponse = Http::get($athleteUrl);
+            if (isset($category['athletes'])) {
+                foreach ($category['athletes'] as $athlete) {
+                    $athleteUrl = $athlete['athlete']['$ref'];
+                    $athleteResponse = Http::get($athleteUrl);
 
-                if ($athleteResponse->successful()) {
-                    $athleteData = $athleteResponse->json();
-                    $athleteId = $athleteData['id'];
+                    if ($athleteResponse->successful()) {
+                        $athleteData = $athleteResponse->json();
+                        $athleteId = $athleteData['id'];
 
-                    // Determine the team_id based on the competitor's homeAway value
-                    $teamId = $homeAway === 'home' ? $homeTeamId : $awayTeamId;
+                        // Determine the team_id based on the competitor's homeAway value
+                        $teamId = $homeAway === 'home' ? $homeTeamId : $awayTeamId;
 
-                    // Check if athlete exists in the database
-                    $athleteExists = DB::table('nfl_espn_athletes')->where('athlete_id', $athleteId)->exists();
+                        // Parse date_of_birth to a compatible format
+                        $dateOfBirth = $this->parseDate($athleteData['dateOfBirth']);
 
-                    if (!$athleteExists) {
-                        // Insert the athlete into the nfl_espn_athletes table
-                        DB::table('nfl_espn_athletes')->insert([
-                            'athlete_id' => $athleteId,
-                            'team_id' => $teamId,
-                            'season_year' => $seasonYear,
-                            'uid' => $athleteData['uid'] ?? null,
-                            'guid' => $athleteData['guid'] ?? null,
-                            'first_name' => $athleteData['firstName'] ?? null,
-                            'last_name' => $athleteData['lastName'] ?? null,
-                            'full_name' => $athleteData['fullName'] ?? null,
-                            'display_name' => $athleteData['displayName'] ?? null,
-                            'short_name' => $athleteData['shortName'] ?? null,
-                            'weight' => $athleteData['weight'] ?? null,
-                            'display_weight' => $athleteData['displayWeight'] ?? null,
-                            'height' => $athleteData['height'] ?? null,
-                            'display_height' => $athleteData['displayHeight'] ?? null,
-                            'age' => $athleteData['age'] ?? null,
-                            'date_of_birth' => $athleteData['dateOfBirth'] ?? null,
-                            'debut_year' => $athleteData['debutYear'] ?? null,
-                            'position' => $athleteData['position'] ?? null,
-                            'status' => $athleteData['status'] ?? null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                        $this->info("Athlete ID: {$athleteId} added to the database.");
-                    }
+                        // Extract necessary fields from the position JSON object
+                        $positionData = [
+                            'id' => $athleteData['position']['id'] ?? null,
+                            'name' => $athleteData['position']['name'] ?? null,
+                            'displayName' => $athleteData['position']['displayName'] ?? null,
+                            'abbreviation' => $athleteData['position']['abbreviation'] ?? null,
+                        ];
 
-                    $statisticsUrl = $athlete['statistics']['$ref'];
-                    $statisticsResponse = Http::get($statisticsUrl);
-                    if ($statisticsResponse->successful()) {
-                        $statistics = $statisticsResponse->json();
-                        $this->storeAthleteData($statistics, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName);
+                        // Extract necessary fields from the status JSON object
+                        $statusData = [
+                            'id' => $athleteData['status']['id'] ?? null,
+                            'name' => $athleteData['status']['name'] ?? null,
+                            'type' => $athleteData['status']['type'] ?? null,
+                            'abbreviation' => $athleteData['status']['abbreviation'] ?? null,
+                        ];
+
+                        // Check if athlete exists in the database
+                        $athleteExists = DB::table('nfl_espn_athletes')->where('athlete_id', $athleteId)->exists();
+
+                        if (!$athleteExists) {
+                            // Insert the athlete into the nfl_espn_athletes table
+                            DB::table('nfl_espn_athletes')->insert([
+                                'athlete_id' => $athleteId,
+                                'team_id' => $teamId,
+                                'season_year' => $seasonYear,
+                                'uid' => $athleteData['uid'] ?? null,
+                                'guid' => $athleteData['guid'] ?? null,
+                                'first_name' => $athleteData['firstName'] ?? null,
+                                'last_name' => $athleteData['lastName'] ?? null,
+                                'full_name' => $athleteData['fullName'] ?? null,
+                                'display_name' => $athleteData['displayName'] ?? null,
+                                'short_name' => $athleteData['shortName'] ?? null,
+                                'weight' => $athleteData['weight'] ?? null,
+                                'display_weight' => $athleteData['displayWeight'] ?? null,
+                                'height' => $athleteData['height'] ?? null,
+                                'display_height' => $athleteData['displayHeight'] ?? null,
+                                'age' => $athleteData['age'] ?? null,
+                                'date_of_birth' => $dateOfBirth,
+                                'debut_year' => $athleteData['debutYear'] ?? null,
+                                'position' => json_encode($positionData), // Convert to JSON
+                                'status' => json_encode($statusData), // Convert to JSON
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            $this->info("Athlete ID: {$athleteId} added to the database.");
+                        }
+
+                        $statisticsUrl = $athlete['statistics']['$ref'];
+                        $statisticsResponse = Http::get($statisticsUrl);
+                        if ($statisticsResponse->successful()) {
+                            $statistics = $statisticsResponse->json();
+                            $this->storeAthleteData($statistics, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName);
+                        } else {
+                            $this->error("Failed to fetch statistics for athlete ID: {$athleteId}");
+                        }
                     } else {
-                        $this->error("Failed to fetch statistics for athlete ID: {$athleteId}");
+                        $this->error("Failed to fetch data for athlete URL: {$athleteUrl}");
                     }
-                } else {
-                    $this->error("Failed to fetch data for athlete URL: {$athleteUrl}");
                 }
+            } else {
+                Log::warning("Missing 'athletes' key in category: {$categoryName}");
             }
         }
     }
@@ -161,5 +186,15 @@ class StoreAthleteSplits extends Command
             }
         }
         return null;
+    }
+
+    protected function parseDate($dateString)
+    {
+        try {
+            return Carbon::parse($dateString)->format('Y-m-d');
+        } catch (Exception $e) {
+            Log::error("Failed to parse date: {$dateString}. Error: {$e->getMessage()}");
+            return null;
+        }
     }
 }

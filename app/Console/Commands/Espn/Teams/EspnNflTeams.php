@@ -19,7 +19,7 @@ class EspnNflTeams extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch NFL teams from the ESPN API';
+    protected $description = 'NOT IN USE Fetch NFL teams from the ESPN API';
 
     /**
      * Execute the console command.

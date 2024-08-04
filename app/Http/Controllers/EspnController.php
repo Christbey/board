@@ -3,8 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\EspnNflDepthChart;
+use App\Models\EspnNflPastH2h;
+use App\Models\NflEspnAtsRecord;
+use App\Models\NflEspnEvent;
+use App\Models\NflEspnEventOdd;
+use App\Models\NflEspnFuture;
 use App\Models\NflEspnInjury;
 use App\Models\NflEspnTeam;
+use App\Models\NflEspnTeamProjection;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +22,13 @@ use Illuminate\Http\Client\ConnectionException;
 
 class EspnController extends Controller
 {
+
+    public function index()
+    {
+        $teams = NflEspnTeam::all();
+        return view('espn.nfl.teams.index', compact('teams'));
+    }
+
     public function showTeamDetails($team_id, $year = 2023)
     {
         $output = new BufferedOutput();
@@ -166,7 +179,7 @@ class EspnController extends Controller
 
         return redirect()->route('espn.team-details', ['team_id' => $teamId]);
     }
-    
+
     public function showInjuries(Request $request)
     {
         $teamId = $request->input('team_id');
@@ -181,6 +194,40 @@ class EspnController extends Controller
         return view('espn.injuries', compact('injuries', 'teams', 'teamId'));
     }
 
+    public function show($id)
+    {
+        $team = NflEspnTeam::findOrFail($id);
+        $injuries = NflEspnInjury::with(['team', 'athlete'])->where('team_id', $id)->get();
+        $atsRecords = NflEspnAtsRecord::where('team_id', $id)->get();
+        $events = NflEspnEvent::where('home_team_id', $id)
+            ->orWhere('away_team_id', $id)
+            ->get();
+        $futures = NflEspnFuture::where('team_id', $id)->get();
+        $depthChart = EspnNflDepthChart::where('team_id', $id)->get();
+        $projections = NflEspnTeamProjection::where('team_id', $id)->get();
+
+        return view('espn.nfl.teams.show', compact('team', 'injuries', 'atsRecords', 'events', 'futures', 'depthChart', 'projections'));
+    }
+
+    public function showEvent($id)
+    {
+        $event = NflEspnEvent::findOrFail($id);
+        $odds = NflEspnEventOdd::where('event_id', $event->event_id)
+            ->get(['provider_name', 'over_under', 'spread', 'over_odds', 'under_odds']);
+
+        $homeTeamId = $event->home_team_id;
+        $awayTeamId = $event->away_team_id;
+
+        $pastH2h = EspnNflPastH2h::where(function ($query) use ($homeTeamId, $awayTeamId) {
+            $query->where('home_team_id', $homeTeamId)
+                ->where('away_team_id', $awayTeamId);
+        })->orWhere(function ($query) use ($homeTeamId, $awayTeamId) {
+            $query->where('home_team_id', $awayTeamId)
+                ->where('away_team_id', $homeTeamId);
+        })->get();
+
+        return view('espn.nfl.events.show', compact('event', 'odds', 'pastH2h'));
+    }
+
 
 }
-

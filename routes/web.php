@@ -87,3 +87,6 @@ Route::get('/espn/events', [App\Http\Controllers\EspnEventController::class, 'in
 Route::post('/espn/events/filter', [App\Http\Controllers\EspnEventController::class, 'filter'])->name('espn.events.filter');
 Route::get('/espn/depth-chart', [EspnController::class, 'showDepthChart'])->name('espn.depth-chart');
 Route::get('/espn/injuries', [EspnController::class, 'showInjuries'])->name('espn.injuries');
+Route::get('/espn/nfl/teams', [EspnController::class, 'index'])->name('espn.nfl.teams.index');
+Route::get('/espn/nfl/teams/{id}', [EspnController::class, 'show'])->name('espn.nfl.teams.show');
+Route::get('/espn/nfl/events/{event_id}', [EspnController::class, 'showEvent'])->name('espn.events.show');

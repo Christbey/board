@@ -9,7 +9,7 @@ class EspnNflDepthChart extends Model
 {
     use HasFactory;
 
-    protected $table = 'espn_nfl_depth_chart';
+    protected $table = 'nfl_espn_depth_chart';
 
     protected $fillable = [
         'team_id',
