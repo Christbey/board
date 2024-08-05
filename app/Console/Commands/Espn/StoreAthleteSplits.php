@@ -40,7 +40,7 @@ class StoreAthleteSplits extends Command
 
                 if ($statisticsResponse->successful()) {
                     $statisticsData = $statisticsResponse->json();
-                    $this->processStatistics($statisticsData, $teamId, $homeAway, $competitors, $seasonYear);
+                    $this->processStatistics($statisticsData, $teamId, $homeAway, $competitors, $seasonYear, $eventId);
                 } else {
                     $this->error("Failed to fetch statistics for team ID: {$teamId}");
                 }
@@ -52,7 +52,7 @@ class StoreAthleteSplits extends Command
         }
     }
 
-    protected function processStatistics($statisticsData, $teamId, $homeAway, $competitors, $seasonYear)
+    protected function processStatistics($statisticsData, $teamId, $homeAway, $competitors, $seasonYear, $eventId)
     {
         $awayTeamId = $this->extractTeamIdFromCompetitors($competitors, 'away');
         $homeTeamId = $this->extractTeamIdFromCompetitors($competitors, 'home');
@@ -125,7 +125,7 @@ class StoreAthleteSplits extends Command
                         $statisticsResponse = Http::get($statisticsUrl);
                         if ($statisticsResponse->successful()) {
                             $statistics = $statisticsResponse->json();
-                            $this->storeAthleteData($statistics, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName);
+                            $this->storeAthleteData($statistics, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName, $eventId);
                         } else {
                             $this->error("Failed to fetch statistics for athlete ID: {$athleteId}");
                         }
@@ -139,11 +139,12 @@ class StoreAthleteSplits extends Command
         }
     }
 
-    protected function storeAthleteData($data, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName)
+    protected function storeAthleteData($data, $athleteId, $teamId, $awayTeamId, $homeTeamId, $categoryName, $eventId)
     {
         $tableColumns = Schema::getColumnListing('nfl_espn_athlete_splits');
 
         $insertData = [
+            'event_id' => $eventId,
             'athlete_id' => $athleteId,
             'split_id' => $data['splits']['id'] ?? 0,
             'split_name' => $data['splits']['name'] ?? 'N/A',
