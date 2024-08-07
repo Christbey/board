@@ -7,9 +7,9 @@ use App\Models\NflEspnTeamProjection;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class FetchEspnNflTeamProjection extends Command
+class NflTeamProjection extends Command
 {
-    protected $signature = 'fetch:espn-nfl-team-projection {team_id?}';
+    protected $signature = 'espn:team-projection {team_id?}';
     protected $description = 'Fetch NFL team projection from ESPN API';
 
     public function __construct()

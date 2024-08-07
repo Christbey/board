@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Espn\Athletes;
+namespace App\Console\Commands\Espn\Season;
 
 use App\Models\NflEspnSplit;
 use Illuminate\Console\Command;
@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 class AthleteSplits extends Command
 {
-    protected $signature = 'espn:nfl-splits {athlete_id}';
-    protected $description = 'Fetch NFL splits from ESPN API';
+    protected $signature = 'espn:athlete-splits {athlete_id}';
+    protected $description = 'Fetch Athlete splits by category from ESPN API';
 
     public function __construct()
     {
@@ -26,6 +26,12 @@ class AthleteSplits extends Command
             $data = $response->json();
 
             if (isset($data['splitCategories']) && count($data['splitCategories']) > 0) {
+                $year = $this->extractYear($data);
+                if (!$year) {
+                    $this->error('Year not found in the response data.');
+                    return;
+                }
+
                 foreach ($data['splitCategories'] as $category) {
                     $splitCategory = $category['name'];
                     if (isset($category['splits']) && count($category['splits']) > 0) {
@@ -39,13 +45,11 @@ class AthleteSplits extends Command
                                 'split_category' => $splitCategory,
                                 'split_type' => $splitType,
                                 'display_name' => $displayName,
+                                'year' => $year,
                             ];
 
-                            // Map stats to corresponding labels
-                            $labels = [
-                                'TOT', 'SOLO', 'AST', 'SACK', 'STF', 'STFYDS', 'FF', 'FR', 'KB',
-                                'INT', 'YDS', 'AVG', 'TD', 'LNG', 'PD'
-                            ];
+                            // Mapping stats to the provided labels
+                            $labels = $data['labels'];
                             foreach ($labels as $index => $label) {
                                 $splitData[$label] = $stats[$index] ?? null;
                             }
@@ -55,6 +59,7 @@ class AthleteSplits extends Command
                                     'athlete_id' => $athleteId,
                                     'split_category' => $splitCategory,
                                     'split_type' => $splitType,
+                                    'year' => $year,
                                 ],
                                 $splitData
                             );
@@ -69,5 +74,15 @@ class AthleteSplits extends Command
         } else {
             $this->error("Failed to fetch NFL splits for athlete {$athleteId}.");
         }
+    }
+
+    private function extractYear($data)
+    {
+        foreach ($data['filters'] as $filter) {
+            if ($filter['name'] === 'season') {
+                return $filter['value'];
+            }
+        }
+        return null;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Espn\Teams;
+namespace App\Console\Commands\Espn\Athletes;
 
 use App\Models\EspnNflDepthChart;
 use App\Models\NflEspnAthlete;
@@ -8,14 +8,14 @@ use App\Models\NflEspnTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class EspnNflPlayerDepthChart extends Command
+class DepthChart extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'espn:nfl-player-depth-chart {team_id?}';
+    protected $signature = 'espn:depth-chart {team_id?}';
 
     /**
      * The console command description.

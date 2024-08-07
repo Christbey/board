@@ -1,61 +1,45 @@
 <?php
 
-namespace App\Console\Commands\Espn;
+namespace App\Console\Commands\Espn\Events;
 
 use App\Models\NflEspnEvent;
 use App\Models\NflEspnWeek;
-use Carbon\Carbon;
-use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
-class FetchNflScoreboard extends Command
+class FetchEspnEvents extends Command
 {
-    protected $signature = 'fetch:nfl-scoreboard {year} {seasontype?} {week?}';
-    protected $description = 'Fetch and store NFL scoreboard data from ESPN API';
-
-    protected $client;
+    protected $signature = 'fetch:espn-events {season_year} {season_type} {week_number}';
+    protected $description = 'Fetch ESPN NFL events and store them in the database';
 
     public function __construct()
     {
         parent::__construct();
-        $this->client = new Client();
     }
 
     public function handle()
     {
-        $year = $this->argument('year');
-        $seasontype = $this->argument('seasontype') ?? 2; // Default to regular season (2)
-        $week = $this->argument('week') ?? 1; // Default to week 1
-        $baseUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+        $seasonYear = $this->argument('season_year');
+        $seasonType = $this->argument('season_type');
+        $weekNumber = $this->argument('week_number');
 
-        $url = "{$baseUrl}?dates={$year}&seasontype={$seasontype}&week={$week}";
+        $url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates={$seasonYear}&seasontype={$seasonType}&week={$weekNumber}";
+        $response = Http::get($url);
 
-        try {
-            $this->info("Fetching data from: $url");
-            $response = $this->client->request('GET', $url);
-            $data = json_decode($response->getBody()->getContents(), true);
+        if ($response->successful()) {
+            $events = $response->json()['events'];
 
-            if (empty($data['events'])) {
-                $this->warn("No data found for SeasonType $seasontype Week $week.");
-                return;
-            }
+            // Ensure the week entry exists in the database
+            $weekModel = NflEspnWeek::firstOrCreate(
+                [
+                    'season_year' => $seasonYear,
+                    'season_type' => $seasonType,
+                    'week_number' => $weekNumber,
+                ]
+            );
 
-            Log::info('API Response:', $data);
-
-            $weekData = [
-                'season_year' => $data['season']['year'],
-                'season_type' => $data['season']['type'],
-                'week_number' => $data['week']['number'],
-            ];
-
-            $weekModel = NflEspnWeek::updateOrCreate($weekData);
-
-            foreach ($data['events'] as $event) {
-                $eventDate = Carbon::parse($event['date'])->toDateTimeString(); // Parse and format the date
-
+            foreach ($events as $event) {
+                $eventDate = date('Y-m-d H:i:s', strtotime($event['date']));
                 $homeTeam = $event['competitions'][0]['competitors'][0]['team'];
                 $awayTeam = $event['competitions'][0]['competitors'][1]['team'];
 
@@ -90,20 +74,9 @@ class FetchNflScoreboard extends Command
                 );
             }
 
-            $this->info("NFL scoreboard data for SeasonType $seasontype Week $week fetched and stored successfully.");
-        } catch (RequestException $e) {
-            $this->error("HTTP request failed for SeasonType $seasontype Week $week: " . $e->getMessage());
-            Log::error('HTTP Request Error', [
-                'url' => $url,
-                'message' => $e->getMessage(),
-                'response' => $e->hasResponse() ? (string)$e->getResponse()->getBody() : 'No response body',
-            ]);
-        } catch (Exception $e) {
-            $this->error("Failed to fetch and store NFL scoreboard data for SeasonType $seasontype Week $week: " . $e->getMessage());
-            Log::error('General Error', [
-                'url' => $url,
-                'message' => $e->getMessage(),
-            ]);
+            $this->info('ESPN NFL events fetched and stored successfully.');
+        } else {
+            $this->error('Failed to fetch data from ESPN API.');
         }
     }
 }

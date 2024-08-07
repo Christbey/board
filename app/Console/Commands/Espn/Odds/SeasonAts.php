@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Console\Commands\Espn\Teams;
+namespace App\Console\Commands\Espn\Odds;
 
 use App\Models\NflEspnAtsRecord;
 use App\Models\NflEspnTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class FetchEspnNflAtsRecords extends Command
+class SeasonAts extends Command
 {
-    protected $signature = 'fetch:espn-nfl-ats-records {season} {team_id?}';
+    protected $signature = 'espn:ats-record {season} {team_id?}';
     protected $description = 'Fetch NFL ATS records from ESPN API';
 
     public function __construct()

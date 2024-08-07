@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Console\Commands\Espn\Teams;
+namespace App\Console\Commands\Espn\Athletes;
 
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class FetchEspnNflAthletes extends Command
+class FetchAthletes extends Command
 {
     protected $signature = 'espn:fetch-nfl-athletes';
     protected $description = 'Fetch NFL athletes from the ESPN API and store them in the database';

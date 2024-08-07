@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Console\Commands\Espn;
+namespace App\Console\Commands\Espn\Events;
 
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
-class StoreAthleteSplits extends Command
+class AthleteSplits extends Command
 {
     protected $signature = 'store:athlete-splits {event_id}';
     protected $description = 'Store athlete splits from ESPN API';

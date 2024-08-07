@@ -1,53 +1,34 @@
-<ul class="list-none mb-6">
-    @if($events)
-        @foreach($events as $event)
-            <li class="mb-2 bg-white p-4 rounded shadow">
-                <p><strong>Event Name:</strong> {{ $event['name'] ?? 'N/A' }}</p>
-                <p><strong>Short Name:</strong> {{ $event['shortName'] ?? 'N/A' }}</p>
-                <p><strong>Date:</strong> {{ $event['date'] ?? 'N/A' }}</p>
-
-                @if(isset($event['predictor']))
-                    <h4 class="text-xl font-semibold mt-2">Predictor:</h4>
-
-                    <h5 class="text-lg font-semibold mt-2">Home Team:</h5>
-                    <table class="table-auto w-full mb-4">
-                        <thead>
-                        <tr>
-                            <th class="px-4 py-2">Statistic</th>
-                            <th class="px-4 py-2">Value</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($event['predictor']['homeTeam']['statistics'] as $stat)
-                            <tr>
-                                <td class="border px-4 py-2">{{ $stat['displayName'] }}</td>
-                                <td class="border px-4 py-2">{{ $stat['displayValue'] }}</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-
-                    <h5 class="text-lg font-semibold mt-2">Away Team:</h5>
-                    <table class="table-auto w-full mb-4">
-                        <thead>
-                        <tr>
-                            <th class="px-4 py-2">Statistic</th>
-                            <th class="px-4 py-2">Value</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($event['predictor']['awayTeam']['statistics'] as $stat)
-                            <tr>
-                                <td class="border px-4 py-2">{{ $stat['displayName'] }}</td>
-                                <td class="border px-4 py-2">{{ $stat['displayValue'] }}</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </li>
-        @endforeach
+<div class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="text-xl font-semibold mb-4">Events</h2>
+    @if($events->isEmpty())
+        <p>No events found for this team for the current year.</p>
     @else
-        <li class="mb-2 bg-white p-4 rounded shadow">No events data available.</li>
+        <table class="min-w-full bg-white rounded-lg shadow">
+            <thead>
+            <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <th class="py-3 px-6 text-left">Event Name</th>
+                <th class="py-3 px-6 text-left">Date</th>
+                <th class="py-3 px-6 text-left">Venue</th>
+                <th class="py-3 px-6 text-left">Home Team</th>
+                <th class="py-3 px-6 text-left">Away Team</th>
+                <th class="py-3 px-6 text-left">Score</th>
+            </tr>
+            </thead>
+            <tbody class="text-gray-600 text-sm font-light">
+            @foreach($events as $event)
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-6 text-left">
+                        <a href="{{ route('espn.events.show', $event->id) }}"
+                           class="text-blue-500 hover:underline">{{ $event->name }}</a>
+                    </td>
+                    <td class="py-3 px-6 text-left">{{ $event->date }}</td>
+                    <td class="py-3 px-6 text-left">{{ $event->venue_name }}</td>
+                    <td class="py-3 px-6 text-left">{{ $event->home_team_id }}</td>
+                    <td class="py-3 px-6 text-left">{{ $event->away_team_id }}</td>
+                    <td class="py-3 px-6 text-left">{{ $event->home_team_score }} - {{ $event->away_team_score }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
     @endif
-</ul>
+</div>

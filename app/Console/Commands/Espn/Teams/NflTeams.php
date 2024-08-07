@@ -6,7 +6,7 @@ use App\Models\NflEspnTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class FetchEspnNflTeams extends Command
+class NflTeams extends Command
 {
     protected $signature = 'espn:fetch-nfl-teams';
     protected $description = 'Fetch NFL teams from the ESPN API and store them in the database';

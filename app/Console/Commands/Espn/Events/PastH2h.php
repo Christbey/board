@@ -1,23 +1,38 @@
 <?php
 
-namespace App\Console\Commands\Espn;
+namespace App\Console\Commands\Espn\Events;
 
+use App\Models\EspnNflPastH2h;
+use App\Models\NflEspnTeam;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\EspnNflPastH2h;
-use Carbon\Carbon;
 
-class FetchEspnEventPastH2h extends Command
+class PastH2h extends Command
 {
-    protected $signature = 'fetch:espn-past-event-h2h {team_id}';
+    protected $signature = 'espn:past-h2h {team_id?}';
     protected $description = 'Fetch and store ESPN past head-to-head event data for a given team';
 
     public function handle()
     {
         $teamId = $this->argument('team_id');
-        $url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/teams/{$teamId}/odds/1002/past-performances?limit=1000";
 
+        if ($teamId) {
+            // Fetch and process data for the specific team ID
+            $this->fetchAndProcessData($teamId);
+        } else {
+            // Fetch and process data for all teams in the nfl_espn_teams table
+            $teams = NflEspnTeam::all('team_id');
+            foreach ($teams as $team) {
+                $this->fetchAndProcessData($team->team_id);
+            }
+        }
+    }
+
+    private function fetchAndProcessData($teamId)
+    {
+        $url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/teams/{$teamId}/odds/1002/past-performances?limit=1000";
         $response = Http::get($url);
 
         if ($response->successful()) {

@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Espn\Events;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use App\Models\NflEspnPlayByPlay;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 use Log;
 
-class FetchNflEspnPlayByPlay extends Command
+class PlaybyPlay extends Command
 {
     protected $signature = 'fetch:nfl-espn-play-by-play';
     protected $description = 'Fetch and store NFL play-by-play data from ESPN API';

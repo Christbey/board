@@ -13,6 +13,7 @@ class NflEspnSplit extends Model
         'split_category',
         'split_type',
         'display_name',
+        'year',
         'TOT',
         'SOLO',
         'AST',

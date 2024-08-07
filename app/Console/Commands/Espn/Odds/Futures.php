@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Espn\Season;
+namespace App\Console\Commands\Espn\Odds;
 
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnFuture;

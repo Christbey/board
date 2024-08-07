@@ -4,10 +4,13 @@ namespace App\Console\Commands\Espn\Teams;
 
 use App\Models\NflEspnInjury;
 use App\Models\NflEspnTeam;
+use App\Models\NflEspnAthlete;
+
+// Ensure to use the athlete model
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class FetchEspnNflInjuries extends Command
+class NflInjuries extends Command
 {
     protected $signature = 'espn:fetch-nfl-injuries {team_id?}';
     protected $description = 'Fetch NFL injuries from the ESPN API and store them in the database';
@@ -36,10 +39,27 @@ class FetchEspnNflInjuries extends Command
                         $athleteUrl = $injury['athlete']['$ref'];
                         $athleteResponse = Http::get($athleteUrl);
                         $athleteId = null;
+                        $seasonYear = date('Y'); // Get the current year
 
                         if ($athleteResponse->successful()) {
                             $athlete = $athleteResponse->json();
                             $athleteId = $athlete['id'];
+
+                            // Ensure the athlete exists in the nfl_espn_athletes table
+                            NflEspnAthlete::updateOrCreate(
+                                ['athlete_id' => $athlete['id']],
+                                [
+                                    'full_name' => $athlete['fullName'],
+                                    'team_id' => $team->team_id,
+                                    'season_year' => $seasonYear // Add the season year
+                                ]
+                            );
+                        }
+
+                        // Truncate description if necessary
+                        $description = $injury['shortComment'] ?? null;
+                        if ($description && strlen($description) > 255) {
+                            $description = substr($description, 0, 255);
                         }
 
                         NflEspnInjury::updateOrCreate(
@@ -50,7 +70,7 @@ class FetchEspnNflInjuries extends Command
                                 'type' => $injury['type']['description'] ?? null,
                                 'status' => $injury['status'] ?? null,
                                 'date' => isset($injury['date']) ? date('Y-m-d', strtotime($injury['date'])) : null,
-                                'description' => $injury['shortComment'] ?? null,
+                                'description' => $description,
                             ]
                         );
                     } else {
@@ -66,6 +86,4 @@ class FetchEspnNflInjuries extends Command
 
         return 0;
     }
-
 }
-// Works as Expected
