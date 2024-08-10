@@ -10,12 +10,12 @@ class CreateCollegeFootballPlayWpTable extends Migration
     {
         Schema::create('college_football_play_wp', function (Blueprint $table) {
             $table->id();
-            $table->integer('game_id');
+            $table->unsignedBigInteger('game_id');
             $table->bigInteger('play_id');
             $table->text('play_text');
-            $table->integer('home_id');
+            $table->unsignedBigInteger('home_id');
             $table->string('home', 255);
-            $table->integer('away_id');
+            $table->unsignedBigInteger('away_id');
             $table->string('away', 255);
             $table->decimal('spread', 10, 2);
             $table->boolean('home_ball');
@@ -28,6 +28,11 @@ class CreateCollegeFootballPlayWpTable extends Migration
             $table->decimal('home_win_prob', 10, 9);
             $table->integer('play_number');
             $table->timestamps();
+
+            // Foreign keys to ensure integrity
+            $table->foreign('home_id')->references('id')->on('college_football_teams')->onDelete('cascade');
+            $table->foreign('away_id')->references('id')->on('college_football_teams')->onDelete('cascade');
+            $table->foreign('game_id')->references('id')->on('college_football_games')->onDelete('cascade');
         });
     }
 

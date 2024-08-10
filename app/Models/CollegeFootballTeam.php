@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,17 +9,14 @@ class CollegeFootballTeam extends Model
 {
     use HasFactory;
 
-    protected $table = 'college_football_teams';
-
     protected $fillable = [
+        'id',
         'school',
         'mascot',
         'abbreviation',
         'alt_name1',
         'alt_name2',
         'alt_name3',
-        'conference',
-        'classification',
         'color',
         'alt_color',
         'logos',
@@ -39,13 +35,11 @@ class CollegeFootballTeam extends Model
         'year_constructed',
         'grass',
         'dome',
+        'conference_id', // Add this to link with CollegeFootballConference
     ];
 
-    protected $casts = [
-        'logos' => 'array',
-        'latitude' => 'decimal:6',
-        'longitude' => 'decimal:6',
-        'grass' => 'boolean',
-        'dome' => 'boolean',
-    ];
+    public function conference()
+    {
+        return $this->belongsTo(CollegeFootballConference::class, 'conference_id');
+    }
 }

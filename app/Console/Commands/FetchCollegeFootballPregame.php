@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballPregame;
+use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballPregame extends Command
@@ -23,23 +24,29 @@ class FetchCollegeFootballPregame extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/metrics/wp/pregame?year={$year}&week={$week}");
 
         if ($response->successful()) {
             $games = $response->json();
 
             foreach ($games as $game) {
+                // Find the corresponding teams by name
+                $homeTeam = CollegeFootballTeam::where('school', $game['homeTeam'])->first();
+                $awayTeam = CollegeFootballTeam::where('school', $game['awayTeam'])->first();
+
+                if (!$homeTeam || !$awayTeam) {
+                    $this->error('Team not found for game: ' . $game['gameId']);
+                    continue;
+                }
+
                 CollegeFootballPregame::updateOrCreate(
                     [
-                        'season' => $game['season'],
-                        'season_type' => $game['seasonType'],
-                        'week' => $game['week'],
                         'game_id' => $game['gameId']
                     ],
                     [
-                        'home_team' => $game['homeTeam'],
-                        'away_team' => $game['awayTeam'],
+                        'home_team_id' => $homeTeam->id,
+                        'away_team_id' => $awayTeam->id,
                         'spread' => $game['spread'],
                         'home_win_prob' => $game['homeWinProb'],
                     ]

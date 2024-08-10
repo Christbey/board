@@ -11,11 +11,15 @@ class CollegeFootballRoster extends Model
 
     protected $table = 'college_football_rosters';
 
+    protected $primaryKey = 'player_id'; // Set player_id as the primary key
+    public $incrementing = false; // Disable auto-incrementing since player_id is not an integer
+    protected $keyType = 'string'; // Set the type of the primary key
+
     protected $fillable = [
         'player_id',
         'first_name',
         'last_name',
-        'team',
+        'team_id', // Change from 'team' to 'team_id'
         'weight',
         'height',
         'jersey',
@@ -35,4 +39,10 @@ class CollegeFootballRoster extends Model
         'home_longitude' => 'decimal:7',
         'recruit_ids' => 'array',
     ];
+
+    // Define the relationship to the CollegeFootballTeam model
+    public function team()
+    {
+        return $this->belongsTo(CollegeFootballTeam::class, 'team_id');
+    }
 }

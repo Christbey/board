@@ -12,8 +12,8 @@ class CollegeFootballPpa extends Model
     protected $table = 'college_football_ppa';
 
     protected $fillable = [
+        'team_id',
         'season',
-        'team',
         'conference',
         'offense_overall',
         'offense_passing',
@@ -34,4 +34,9 @@ class CollegeFootballPpa extends Model
         'defense_cumulative_passing',
         'defense_cumulative_rushing',
     ];
+
+    public function team()
+    {
+        return $this->belongsTo(CollegeFootballTeam::class, 'team_id');
+    }
 }

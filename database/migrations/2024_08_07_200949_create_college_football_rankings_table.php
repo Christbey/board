@@ -16,7 +16,11 @@ class CreateCollegeFootballRankingsTable extends Migration
             $table->string('poll');
             $table->integer('rank');
             $table->string('school');
-            $table->string('conference')->nullable();
+            $table->unsignedBigInteger('team_id')->nullable();
+            $table->unsignedBigInteger('conference_id')->nullable();
+
+            $table->foreign('team_id')->references('id')->on('college_football_teams')->onDelete('set null');
+            $table->foreign('conference_id')->references('id')->on('college_football_conferences')->onDelete('set null');
             $table->integer('first_place_votes')->nullable();
             $table->integer('points')->nullable();
             $table->timestamps();

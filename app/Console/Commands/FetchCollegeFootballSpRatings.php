@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballSpRating;
+use App\Models\CollegeFootballTeam;
+use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballSpRatings extends Command
 {
-    protected $signature = 'fetch:college-football-sp-ratings {year=2024}';
+    protected $signature = 'fetch:college-football-sp-ratings {year=2023}';
     protected $description = 'Fetch college football SP ratings from the API and save to database';
 
     public function __construct()
@@ -22,46 +24,64 @@ class FetchCollegeFootballSpRatings extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/ratings/sp?year={$year}");
 
         if ($response->successful()) {
             $teams = $response->json();
 
-            foreach ($teams as $team) {
+            foreach ($teams as $teamData) {
+                // Find the corresponding team
+                $team = CollegeFootballTeam::where('school', $teamData['team'])->first();
+                if (!$team) {
+                    $this->error('Team not found for: ' . $teamData['team']);
+                    continue;
+                }
+
+                // Find the corresponding conference
+                $conference = CollegeFootballConference::where('abbreviation', $teamData['conference'])
+                    ->orWhere('name', $teamData['conference'])
+                    ->first();
+
+                if (!$conference) {
+                    $this->error('Conference not found for: ' . json_encode($teamData['conference']));
+                    continue;
+                }
+
+                // Update or create the SP rating with team_id and conference_id
                 CollegeFootballSpRating::updateOrCreate(
                     [
-                        'year' => $team['year'],
-                        'team' => $team['team']
+                        'year' => $teamData['year'],
+                        'team_id' => $team->id ?? null,
                     ],
                     [
-                        'conference' => $team['conference'] ?? null,
-                        'rating' => $team['rating'] ?? null,
-                        'ranking' => $team['ranking'] ?? null,
-                        'second_order_wins' => $team['secondOrderWins'] ?? null,
-                        'sos' => $team['sos'] ?? null,
-                        'offense_ranking' => $team['offense']['ranking'] ?? null,
-                        'offense_rating' => $team['offense']['rating'] ?? null,
-                        'offense_success' => $team['offense']['success'] ?? null,
-                        'offense_explosiveness' => $team['offense']['explosiveness'] ?? null,
-                        'offense_rushing' => $team['offense']['rushing'] ?? null,
-                        'offense_passing' => $team['offense']['passing'] ?? null,
-                        'offense_standard_downs' => $team['offense']['standardDowns'] ?? null,
-                        'offense_passing_downs' => $team['offense']['passingDowns'] ?? null,
-                        'offense_run_rate' => $team['offense']['runRate'] ?? null,
-                        'offense_pace' => $team['offense']['pace'] ?? null,
-                        'defense_ranking' => $team['defense']['ranking'] ?? null,
-                        'defense_rating' => $team['defense']['rating'] ?? null,
-                        'defense_success' => $team['defense']['success'] ?? null,
-                        'defense_explosiveness' => $team['defense']['explosiveness'] ?? null,
-                        'defense_rushing' => $team['defense']['rushing'] ?? null,
-                        'defense_passing' => $team['defense']['passing'] ?? null,
-                        'defense_standard_downs' => $team['defense']['standardDowns'] ?? null,
-                        'defense_passing_downs' => $team['defense']['passingDowns'] ?? null,
-                        'defense_havoc_total' => $team['defense']['havoc']['total'] ?? null,
-                        'defense_havoc_front_seven' => $team['defense']['havoc']['frontSeven'] ?? null,
-                        'defense_havoc_db' => $team['defense']['havoc']['db'] ?? null,
-                        'special_teams_rating' => $team['specialTeams']['rating'] ?? null,
+                        'conference_id' => $conference->id ?? null,
+                        'rating' => $teamData['rating'] ?? null,
+                        'ranking' => $teamData['ranking'] ?? null,
+                        'second_order_wins' => $teamData['secondOrderWins'] ?? null,
+                        'sos' => $teamData['sos'] ?? null,
+                        'offense_ranking' => $teamData['offense']['ranking'] ?? null,
+                        'offense_rating' => $teamData['offense']['rating'] ?? null,
+                        'offense_success' => $teamData['offense']['success'] ?? null,
+                        'offense_explosiveness' => $teamData['offense']['explosiveness'] ?? null,
+                        'offense_rushing' => $teamData['offense']['rushing'] ?? null,
+                        'offense_passing' => $teamData['offense']['passing'] ?? null,
+                        'offense_standard_downs' => $teamData['offense']['standardDowns'] ?? null,
+                        'offense_passing_downs' => $teamData['offense']['passingDowns'] ?? null,
+                        'offense_run_rate' => $teamData['offense']['runRate'] ?? null,
+                        'offense_pace' => $teamData['offense']['pace'] ?? null,
+                        'defense_ranking' => $teamData['defense']['ranking'] ?? null,
+                        'defense_rating' => $teamData['defense']['rating'] ?? null,
+                        'defense_success' => $teamData['defense']['success'] ?? null,
+                        'defense_explosiveness' => $teamData['defense']['explosiveness'] ?? null,
+                        'defense_rushing' => $teamData['defense']['rushing'] ?? null,
+                        'defense_passing' => $teamData['defense']['passing'] ?? null,
+                        'defense_standard_downs' => $teamData['defense']['standardDowns'] ?? null,
+                        'defense_passing_downs' => $teamData['defense']['passingDowns'] ?? null,
+                        'defense_havoc_total' => $teamData['defense']['havoc']['total'] ?? null,
+                        'defense_havoc_front_seven' => $teamData['defense']['havoc']['frontSeven'] ?? null,
+                        'defense_havoc_db' => $teamData['defense']['havoc']['db'] ?? null,
+                        'special_teams_rating' => $teamData['specialTeams']['rating'] ?? null,
                     ]
                 );
             }

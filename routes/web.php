@@ -7,6 +7,8 @@ use App\Http\Controllers\NflController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\OddsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CollegeFootballController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -90,3 +92,9 @@ Route::get('/espn/injuries', [EspnController::class, 'showInjuries'])->name('esp
 Route::get('/espn/nfl/teams', [EspnController::class, 'index'])->name('espn.nfl.teams.index');
 Route::get('/espn/nfl/teams/{id}', [EspnController::class, 'show'])->name('espn.nfl.teams.show');
 Route::get('/espn/nfl/events/{event_id}', [EspnController::class, 'showEvent'])->name('espn.events.show');
+
+// College Football routes
+
+Route::get('/college-football', [CollegeFootballController::class, 'index'])->name('collegeFootball.index');
+Route::get('/college-football/{team}', [CollegeFootballController::class, 'show'])->name('collegeFootball.show');
+

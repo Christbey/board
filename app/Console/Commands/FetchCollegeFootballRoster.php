@@ -26,20 +26,28 @@ class FetchCollegeFootballRoster extends Command
             $teamName = urlencode($team->school);
             $response = Http::withHeaders([
                 'accept' => 'application/json',
-                'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+                'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
             ])->get("https://api.collegefootballdata.com/roster?team={$teamName}&year={$year}");
 
             if ($response->successful()) {
                 $players = $response->json();
 
                 foreach ($players as $player) {
+                    // Find the corresponding team by its school name
+                    $teamRecord = CollegeFootballTeam::where('school', $player['team'])->first();
+
+                    if (!$teamRecord) {
+                        $this->error("Team not found for player {$player['first_name']} {$player['last_name']}");
+                        continue;
+                    }
+
                     CollegeFootballRoster::updateOrCreate(
                         ['player_id' => $player['id']],
                         [
                             'player_id' => $player['id'],
                             'first_name' => $player['first_name'],
                             'last_name' => $player['last_name'],
-                            'team' => $player['team'],
+                            'team_id' => $teamRecord->id, // Save team_id instead of team
                             'weight' => $player['weight'],
                             'height' => $player['height'],
                             'jersey' => $player['jersey'],

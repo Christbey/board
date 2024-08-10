@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballPlayWP;
+use App\Models\CollegeFootballGame;
+use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballPlayWP extends Command
@@ -22,23 +24,50 @@ class FetchCollegeFootballPlayWP extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/metrics/wp?gameId={$gameId}");
 
         if ($response->successful()) {
             $plays = $response->json();
 
             foreach ($plays as $play) {
+                // Find or create the home and away teams
+                $homeTeam = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $play['home']],
+                    ['school' => $play['home']]
+                );
+
+                $awayTeam = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $play['away']],
+                    ['school' => $play['away']]
+                );
+
+                // Find or create the game
+                $game = CollegeFootballGame::firstOrCreate(
+                    ['id' => $gameId],
+                    [
+                        'season' => $play['season'] ?? null,
+                        'week' => $play['week'] ?? null,
+                        'season_type' => $play['seasonType'] ?? null,
+                        'start_date' => $play['startDate'] ?? null,
+                        'home_id' => $homeTeam->id,
+                        'home_team' => $play['home'],
+                        'away_id' => $awayTeam->id,
+                        'away_team' => $play['away'],
+                    ]
+                );
+
+                // Store the play win probability data
                 CollegeFootballPlayWP::updateOrCreate(
                     [
-                        'game_id' => $gameId,
+                        'game_id' => $game->id,
                         'play_id' => $play['playId'],
                     ],
                     [
                         'play_text' => $play['playText'],
-                        'home_id' => $play['homeId'],
+                        'home_id' => $homeTeam->id,
                         'home' => $play['home'],
-                        'away_id' => $play['awayId'],
+                        'away_id' => $awayTeam->id,
                         'away' => $play['away'],
                         'spread' => $play['spread'],
                         'home_ball' => $play['homeBall'],

@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CollegeFootballEloRating extends Model
+class CollegeFootballSpConferenceRating extends Model
 {
     use HasFactory;
 
-    protected $table = 'college_football_elo_ratings';
+    protected $table = 'college_football_sp_conference_ratings';
 
     protected $fillable = [
         'year',
-        'team_id',
         'conference_id',
-        'elo',
+        'rating',
+        'ranking',
+        'offense_rating',
+        'defense_rating',
+        'special_teams_rating',
     ];
-
-    public function team()
-    {
-        return $this->belongsTo(CollegeFootballTeam::class, 'team_id');
-    }
 
     public function conference()
     {

@@ -45,6 +45,10 @@ class CollegeFootballGame extends Model
         'excitement_index',
         'highlights',
         'notes',
+        'home_team_id',        // New field
+        'home_conference_id',  // New field
+        'away_team_id',        // New field
+        'away_conference_id',  // New field
     ];
 
     protected $casts = [
@@ -54,4 +58,17 @@ class CollegeFootballGame extends Model
         'away_post_win_prob' => 'decimal:2',
         'excitement_index' => 'decimal:2',
     ];
+
+    // CollegeFootballGame.php
+    public function homeTeam()
+    {
+        return $this->belongsTo(CollegeFootballTeam::class, 'home_id');
+    }
+
+    public function awayTeam()
+    {
+        return $this->belongsTo(CollegeFootballTeam::class, 'away_id');
+    }
+
 }
+

@@ -11,8 +11,8 @@ class CreateCollegeFootballAdvSeasonStatsTable extends Migration
         Schema::create('college_football_adv_season_stats', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('season');
-            $table->string('team');
-            $table->string('conference');
+            $table->unsignedBigInteger('team_id'); // Foreign key for team_id
+            $table->unsignedBigInteger('conference_id')->nullable(); // Foreign key for conference_id, nullable in case no conference is provided
 
             // Offense Fields
             $table->integer('offense_plays');
@@ -68,6 +68,10 @@ class CreateCollegeFootballAdvSeasonStatsTable extends Migration
             $table->decimal('offense_passing_plays_explosiveness', 10, 9);
 
             $table->timestamps();
+
+            // Foreign keys
+            $table->foreign('team_id')->references('id')->on('college_football_teams')->onDelete('cascade');
+            $table->foreign('conference_id')->references('id')->on('college_football_conferences')->onDelete('set null');
         });
     }
 
@@ -76,5 +80,3 @@ class CreateCollegeFootballAdvSeasonStatsTable extends Migration
         Schema::dropIfExists('college_football_adv_season_stats');
     }
 }
-
-?>

@@ -41,5 +41,7 @@ class CollegeFootballSpRating extends Model
         'defense_havoc_front_seven',
         'defense_havoc_db',
         'special_teams_rating',
+        'team_id',
+        'conference_id',
     ];
 }

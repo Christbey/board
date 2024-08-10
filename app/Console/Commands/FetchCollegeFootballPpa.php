@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballPpa;
+use App\Models\CollegeFootballGamePpa;
+use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballPpa extends Command
@@ -22,38 +24,45 @@ class FetchCollegeFootballPpa extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/ppa/teams?year={$year}");
 
         if ($response->successful()) {
             $teams = $response->json();
 
-            foreach ($teams as $team) {
+            foreach ($teams as $teamData) {
+                // Find the corresponding team or create it if it doesn't exist
+                $team = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $teamData['team']],
+                    ['school' => $teamData['team']]
+                );
+
+                // Store the PPA data
                 CollegeFootballPpa::updateOrCreate(
                     [
-                        'season' => $team['season'],
-                        'team' => $team['team']
+                        'team_id' => $team->id,
+                        'season' => $teamData['season'],
                     ],
                     [
-                        'conference' => $team['conference'] ?? null,
-                        'offense_overall' => $team['offense']['overall'] ?? null,
-                        'offense_passing' => $team['offense']['passing'] ?? null,
-                        'offense_rushing' => $team['offense']['rushing'] ?? null,
-                        'offense_first_down' => $team['offense']['firstDown'] ?? null,
-                        'offense_second_down' => $team['offense']['secondDown'] ?? null,
-                        'offense_third_down' => $team['offense']['thirdDown'] ?? null,
-                        'offense_cumulative_total' => $team['offense']['cumulative']['total'] ?? null,
-                        'offense_cumulative_passing' => $team['offense']['cumulative']['passing'] ?? null,
-                        'offense_cumulative_rushing' => $team['offense']['cumulative']['rushing'] ?? null,
-                        'defense_overall' => $team['defense']['overall'] ?? null,
-                        'defense_passing' => $team['defense']['passing'] ?? null,
-                        'defense_rushing' => $team['defense']['rushing'] ?? null,
-                        'defense_first_down' => $team['defense']['firstDown'] ?? null,
-                        'defense_second_down' => $team['defense']['secondDown'] ?? null,
-                        'defense_third_down' => $team['defense']['thirdDown'] ?? null,
-                        'defense_cumulative_total' => $team['defense']['cumulative']['total'] ?? null,
-                        'defense_cumulative_passing' => $team['defense']['cumulative']['passing'] ?? null,
-                        'defense_cumulative_rushing' => $team['defense']['cumulative']['rushing'] ?? null,
+                        'conference' => $teamData['conference'] ?? null,
+                        'offense_overall' => $teamData['offense']['overall'] ?? null,
+                        'offense_passing' => $teamData['offense']['passing'] ?? null,
+                        'offense_rushing' => $teamData['offense']['rushing'] ?? null,
+                        'offense_first_down' => $teamData['offense']['firstDown'] ?? null,
+                        'offense_second_down' => $teamData['offense']['secondDown'] ?? null,
+                        'offense_third_down' => $teamData['offense']['thirdDown'] ?? null,
+                        'offense_cumulative_total' => $teamData['offense']['cumulative']['total'] ?? null,
+                        'offense_cumulative_passing' => $teamData['offense']['cumulative']['passing'] ?? null,
+                        'offense_cumulative_rushing' => $teamData['offense']['cumulative']['rushing'] ?? null,
+                        'defense_overall' => $teamData['defense']['overall'] ?? null,
+                        'defense_passing' => $teamData['defense']['passing'] ?? null,
+                        'defense_rushing' => $teamData['defense']['rushing'] ?? null,
+                        'defense_first_down' => $teamData['defense']['firstDown'] ?? null,
+                        'defense_second_down' => $teamData['defense']['secondDown'] ?? null,
+                        'defense_third_down' => $teamData['defense']['thirdDown'] ?? null,
+                        'defense_cumulative_total' => $teamData['defense']['cumulative']['total'] ?? null,
+                        'defense_cumulative_passing' => $teamData['defense']['cumulative']['passing'] ?? null,
+                        'defense_cumulative_rushing' => $teamData['defense']['cumulative']['rushing'] ?? null,
                     ]
                 );
             }

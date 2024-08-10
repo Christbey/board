@@ -42,6 +42,15 @@ class CreateCollegeFootballGamesTable extends Migration
             $table->decimal('excitement_index', 5, 2)->nullable();
             $table->string('highlights')->nullable();
             $table->string('notes')->nullable();
+            $table->unsignedBigInteger('home_team_id')->nullable();
+            $table->unsignedBigInteger('home_conference_id')->nullable();
+            $table->unsignedBigInteger('away_team_id')->nullable();
+            $table->unsignedBigInteger('away_conference_id')->nullable();
+
+            $table->foreign('home_team_id')->references('id')->on('college_football_teams')->onDelete('set null');
+            $table->foreign('home_conference_id')->references('id')->on('college_football_conferences')->onDelete('set null');
+            $table->foreign('away_team_id')->references('id')->on('college_football_teams')->onDelete('set null');
+            $table->foreign('away_conference_id')->references('id')->on('college_football_conferences')->onDelete('set null');
             $table->timestamps();
         });
     }

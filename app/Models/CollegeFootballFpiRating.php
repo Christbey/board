@@ -13,8 +13,8 @@ class CollegeFootballFpiRating extends Model
 
     protected $fillable = [
         'year',
-        'team',
-        'conference',
+        'team_id',
+        'conference_id',
         'fpi',
         'strength_of_record',
         'resume_fpi',

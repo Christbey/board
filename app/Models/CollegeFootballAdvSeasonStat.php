@@ -12,7 +12,7 @@ class CollegeFootballAdvSeasonStat extends Model
     protected $table = 'college_football_adv_season_stats';
 
     protected $fillable = [
-        'season', 'team', 'conference',
+        'season', 'team_id', 'conference_id',
         'offense_plays', 'offense_drives', 'offense_ppa', 'offense_total_ppa',
         'offense_success_rate', 'offense_explosiveness', 'offense_power_success',
         'offense_stuff_rate', 'offense_line_yards', 'offense_line_yards_total',

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballAdvGameStat;
+use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballAdvGameStats extends Command
@@ -30,6 +31,18 @@ class FetchCollegeFootballAdvGameStats extends Command
             $stats = $response->json();
 
             foreach ($stats as $stat) {
+                // Find or create the team
+                $team = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $stat['team']],
+                    ['school' => $stat['team']]
+                );
+
+                // Find or create the opponent
+                $opponent = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $stat['opponent']],
+                    ['school' => $stat['opponent']]
+                );
+
                 CollegeFootballAdvGameStat::updateOrCreate(
                     [
                         'game_id' => $stat['gameId']
@@ -37,8 +50,8 @@ class FetchCollegeFootballAdvGameStats extends Command
                     [
                         'season' => $year,
                         'week' => $stat['week'],
-                        'team' => $stat['team'],
-                        'opponent' => $stat['opponent'],
+                        'team_id' => $team->id,
+                        'opponent_id' => $opponent->id,
                         'offense_plays' => $stat['offense']['plays'] ?? null,
                         'offense_drives' => $stat['offense']['drives'] ?? null,
                         'offense_ppa' => $stat['offense']['ppa'] ?? null,

@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballRanking;
+use App\Models\CollegeFootballTeam;
+use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballRankings extends Command
 {
-    protected $signature = 'fetch:college-football-rankings {year=2023} {week=1} {seasonType=regular}';
+    protected $signature = 'fetch:college-football-rankings {year=2024} {week=1} {seasonType=regular}';
     protected $description = 'Fetch college football rankings from the API and save to database';
 
     public function __construct()
@@ -24,7 +26,7 @@ class FetchCollegeFootballRankings extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/rankings?year={$year}&week={$week}&seasonType={$seasonType}");
 
         if ($response->successful()) {
@@ -33,6 +35,24 @@ class FetchCollegeFootballRankings extends Command
             foreach ($rankings as $rankingWeek) {
                 foreach ($rankingWeek['polls'] as $poll) {
                     foreach ($poll['ranks'] as $rank) {
+                        // Find the corresponding team
+                        $team = CollegeFootballTeam::where('school', $rank['school'])->first();
+                        if (!$team) {
+                            $this->error("Team not found for: {$rank['school']}");
+                            continue;
+                        }
+
+                        // Find the corresponding conference
+                        $conference = CollegeFootballConference::where('abbreviation', $rank['conference'])
+                            ->orWhere('name', $rank['conference'])
+                            ->first();
+
+                        if (!$conference) {
+                            $this->error("Conference not found for: {$rank['conference']}");
+                            continue;
+                        }
+
+                        // Update or create the ranking with team_id and conference_id
                         CollegeFootballRanking::updateOrCreate(
                             [
                                 'season' => $rankingWeek['season'],
@@ -40,12 +60,12 @@ class FetchCollegeFootballRankings extends Command
                                 'week' => $rankingWeek['week'],
                                 'poll' => $poll['poll'],
                                 'rank' => $rank['rank'],
-                                'school' => $rank['school']
+                                'team_id' => $team->id,
+                                'conference_id' => $conference->id,
                             ],
                             [
-                                'conference' => $rank['conference'],
-                                'first_place_votes' => $rank['firstPlaceVotes'],
-                                'points' => $rank['points']
+                                'first_place_votes' => $rank['firstPlaceVotes'] ?? null,
+                                'points' => $rank['points'] ?? null,
                             ]
                         );
                     }

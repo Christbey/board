@@ -13,8 +13,10 @@ class CreateCollegeFootballAdvGameStatsTable extends Migration
             $table->integer('game_id')->unique();
             $table->integer('season');
             $table->integer('week');
-            $table->string('team');
-            $table->string('opponent');
+            $table->unsignedBigInteger('team_id'); // Foreign key for team_id
+            $table->unsignedBigInteger('opponent_id'); // Foreign key for opponent_id
+
+            // Offense Fields
             $table->integer('offense_plays')->nullable();
             $table->integer('offense_drives')->nullable();
             $table->float('offense_ppa')->nullable();
@@ -44,6 +46,10 @@ class CreateCollegeFootballAdvGameStatsTable extends Migration
             $table->float('offense_passing_plays_success_rate')->nullable();
             $table->float('offense_passing_plays_explosiveness')->nullable();
             $table->timestamps();
+
+            // Foreign keys
+            $table->foreign('team_id')->references('id')->on('college_football_teams')->onDelete('cascade');
+            $table->foreign('opponent_id')->references('id')->on('college_football_teams')->onDelete('cascade');
         });
     }
 

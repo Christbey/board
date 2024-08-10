@@ -1,10 +1,11 @@
 <?php
 
-
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballAdvSeasonStat;
+use App\Models\CollegeFootballTeam;
+use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballAdvSeasonStats extends Command
@@ -25,13 +26,28 @@ class FetchCollegeFootballAdvSeasonStats extends Command
             $stats = $response->json();
 
             foreach ($stats as $stat) {
+                // Find or create the team
+                $team = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $stat['team']],
+                    ['school' => $stat['team']]
+                );
+
+                // Find or create the conference
+                $conference = null;
+                if (isset($stat['conference'])) {
+                    $conference = CollegeFootballConference::firstOrCreate(
+                        ['abbreviation' => $stat['conference']],
+                        ['abbreviation' => $stat['conference']]
+                    );
+                }
+
                 CollegeFootballAdvSeasonStat::updateOrCreate(
                     [
                         'season' => $stat['season'],
-                        'team' => $stat['team']
+                        'team_id' => $team->id,
                     ],
                     [
-                        'conference' => $stat['conference'],
+                        'conference_id' => $conference->id ?? null,
                         'offense_plays' => $stat['offense']['plays'],
                         'offense_drives' => $stat['offense']['drives'],
                         'offense_ppa' => $stat['offense']['ppa'],

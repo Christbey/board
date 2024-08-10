@@ -13,11 +13,10 @@ class CreateCollegeFootballTeamsTable extends Migration
             $table->string('school');
             $table->string('mascot')->nullable();
             $table->string('abbreviation')->nullable();
-            $table->string('alt_name1')->nullable();
-            $table->string('alt_name2')->nullable();
-            $table->string('alt_name3')->nullable();
-            $table->string('conference')->nullable();
-            $table->string('classification')->nullable();
+
+            $table->unsignedBigInteger('conference_id')->nullable();
+            $table->foreign('conference_id')->references('id')->on('college_football_conferences')->onDelete('set null');
+
             $table->string('color')->nullable();
             $table->string('alt_color')->nullable();
             $table->json('logos')->nullable();
@@ -37,6 +36,9 @@ class CreateCollegeFootballTeamsTable extends Migration
             $table->integer('year_constructed')->nullable();
             $table->boolean('grass')->nullable();
             $table->boolean('dome')->nullable();
+            $table->string('alt_name1')->nullable();
+            $table->string('alt_name2')->nullable();
+            $table->string('alt_name3')->nullable();
             $table->timestamps();
         });
     }

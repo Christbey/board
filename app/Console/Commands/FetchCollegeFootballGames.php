@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballGame;
+use App\Models\CollegeFootballTeam;
+use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballGames extends Command
@@ -23,13 +25,26 @@ class FetchCollegeFootballGames extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/games?year={$year}&seasonType={$seasonType}");
 
         if ($response->successful()) {
             $games = $response->json();
 
             foreach ($games as $game) {
+                // Find the corresponding teams
+                $homeTeam = CollegeFootballTeam::where('school', $game['home_team'])->first();
+                $awayTeam = CollegeFootballTeam::where('school', $game['away_team'])->first();
+
+                // Find the corresponding conferences
+                $homeConference = CollegeFootballConference::where('abbreviation', $game['home_conference'])
+                    ->orWhere('name', $game['home_conference'])
+                    ->first();
+
+                $awayConference = CollegeFootballConference::where('abbreviation', $game['away_conference'])
+                    ->orWhere('name', $game['away_conference'])
+                    ->first();
+
                 CollegeFootballGame::updateOrCreate(
                     ['id' => $game['id']],
                     [
@@ -53,6 +68,8 @@ class FetchCollegeFootballGames extends Command
                         'home_post_win_prob' => $game['home_post_win_prob'] ?? null,
                         'home_pregame_elo' => $game['home_pregame_elo'] ?? null,
                         'home_postgame_elo' => $game['home_postgame_elo'] ?? null,
+                        'home_team_id' => $homeTeam->id ?? null,
+                        'home_conference_id' => $homeConference->id ?? null,
                         'away_id' => $game['away_id'],
                         'away_team' => $game['away_team'],
                         'away_conference' => $game['away_conference'] ?? null,
@@ -62,6 +79,8 @@ class FetchCollegeFootballGames extends Command
                         'away_post_win_prob' => $game['away_post_win_prob'] ?? null,
                         'away_pregame_elo' => $game['away_pregame_elo'] ?? null,
                         'away_postgame_elo' => $game['away_postgame_elo'] ?? null,
+                        'away_team_id' => $awayTeam->id ?? null,
+                        'away_conference_id' => $awayConference->id ?? null,
                         'excitement_index' => $game['excitement_index'] ?? null,
                         'highlights' => $game['highlights'] ?? null,
                         'notes' => $game['notes'] ?? null,

@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballFpiRating;
+use App\Models\CollegeFootballTeam;
+use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballFpiRatings extends Command
@@ -22,20 +24,36 @@ class FetchCollegeFootballFpiRatings extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer 4b/N6meGdvO3k52FMU375HldXVcg+iNk6o/SMYATiNL3LUkg0LNRcvUKg97pbGrT',
+            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
         ])->get("https://api.collegefootballdata.com/ratings/fpi?year={$year}");
 
         if ($response->successful()) {
             $teams = $response->json();
 
             foreach ($teams as $team) {
+                // Find or create the team
+                $teamRecord = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $team['team']],
+                    ['school' => $team['team']]
+                );
+
+                // Find or create the conference
+                $conferenceRecord = null;
+                if (isset($team['conference'])) {
+                    $conferenceRecord = CollegeFootballConference::firstOrCreate(
+                        ['abbreviation' => $team['conference']],
+                        ['abbreviation' => $team['conference']]
+                    );
+                }
+
+                // Store the FPI rating data
                 CollegeFootballFpiRating::updateOrCreate(
                     [
                         'year' => $team['year'],
-                        'team' => $team['team']
+                        'team_id' => $teamRecord->id,
                     ],
                     [
-                        'conference' => $team['conference'] ?? null,
+                        'conference_id' => $conferenceRecord->id ?? null,
                         'fpi' => $team['fpi'] ?? null,
                         'strength_of_record' => $team['resumeRanks']['strengthOfRecord'] ?? null,
                         'resume_fpi' => $team['resumeRanks']['fpi'] ?? null,

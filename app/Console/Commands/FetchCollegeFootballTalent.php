@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballTalent;
+use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballTalent extends Command
@@ -28,10 +29,22 @@ class FetchCollegeFootballTalent extends Command
             $talents = $response->json();
 
             foreach ($talents as $talent) {
+                // Find the corresponding college football team by school name, or create it if it doesn't exist
+                $team = CollegeFootballTeam::firstOrCreate(
+                    ['school' => $talent['school']],
+                    [
+                        'mascot' => 'Unknown', // You can set this to a default value or leave it null
+                        'abbreviation' => 'UNK', // Default or null
+                        'conference' => 'Unknown', // Default or null
+                        'classification' => 'fbs', // Assuming all fetched teams are FBS
+                        // Add other fields as necessary
+                    ]
+                );
+
+                // Now that the team exists, update or create the talent record
                 CollegeFootballTalent::updateOrCreate(
                     [
-                        'year' => $talent['year'],
-                        'school' => $talent['school']
+                        'team_id' => $team->id, // Use team_id as the primary key
                     ],
                     [
                         'year' => $talent['year'],
