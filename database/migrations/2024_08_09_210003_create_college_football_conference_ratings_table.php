@@ -8,7 +8,7 @@ class CreateCollegeFootballSpConferenceRatingsTable extends Migration
 {
     public function up()
     {
-        Schema::create('college_football_sp_conference_ratings', function (Blueprint $table) {
+        Schema::create('college_football_conference_ratings', function (Blueprint $table) {
             $table->id();
             $table->integer('year');
             $table->unsignedBigInteger('conference_id');
