@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 <x-app-layout>
     <div class="container mx-auto p-6">
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -39,7 +40,7 @@
                 <tbody>
                 @forelse($games as $game)
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $game->date }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ Carbon::parse($game->start_date)->format('m/d') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($game->home_id == $teamData->id)
                                 vs. {{ $game->awayTeam->school ?? 'Unknown Team' }}
@@ -47,7 +48,7 @@
                                 @ {{ $game->homeTeam->school ?? 'Unknown Team' }}
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $game->venue_name ?? 'Unknown Venue' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $game->venue ?? 'Unknown Venue' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ $game->result ?? 'TBD' }}</td>
                     </tr>
                 @empty
