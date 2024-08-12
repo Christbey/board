@@ -67,6 +67,59 @@ class CreateCollegeFootballAdvSeasonStatsTable extends Migration
             $table->decimal('offense_passing_plays_success_rate', 10, 9);
             $table->decimal('offense_passing_plays_explosiveness', 10, 9);
 
+            // Defense Fields
+            $table->integer('defense_plays');
+            $table->integer('defense_drives');
+            $table->decimal('defense_ppa', 10, 9);
+            $table->decimal('defense_total_ppa', 15, 9);
+            $table->decimal('defense_success_rate', 10, 9);
+            $table->decimal('defense_explosiveness', 10, 9);
+            $table->decimal('defense_power_success', 10, 9);
+            $table->decimal('defense_stuff_rate', 10, 9);
+            $table->decimal('defense_line_yards', 10, 9);
+            $table->integer('defense_line_yards_total');
+            $table->decimal('defense_second_level_yards', 10, 9);
+            $table->integer('defense_second_level_yards_total');
+            $table->decimal('defense_open_field_yards', 10, 9);
+            $table->integer('defense_open_field_yards_total');
+            $table->integer('defense_total_opportunities');
+            $table->decimal('defense_points_per_opportunity', 10, 9);
+
+            // Defense Field Position
+            $table->decimal('defense_field_position_average_start', 10, 2);
+            $table->decimal('defense_field_position_average_predicted_points', 10, 3);
+
+            // Defense Havoc
+            $table->decimal('defense_havoc_total', 10, 9);
+            $table->decimal('defense_havoc_front_seven', 10, 9);
+            $table->decimal('defense_havoc_db', 10, 9);
+
+            // Defense Standard Downs
+            $table->decimal('defense_standard_downs_rate', 10, 9);
+            $table->decimal('defense_standard_downs_ppa', 10, 9);
+            $table->decimal('defense_standard_downs_success_rate', 10, 9);
+            $table->decimal('defense_standard_downs_explosiveness', 10, 9);
+
+            // Defense Passing Downs
+            $table->decimal('defense_passing_downs_rate', 10, 9);
+            $table->decimal('defense_passing_downs_ppa', 10, 9);
+            $table->decimal('defense_passing_downs_success_rate', 10, 9);
+            $table->decimal('defense_passing_downs_explosiveness', 10, 9);
+
+            // Defense Rushing Plays
+            $table->decimal('defense_rushing_plays_rate', 10, 9);
+            $table->decimal('defense_rushing_plays_ppa', 10, 9);
+            $table->decimal('defense_rushing_plays_total_ppa', 15, 9);
+            $table->decimal('defense_rushing_plays_success_rate', 10, 9);
+            $table->decimal('defense_rushing_plays_explosiveness', 10, 9);
+
+            // Defense Passing Plays
+            $table->decimal('defense_passing_plays_rate', 10, 9);
+            $table->decimal('defense_passing_plays_ppa', 10, 9);
+            $table->decimal('defense_passing_plays_total_ppa', 15, 9);
+            $table->decimal('defense_passing_plays_success_rate', 10, 9);
+            $table->decimal('defense_passing_plays_explosiveness', 10, 9);
+
             $table->timestamps();
 
             // Foreign keys

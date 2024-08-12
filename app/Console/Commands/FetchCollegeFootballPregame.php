@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballPregame extends Command
 {
-    protected $signature = 'fetch:college-football-pregame {year=2023} {week=1}';
+    protected $signature = 'fetch:college-football-pregame {year=2024} {week=1}';
     protected $description = 'Fetch college football pregame win probability data from the API and save to database';
 
     public function __construct()
@@ -49,6 +49,9 @@ class FetchCollegeFootballPregame extends Command
                         'away_team_id' => $awayTeam->id,
                         'spread' => $game['spread'],
                         'home_win_prob' => $game['homeWinProb'],
+                        'season_type' => $game['seasonType'],
+                        'season' => $game['season'],
+                        'week' => $game['week'],
                     ]
                 );
             }

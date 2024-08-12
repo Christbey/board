@@ -27,4 +27,9 @@ class CollegeFootballFpiRating extends Model
         'efficiency_defense',
         'efficiency_special_teams',
     ];
+
+    public function team()
+    {
+        return $this->belongsTo(CollegeFootballTeam::class, 'team_id');
+    }
 }

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballFpiRatings extends Command
 {
-    protected $signature = 'fetch:college-football-fpi-ratings {year=2024}';
+    protected $signature = 'fetch:college-football-fpi-ratings {year=2023}';
     protected $description = 'Fetch college football FPI ratings from the API and save to database';
 
     public function __construct()

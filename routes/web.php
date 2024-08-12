@@ -1,13 +1,18 @@
 <?php
 
+use App\Http\Controllers\CollegeFootballController;
+use App\Http\Controllers\CollegeFootballEventController;
+use App\Http\Controllers\DataPreparationController;
+use App\Http\Controllers\DynamicNFLController;
+use App\Http\Controllers\EspnController;
 use App\Http\Controllers\MlbController;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\NcaaController;
 use App\Http\Controllers\NflController;
-use App\Http\Controllers\TaskController;
+use App\Http\Controllers\NFLStatsController;
 use App\Http\Controllers\OddsController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CollegeFootballController;
 
 
 Route::get('/', function () {
@@ -58,19 +63,13 @@ Route::get('/forge-servers', function () {
     return view('forge-servers');
 })->name('forge-servers');
 
-use App\Http\Controllers\DataPreparationController;
-
 Route::get('/data-preparation', [DataPreparationController::class, 'fetchData']);
 Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name('fetch.data');
 Route::get('/match-schedules-odds', [DataPreparationController::class, 'matchSchedulesWithOdds'])->name('match.schedules.odds');
 Route::get('/predictions', [DataPreparationController::class, 'makePredictions'])->name('predictions');
 Route::get('/fetch-data', [DataPreparationController::class, 'fetchData'])->name('fetchData');
 
-use App\Http\Controllers\NFLStatsController;
-
 Route::get('/nfl/box-score/{gameID}', [NFLStatsController::class, 'fetchBoxScore']);
-
-use App\Http\Controllers\EspnController;
 
 Route::get('/espn/team/{team_id}/schedule', [EspnController::class, 'showNflSchedule'])->name('espn.schedule');
 Route::get('/espn/team/{team_id}/details', [App\Http\Controllers\EspnController::class, 'showTeamDetails'])->name('espn.team-details');
@@ -78,8 +77,6 @@ Route::post('/espn/team/details/filter', [App\Http\Controllers\EspnController::c
 Route::get('/espn-nfl-odds', [EspnController::class, 'showNflOdds']);
 Route::get('/espn-nfl-scoreboard', [EspnController::class, 'showNflScoreboard']);
 Route::get('/espn-nfl-team-projection', [EspnController::class, 'showNflTeamProjection']);
-
-use App\Http\Controllers\DynamicNFLController;
 
 
 Route::get('/nfl/fetch', [DynamicNFLController::class, 'fetch']);
@@ -95,6 +92,7 @@ Route::get('/espn/nfl/events/{event_id}', [EspnController::class, 'showEvent'])-
 
 // College Football routes
 
-Route::get('/college-football', [CollegeFootballController::class, 'index'])->name('collegeFootball.index');
-Route::get('/college-football/{team}', [CollegeFootballController::class, 'show'])->name('collegeFootball.show');
+Route::get('/college-football', [CollegeFootballController::class, 'index'])->name('collegeFootball.teams.index');
+Route::get('/college-football/{team}', [CollegeFootballController::class, 'show'])->name('collegeFootball.teams.show');
+Route::get('/college-football/events/{id}', [CollegeFootballController::class, 'showEvent'])->name('collegeFootball.events.show');
 

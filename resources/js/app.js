@@ -1,13 +1,21 @@
 import './bootstrap';
+import 'chart.js/auto';
 
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
 
-// Sidebar Toggle Function
-document.getElementById('sidebarToggleBtn').addEventListener('click', function () {
-    document.getElementById('sidebar').classList.toggle('closed');
-    document.getElementById('mainContent').classList.toggle('closed');
-});
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('closed');
+            document.getElementById('mainContent').classList.toggle('closed');
+        });
+    }
 
-document.getElementById('closeSidebarBtn').addEventListener('click', function () {
-    document.getElementById('sidebar').classList.toggle('closed');
-    document.getElementById('mainContent').classList.toggle('closed');
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('closed');
+            document.getElementById('mainContent').classList.toggle('closed');
+        });
+    }
 });

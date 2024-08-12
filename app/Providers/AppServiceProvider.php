@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\ChartService;
 use App\Services\NflOddsService;
 use App\Services\NcaaOddsService;
 use App\Services\MlbOddsService;
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Horizon and Telescope service providers
         $this->app->register(TelescopeServiceProvider::class);
+        $this->app->singleton(ChartService::class, function ($app) {
+            return new ChartService();
+        });
     }
 
     /**

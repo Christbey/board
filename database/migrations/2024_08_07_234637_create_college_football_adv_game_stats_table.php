@@ -10,7 +10,7 @@ class CreateCollegeFootballAdvGameStatsTable extends Migration
     {
         Schema::create('college_football_adv_game_stats', function (Blueprint $table) {
             $table->id();
-            $table->integer('game_id')->unique();
+            $table->integer('game_id'); // Unique game identifier (not unique across multiple teams)
             $table->integer('season');
             $table->integer('week');
             $table->unsignedBigInteger('team_id'); // Foreign key for team_id
@@ -45,11 +45,45 @@ class CreateCollegeFootballAdvGameStatsTable extends Migration
             $table->float('offense_passing_plays_total_ppa')->nullable();
             $table->float('offense_passing_plays_success_rate')->nullable();
             $table->float('offense_passing_plays_explosiveness')->nullable();
+
+            // Defense Fields
+            $table->integer('defense_plays')->nullable();
+            $table->integer('defense_drives')->nullable();
+            $table->float('defense_ppa')->nullable();
+            $table->float('defense_total_ppa')->nullable();
+            $table->float('defense_success_rate')->nullable();
+            $table->float('defense_explosiveness')->nullable();
+            $table->float('defense_power_success')->nullable();
+            $table->float('defense_stuff_rate')->nullable();
+            $table->float('defense_line_yards')->nullable();
+            $table->integer('defense_line_yards_total')->nullable();
+            $table->float('defense_second_level_yards')->nullable();
+            $table->integer('defense_second_level_yards_total')->nullable();
+            $table->float('defense_open_field_yards')->nullable();
+            $table->integer('defense_open_field_yards_total')->nullable();
+            $table->float('defense_standard_downs_ppa')->nullable();
+            $table->float('defense_standard_downs_success_rate')->nullable();
+            $table->float('defense_standard_downs_explosiveness')->nullable();
+            $table->float('defense_passing_downs_ppa')->nullable();
+            $table->float('defense_passing_downs_success_rate')->nullable();
+            $table->float('defense_passing_downs_explosiveness')->nullable();
+            $table->float('defense_rushing_plays_ppa')->nullable();
+            $table->float('defense_rushing_plays_total_ppa')->nullable();
+            $table->float('defense_rushing_plays_success_rate')->nullable();
+            $table->float('defense_rushing_plays_explosiveness')->nullable();
+            $table->float('defense_passing_plays_ppa')->nullable();
+            $table->float('defense_passing_plays_total_ppa')->nullable();
+            $table->float('defense_passing_plays_success_rate')->nullable();
+            $table->float('defense_passing_plays_explosiveness')->nullable();
+
             $table->timestamps();
 
             // Foreign keys
             $table->foreign('team_id')->references('id')->on('college_football_teams')->onDelete('cascade');
             $table->foreign('opponent_id')->references('id')->on('college_football_teams')->onDelete('cascade');
+
+            // Composite unique key to ensure each team in a game has only one record
+            $table->unique(['game_id', 'team_id']);
         });
     }
 

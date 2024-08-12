@@ -17,6 +17,10 @@ class CollegeFootballPregame extends Model
         'away_team_id',
         'spread',
         'home_win_prob',
+        'season_type',
+        'season',
+        'week',
+        
     ];
 
     // Define relationships to the CollegeFootballTeam model
