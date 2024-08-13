@@ -53,11 +53,11 @@
                 </x-nav-dropdown>
                 <!-- NCAAF Dropdown -->
                 <x-nav-dropdown label="NCAAF" id="dropdown-ncaaf">
-                    <x-nav-link href="{{ route('collegeFootball.teams.index') }}"
-                                :active="request()->routeIs('ncaa.teams')">
+                    <x-nav-link href="{{ route('cfb.teams.index') }}"
+                                :active="request()->routeIs('cfb.teams.index')">
                         {{ __('Teams') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('ncaa.event') }}" :active="request()->routeIs('ncaa.event')">
+                    <x-nav-link href="{{ route('cfb.events.index') }}" :active="request()->routeIs('cfb.events.index')">
                         {{ __('Events') }}
                     </x-nav-link>
                 </x-nav-dropdown>

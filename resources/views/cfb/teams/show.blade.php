@@ -1,26 +1,4 @@
 @php use Carbon\Carbon; @endphp
-@php
-    function darkenHexColor($hex, $factor = 20) {
-        // Remove "#" if present
-        $hex = str_replace("#", "", $hex);
-
-        // Convert to RGB
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-
-        // Darken the color by the factor
-        $r = max(0, $r - $factor);
-        $g = max(0, $g - $factor);
-        $b = max(0, $b - $factor);
-
-        // Return the darkened color in hex format
-        return sprintf("#%02x%02x%02x", $r, $g, $b);
-    }
-
-    $teamColor = $teamData->color;
-    $darkenedBorderColor = darkenHexColor($teamColor, 30); // Adjust the factor as needed
-@endphp
 
 <x-app-layout>
     <div class="container mx-auto p-6">
@@ -31,14 +9,10 @@
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <!-- Team Information -->
             <div class="mb-6">
-                <h2 class="text-2xl font-semibold">{{ $teamData->school }}</h2>
-                <p class="text-gray-700">Mascot: {{ $teamData->mascot }}</p>
-                <p class="text-gray-700">Abbreviation: {{ $teamData->abbreviation }}</p>
-                <p class="text-gray-700">Conference: {{ $teamData->conference->name }}</p>
-                <p class="text-gray-700">Location: {{ $teamData->city }}, {{ $teamData->state }}</p>
-                <p class="text-gray-700">Stadium: {{ $teamData->venue_name }} (Capacity: {{ $teamData->capacity }})</p>
-                <p class="text-gray-700">Elo Rating: {{ $eloRating->elo ?? 'N/A' }}</p>
-                <p class="text-gray-700">FPI Rating: {{ $fpiRating->fpi ?? 'N/A' }}</p>
+                <h2 class="text-2xl font-semibold">{{ $teamData->school }} {{ $teamData->mascot }}</h2>
+                <p class="text-gray-700"> {{ $teamData->conference->name }}</p>
+                <p class="text-gray-700"> {{ $teamData->venue_name }} </p>
+         
             </div>
 
             <!-- Talent Data Chart -->
@@ -136,7 +110,7 @@
         </div>
 
         <!-- Year Filter -->
-        <form method="GET" action="{{ route('collegeFootball.teams.show', $teamData->id) }}" class="mb-6">
+        <form method="GET" action="{{ route('cfb.teams.show', $teamData->id) }}" class="mb-6">
             <div class="flex items-center space-x-4">
                 <label for="year" class="block text-sm font-medium text-gray-700">Select Year:</label>
                 <select name="year" id="year"
@@ -169,7 +143,7 @@
                 <tbody>
                 @forelse($games as $game)
                     <tr class="cursor-pointer hover:bg-gray-100"
-                        onclick="window.location='{{ route('collegeFootball.events.show', $game->id) }}'">
+                        onclick="window.location='{{ route('cfb.events.show', $game->id) }}'">
                         <td class="px-6 py-4 whitespace-nowrap">{{ Carbon::parse($game->start_date)->format('m/d') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {{ $game->home_id == $teamData->id ? 'vs. ' . ($game->awayTeam->school ?? 'Unknown Team') : '@ ' . ($game->homeTeam->school ?? 'Unknown Team') }}
@@ -283,7 +257,7 @@
                                 'rgba(211, 211, 211, 0.6)'
                             ],
                             borderColor: [
-                                '{{ $darkenedBorderColor }}',
+                                'rgba(211, 211, 211, 1)',
                                 'rgba(211, 211, 211, 1)'
                             ],
                             borderWidth: 1

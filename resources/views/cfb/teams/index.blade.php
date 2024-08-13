@@ -2,7 +2,7 @@
     <div class="container mx-auto p-6">
         <h1 class="text-2xl font-semibold text-gray-800 mb-6">College Football Teams (FBS)</h1>
 
-        <form method="GET" action="{{ route('collegeFootball.teams.index') }}" class="mb-6">
+        <form method="GET" action="{{ route('cfb.teams.index') }}" class="mb-6">
             <div class="flex items-center space-x-4">
                 <label for="conference" class="block text-sm font-medium text-gray-700">Filter by Conference:</label>
                 <select name="conference" id="conference"
@@ -34,7 +34,7 @@
                 <tbody>
                 @foreach($teams as $team)
                     <tr class="cursor-pointer hover:bg-gray-100"
-                        onclick="window.location='{{ route('collegeFootball.teams.show', $team->id) }}'">
+                        onclick="window.location='{{ route('cfb.teams.show', $team->id) }}'">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $team->school }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ $team->mascot }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ $team->abbreviation }}</td>

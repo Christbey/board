@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\CollegeFootballController;
-use App\Http\Controllers\CollegeFootballEventController;
 use App\Http\Controllers\DataPreparationController;
 use App\Http\Controllers\DynamicNFLController;
 use App\Http\Controllers\EspnController;
@@ -10,7 +9,6 @@ use App\Http\Controllers\NbaController;
 use App\Http\Controllers\NcaaController;
 use App\Http\Controllers\NflController;
 use App\Http\Controllers\NFLStatsController;
-use App\Http\Controllers\OddsController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -91,8 +89,13 @@ Route::get('/espn/nfl/teams/{id}', [EspnController::class, 'show'])->name('espn.
 Route::get('/espn/nfl/events/{event_id}', [EspnController::class, 'showEvent'])->name('espn.events.show');
 
 // College Football routes
+Route::get('/college-football', [CollegeFootballController::class, 'index'])->name('cfb.teams.index');
+Route::get('/college-football/{team}', [CollegeFootballController::class, 'show'])->name('cfb.teams.show');
+Route::get('/college-football/events/index', [App\Http\Controllers\CollegeFootballController::class, 'event'])->name('cfb.events.index');
+Route::get('/college-football/events/{id}', [CollegeFootballController::class, 'showEvent'])->name('cfb.events.show');
+Route::get('college-football/rankings/index', [CollegeFootballController::class, 'rankings'])->name('cfb.rankings.index');
 
-Route::get('/college-football', [CollegeFootballController::class, 'index'])->name('collegeFootball.teams.index');
-Route::get('/college-football/{team}', [CollegeFootballController::class, 'show'])->name('collegeFootball.teams.show');
-Route::get('/college-football/events/{id}', [CollegeFootballController::class, 'showEvent'])->name('collegeFootball.events.show');
-
+Route::get('/test', function () {
+    Log::info('Test route was called.');
+    return 'Test route is working';
+});

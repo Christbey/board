@@ -7,12 +7,14 @@ use App\Models\CollegeFootballAdvSeasonStat;
 use App\Models\CollegeFootballConference;
 use App\Models\CollegeFootballEloRating;
 use App\Models\CollegeFootballFpiRating;
+use App\Models\CollegeFootballRanking;
 use App\Models\CollegeFootballTalent;
 use App\Models\CollegeFootballTeam;
 use App\Models\CollegeFootballGame;
 use App\Models\CollegeFootballPregame;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Log;
 
 class CollegeFootballController extends Controller
 {
@@ -72,7 +74,7 @@ class CollegeFootballController extends Controller
             ->distinct()
             ->get();
 
-        return view('college-football.teams.index', compact('teams', 'conferences', 'conferenceName', 'eloRatings'));
+        return view('cfb.teams.index', compact('teams', 'conferences', 'conferenceName', 'eloRatings'));
     }
 
     public function show(Request $request, $team)
@@ -113,7 +115,7 @@ class CollegeFootballController extends Controller
             ->avg('fpi');
 
         // Pass the data to the view
-        return view('college-football.teams.show', compact('teamData', 'games', 'fpiRating', 'eloRating', 'advStats', 'talentData', 'averageTalent', 'averageConferenceFpi', 'year'));
+        return view('cfb.teams.show', compact('teamData', 'games', 'fpiRating', 'eloRating', 'advStats', 'talentData', 'averageTalent', 'averageConferenceFpi', 'year'));
     }
 
     public function showEvent($id, $year = null)
@@ -142,6 +144,78 @@ class CollegeFootballController extends Controller
             ->first();
 
         // Pass the ratings, game, pregame, and advanced stats data to the view
-        return view('college-football.events.show', compact('game', 'homeFpiRating', 'awayFpiRating', 'homeEloRating', 'awayEloRating', 'pregameData', 'homeAdvStats', 'awayAdvStats', 'year'));
+        return view('cfb.events.show', compact('game', 'homeFpiRating', 'awayFpiRating', 'homeEloRating', 'awayEloRating', 'pregameData', 'homeAdvStats', 'awayAdvStats', 'year'));
     }
+
+    public function event(Request $request)
+    {
+        $currentYear = date('Y');
+        $defaultWeek = 1; // Default to Week 1
+
+        $selectedConference = $request->input('conference', 'SEC'); // Default to SEC
+        $selectedWeek = $request->input('week', $defaultWeek); // Default to Week 1
+        $selectedYear = $request->input('year', $currentYear); // Default to current year
+
+        Log::info('Selected Conference:', ['conference' => $selectedConference]);
+        Log::info('Selected Week:', ['week' => $selectedWeek]);
+        Log::info('Selected Year:', ['year' => $selectedYear]);
+
+        // Fetch the conference
+        $conference = CollegeFootballConference::where('name', $selectedConference)->first();
+
+        // Fetch games based on the selected conference, week, and year
+        $games = CollegeFootballGame::with(['homeTeam', 'awayTeam'])
+            ->whereYear('start_date', $selectedYear)
+            ->where(function ($query) use ($conference) {
+                $query->whereHas('homeTeam', function ($query) use ($conference) {
+                    $query->where('conference_id', $conference->id);
+                })
+                    ->orWhereHas('awayTeam', function ($query) use ($conference) {
+                        $query->where('conference_id', $conference->id);
+                    });
+            })
+            ->when($selectedWeek, function ($query) use ($selectedWeek) {
+                Log::info('Applying Week Filter:', ['week' => $selectedWeek]);
+                return $query->where('week', $selectedWeek);
+            })
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        Log::info('Fetched Games:', ['games' => $games->toArray()]);
+
+        // Fetch all conferences for the filter dropdown
+        $conferences = CollegeFootballConference::pluck('name');
+
+        // Fetch all distinct weeks available in the games table for the selected year
+        $weeks = CollegeFootballGame::whereYear('start_date', $selectedYear)
+            ->distinct()
+            ->orderBy('week')
+            ->pluck('week');
+
+        return view('cfb.events.index', compact('games', 'conferences', 'selectedConference', 'weeks', 'selectedWeek'));
+    }
+
+    public function rankings(Request $request)
+    {
+        $selectedPoll = $request->input('poll', 'AP Top 25');
+        $currentYear = date('Y'); // Get the current year
+
+        // Fetch distinct polls for the filter dropdown for the current year
+        $polls = CollegeFootballRanking::where('season', $currentYear)
+            ->select('poll')
+            ->distinct()
+            ->pluck('poll');
+
+        // Fetch rankings based on the selected poll and current year
+        $rankings = CollegeFootballRanking::where('season', $currentYear)
+            ->when($selectedPoll, function ($query) use ($selectedPoll) {
+                return $query->where('poll', $selectedPoll);
+            })
+            ->orderBy('points', 'desc')
+            ->get();
+
+        return view('cfb.rankings.index', compact('rankings', 'polls', 'selectedPoll'));
+    }
+
+
 }

@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\CollegeFootballPpa;
-use App\Models\CollegeFootballGamePpa;
 use App\Models\CollegeFootballTeam;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchCollegeFootballPpa extends Command
 {
@@ -31,11 +31,17 @@ class FetchCollegeFootballPpa extends Command
             $teams = $response->json();
 
             foreach ($teams as $teamData) {
+                // Log the team name being processed
+                Log::info('Processing team: ' . $teamData['team']);
+
                 // Find the corresponding team or create it if it doesn't exist
                 $team = CollegeFootballTeam::firstOrCreate(
                     ['school' => $teamData['team']],
                     ['school' => $teamData['team']]
                 );
+
+                // Log the team ID
+                Log::info('Team ID for ' . $teamData['team'] . ': ' . $team->id);
 
                 // Store the PPA data
                 CollegeFootballPpa::updateOrCreate(
@@ -65,6 +71,9 @@ class FetchCollegeFootballPpa extends Command
                         'defense_cumulative_rushing' => $teamData['defense']['cumulative']['rushing'] ?? null,
                     ]
                 );
+
+                // Log success for each team
+                Log::info('PPA data stored successfully for team: ' . $teamData['team']);
             }
 
             $this->info("College football PPA data for year {$year} fetched and saved successfully.");
