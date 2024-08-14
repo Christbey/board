@@ -21,12 +21,12 @@ class CreateNflEspnPastH2hTable extends Migration
             $table->decimal('spread', 5, 2);
             $table->decimal('over_odds', 5, 2);
             $table->decimal('under_odds', 5, 2);
-            $table->decimal('away_team_money_line_odds', 5, 2);
-            $table->decimal('away_team_spread_odds', 5, 2);
+            $table->decimal('away_team_money_line_odds');
+            $table->decimal('away_team_spread_odds');
             $table->boolean('away_team_spread_winner');
             $table->boolean('away_team_money_line_winner');
-            $table->decimal('home_team_money_line_odds', 5, 2);
-            $table->decimal('home_team_spread_odds', 5, 2);
+            $table->decimal('home_team_money_line_odds');
+            $table->decimal('home_team_spread_odds');
             $table->boolean('home_team_spread_winner');
             $table->boolean('home_team_money_line_winner');
             $table->timestamp('line_date');

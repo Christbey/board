@@ -3,28 +3,33 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithPagination;
+
+// Add this import
 use App\Models\NflEspnInjury;
 
 class TeamInjuries extends Component
 {
+    use WithPagination;
+
+    // Include the pagination trait
+
     public $teamId;
-    public $injuries;
     public $statusFilter = '';
 
     public function mount($teamId)
     {
         $this->teamId = $teamId;
-        $this->loadInjuries();
     }
 
     public function updatedStatusFilter()
     {
-        // This method is automatically called when the status filter is updated
+        $this->resetPage(); // Reset to the first page when the filter is updated
     }
 
     public function applyFilter()
     {
-        $this->loadInjuries();
+        $this->resetPage(); // Reset to the first page when applying a filter
     }
 
     public function loadInjuries()
@@ -35,13 +40,13 @@ class TeamInjuries extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        $this->injuries = $query->get();
+        return $query->paginate(10); // Use pagination here
     }
 
     public function render()
     {
         return view('livewire.team-injuries', [
-            'injuries' => $this->injuries
+            'injuries' => $this->loadInjuries() // Pass the paginated data
         ]);
     }
 }

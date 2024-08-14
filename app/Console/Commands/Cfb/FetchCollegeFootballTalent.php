@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
 use App\Models\CollegeFootballTalent;
 use App\Models\CollegeFootballTeam;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballTalent extends Command
@@ -37,7 +37,6 @@ class FetchCollegeFootballTalent extends Command
                         'abbreviation' => 'UNK', // Default or null
                         'conference' => 'Unknown', // Default or null
                         'classification' => 'fbs', // Assuming all fetched teams are FBS
-                        // Add other fields as necessary
                     ]
                 );
 

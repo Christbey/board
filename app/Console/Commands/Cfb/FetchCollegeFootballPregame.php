@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
 use App\Models\CollegeFootballPregame;
 use App\Models\CollegeFootballTeam;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballPregame extends Command

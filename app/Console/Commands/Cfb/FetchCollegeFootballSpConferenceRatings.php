@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
-use App\Models\CollegeFootballSpConferenceRating;
 use App\Models\CollegeFootballConference;
+use App\Models\CollegeFootballSpConferenceRating;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballSpConferenceRatings extends Command

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
 use App\Models\CollegeFootballPpa;
 use App\Models\CollegeFootballTeam;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 

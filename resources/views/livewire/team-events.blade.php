@@ -9,8 +9,6 @@
                 <th class="py-3 px-6 text-left">Event Name</th>
                 <th class="py-3 px-6 text-left">Date</th>
                 <th class="py-3 px-6 text-left">Venue</th>
-                <th class="py-3 px-6 text-left">Home Team</th>
-                <th class="py-3 px-6 text-left">Away Team</th>
                 <th class="py-3 px-6 text-left">Score</th>
             </tr>
             </thead>
@@ -23,8 +21,7 @@
                     </td>
                     <td class="py-3 px-6 text-left">{{ $event->date }}</td>
                     <td class="py-3 px-6 text-left">{{ $event->venue_name }}</td>
-                    <td class="py-3 px-6 text-left">{{ $event->home_team_id }}</td>
-                    <td class="py-3 px-6 text-left">{{ $event->away_team_id }}</td>
+
                     <td class="py-3 px-6 text-left">{{ $event->home_team_score }} - {{ $event->away_team_score }}</td>
                 </tr>
             @endforeach

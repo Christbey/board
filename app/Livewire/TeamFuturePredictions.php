@@ -9,7 +9,7 @@ class TeamFuturePredictions extends Component
 {
     public $teamId;
     public $futures;
-    public $filterProviderName = '';
+    public $filterProviderName = 'Draftkings';
     public $allProviderNames;
 
     public function mount($teamId)

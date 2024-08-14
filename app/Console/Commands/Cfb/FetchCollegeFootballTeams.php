@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
-use App\Models\CollegeFootballTeam;
 use App\Models\CollegeFootballConference;
+use App\Models\CollegeFootballTeam;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballTeams extends Command
@@ -41,7 +41,6 @@ class FetchCollegeFootballTeams extends Command
                     continue;
                 }
 
-                // Find or create the conference by abbreviation
                 // Find or create the conference by abbreviation
                 $conference = CollegeFootballConference::updateOrCreate(
                     ['abbreviation' => $conferenceAbbreviation],

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cfb;
 
-use Illuminate\Console\Command;
 use App\Models\CollegeFootballConference;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballConferences extends Command

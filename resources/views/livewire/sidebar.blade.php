@@ -24,6 +24,28 @@
                     </x-nav-link>
                 </li>
 
+                <!-- CFB Dropdown -->
+                <x-nav-dropdown label="CFB" id="dropdown-cfb">
+                    <x-nav-link href="{{ route('cfb.teams.index') }}" :active="request()->routeIs('cfb.teams.index')">
+                        {{ __('Teams') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('cfb.events.index') }}" :active="request()->routeIs('cfb.events.index')">
+                        {{ __('Events') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('cfb.rankings.index') }}"
+                                :active="request()->routeIs('cfb.rankings.index')">
+                        {{ __('Rankings') }}
+                    </x-nav-link>
+                </x-nav-dropdown>
+
+                <!-- ESPN Dropdown -->
+                <x-nav-dropdown label="ESPN" id="dropdown-espn">
+                    <x-nav-link href="{{ route('espn.nfl.teams.index') }}" :active="request()->routeIs('nfl.teams')">
+                        {{ __('ESPN Teams') }}
+                    </x-nav-link>
+
+                </x-nav-dropdown>
+
                 <!-- NFL Dropdown -->
                 <x-nav-dropdown label="NFL" id="dropdown-nfl">
                     <x-nav-link href="{{ route('nfl.teams') }}" :active="request()->routeIs('nfl.teams')">
