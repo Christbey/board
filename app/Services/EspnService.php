@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Config;
 use App\Models\NflEspnTeam;
 use Log;
 
-class ESPNService
+class EspnService
 {
     protected $client;
     protected $baseUri;

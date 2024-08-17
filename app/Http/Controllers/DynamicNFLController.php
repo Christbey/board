@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ESPNService;
+use App\Services\EspnService;
 use Illuminate\Http\Request;
 
 class DynamicNFLController extends Controller
 {
     protected $espnService;
 
-    public function __construct(ESPNService $espnService)
+    public function __construct(EspnService $espnService)
     {
         $this->espnService = $espnService;
     }
