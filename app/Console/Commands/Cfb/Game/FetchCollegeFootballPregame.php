@@ -6,6 +6,8 @@ use App\Models\CollegeFootballPregame;
 use App\Models\CollegeFootballTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Spatie\DiscordAlerts\Facades\DiscordAlert;
+use Illuminate\Support\Facades\Log;
 
 class FetchCollegeFootballPregame extends Command
 {
@@ -40,6 +42,50 @@ class FetchCollegeFootballPregame extends Command
                     continue;
                 }
 
+                // Find the existing pregame data
+                $pregame = CollegeFootballPregame::where('game_id', $game['gameId'])->first();
+
+                // Determine if home_win_prob has changed before updating the record
+                $homeWinProbChanged = $pregame ? round($pregame->home_win_prob, 2) !== round($game['homeWinProb'], 2) : true;
+
+                // Send notification only if home_win_prob changed
+                if ($homeWinProbChanged) {
+                    $homeTeamName = $homeTeam->school;
+                    $awayTeamName = $awayTeam->school;
+                    $gameId = $game['gameId'];
+                    $homeWinProb = $game['homeWinProb'];
+
+                    // Send a Discord notification
+                    DiscordAlert::to('cfb-events')->message('', [
+                        [
+                            'title' => "Pregame Updated: {$homeTeamName} vs {$awayTeamName}",
+                            'description' => "The home win probability for Game ID: {$gameId} has been updated.",
+                            'fields' => [
+                                [
+                                    'name' => 'Home Win Probability',
+                                    'value' => "{$homeWinProb}%",
+                                    'inline' => true,
+                                ],
+                                [
+                                    'name' => 'Spread',
+                                    'value' => "{$game['spread']}",
+                                    'inline' => true,
+                                ]
+                            ],
+                            'color' => '#7289da', // Discord blue color, will be converted to decimal automatically
+                            'timestamp' => now()->toIso8601String(),
+                        ]
+                    ]);
+
+                    Log::info('Sent Discord notification for pregame update', [
+                        'game_id' => $gameId,
+                        'home_team' => $homeTeamName,
+                        'away_team' => $awayTeamName,
+                        'home_win_prob' => $homeWinProb,
+                    ]);
+                }
+
+                // Perform the updateOrCreate operation
                 CollegeFootballPregame::updateOrCreate(
                     [
                         'game_id' => $game['gameId']

@@ -10,7 +10,7 @@ class CollegeFootballPregame extends Model
     use HasFactory;
 
     protected $table = 'college_football_pregame';
-
+    protected $primaryKey = 'game_id';
     protected $fillable = [
         'game_id',
         'home_team_id',
@@ -20,7 +20,7 @@ class CollegeFootballPregame extends Model
         'season_type',
         'season',
         'week',
-        
+
     ];
 
     // Define relationships to the CollegeFootballTeam model

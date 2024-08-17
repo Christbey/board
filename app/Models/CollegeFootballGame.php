@@ -69,6 +69,7 @@ class CollegeFootballGame extends Model
     {
         return $this->belongsTo(CollegeFootballTeam::class, 'away_id');
     }
+    
 
 }
 

@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 
+use App\Models\CollegeFootballGame;
+use App\Observers\CollegeFootballGameObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        CollegeFootballGame::observe(CollegeFootballGameObserver::class);
+
         // Other bootstrapping logic
     }
 }
