@@ -88,7 +88,7 @@ class FetchNews extends Command
 
             // Only send a Discord notification if the record was recently created
             if ($nflNews->wasRecentlyCreated) {
-                DiscordAlert::to('default')->message('', [
+                DiscordAlert::to('nfl-news')->message('', [
                     [
                         'title' => $headline,
                         'description' => $description,
