@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Spatie\DiscordAlerts\Facades\DiscordAlert;
 
 class FetchNews extends Command
 {
@@ -57,7 +58,7 @@ class FetchNews extends Command
                 }
             }
 
-            // Check if athlete_id and team_id exist in their respective tables
+            // Check if athlete_id and team_id exist in their respective table.
             if ($athleteId && !NflEspnAthlete::where('athlete_id', $athleteId)->exists()) {
                 Log::warning('Athlete ID does not exist in the nfl_espn_athletes table', ['athleteId' => $athleteId]);
                 $athleteId = null; // Set to null to avoid foreign key constraint violation
@@ -70,7 +71,7 @@ class FetchNews extends Command
 
             Log::info('Extracted IDs', ['teamId' => $teamId, 'athleteId' => $athleteId]);
 
-            NflEspnNews::updateOrCreate(
+            $nflNews = NflEspnNews::updateOrCreate(
                 ['url' => $url],
                 [
                     'headline' => $headline,
@@ -85,10 +86,23 @@ class FetchNews extends Command
                 ]
             );
 
+            // Only send a Discord notification if the record was recently created
+            if ($nflNews->wasRecentlyCreated) {
+                DiscordAlert::to('default')->message('', [
+                    [
+                        'title' => $headline,
+                        'description' => $description,
+                        'url' => $url,
+                        'published' => $published,
+                        'color' => '#7289da', // Optional: You can specify a color for the embed (hex code or decimal)
+                    ]
+                ]);
+                Log::info('Sent Discord notification for new news item', ['headline' => $headline, 'url' => $url]);
+            }
+
             Log::info('News stored', ['headline' => $headline, 'url' => $url]);
         }
 
-        $this->info('NFL news fetched and stored successfully.');
         Log::info('NFL news fetched and stored successfully');
     }
 }

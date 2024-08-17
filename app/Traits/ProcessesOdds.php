@@ -3,7 +3,9 @@
 namespace App\Traits;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Log;
+use Spatie\DiscordAlerts\Facades\DiscordAlert;
 
 trait ProcessesOdds
 {
@@ -22,22 +24,60 @@ trait ProcessesOdds
                     }
 
                     $oddsData = $this->prepareOddsData($odd, $bookmaker, $homeTeam->id, $awayTeam->id);
-                    Log::info('Prepared odds data:', $oddsData);
 
                     $existingOdds = $this->storeOrUpdateOdds($oddsModel, $oddsData);
 
                     if ($existingOdds && $this->oddsHaveChanged($existingOdds, $oddsData)) {
+                        try {
+
+
+                            $description = "**Odds have changed!**\n";
+
+                            if (number_format($existingOdds->total_over_point, 2) !== number_format($oddsData['total_over_point'], 2)) {
+                                $emoji = $oddsData['total_over_point'] > $existingOdds->total_over_point ? '⬆️' : '⬇️';
+                                $description .= "~~Old Total: {$existingOdds->total_over_point}~~ ➔ New Total: {$oddsData['total_over_point']} {$emoji}\n";
+                            }
+
+                            if (number_format($existingOdds->h2h_home_price, 2) !== number_format($oddsData['h2h_home_price'], 2)) {
+                                $description .= "~~Old Home Team H2H Price: {$existingOdds->h2h_home_price}~~ ➔ New Home Team H2H Price: {$oddsData['h2h_home_price']}\n";
+                            }
+
+                            if (number_format($existingOdds->h2h_away_price, 2) !== number_format($oddsData['h2h_away_price'], 2)) {
+                                $description .= "~~Old Away Team H2H Price: {$existingOdds->h2h_away_price}~~ ➔ New Away Team H2H Price: {$oddsData['h2h_away_price']}\n";
+                            }
+
+                            if (number_format($existingOdds->spread_home_point, 2) !== number_format($oddsData['spread_home_point'], 2)) {
+                                $description .= "~~Old Home Spread Point: {$existingOdds->spread_home_point}~~ ➔ New Home Spread Point: {$oddsData['spread_home_point']}\n";
+                            }
+
+                            if (number_format($existingOdds->spread_away_point, 2) !== number_format($oddsData['spread_away_point'], 2)) {
+                                $description .= "~~Old Away Spread Point: {$existingOdds->spread_away_point}~~ ➔ New Away Spread Point: {$oddsData['spread_away_point']}\n";
+                            }
+
+                            if (!empty(trim($description))) {
+                                DiscordAlert::to('nfl-odds')->message('', [
+                                    [
+                                        'title' => "{$homeTeam->name} {$oddsData['spread_home_point']} vs {$awayTeam->name} {$oddsData['spread_away_point']}",
+                                        'description' => $description,
+                                        'color' => '#E77625',
+                                    ]
+                                ]);
+                            }
+
+                            Log::info('Notification sent to Discord successfully');
+                        } catch (Exception $e) {
+                            Log::error('Failed to send notification to Discord', ['error' => $e->getMessage()]);
+                        }
+
                         Log::info('Odds have changed, storing history for event ID: ' . $oddsData['event_id']);
                         $this->storeOddsHistory($oddsHistoryModel, $existingOdds, $oddsData);
                         $existingOdds->update($oddsData);
-                    } elseif (!$existingOdds) {
-                        Log::info('Storing new odds for event ID: ' . $oddsData['event_id']);
-                        $this->storeOdds($oddsModel, $oddsData);
                     }
                 }
             }
         }
     }
+
 
     protected function getTeam($teamModel, $teamName)
     {
@@ -105,6 +145,7 @@ trait ProcessesOdds
             ->first();
 
         if ($existingOdds) {
+
             return $existingOdds;
         }
 
@@ -113,8 +154,12 @@ trait ProcessesOdds
 
     protected function storeOdds($oddsModel, array $oddsData)
     {
-        return $oddsModel::create($oddsData);
+        $odds = $oddsModel::create($oddsData);
+
+
+        return $odds;
     }
+
 
     protected function storeOddsHistory($oddsHistoryModel, $existingOdds, array $oddsData)
     {

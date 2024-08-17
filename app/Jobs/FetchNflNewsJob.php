@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Spatie\DiscordAlerts\Facades\DiscordAlert;
 
 class FetchNflNewsJob implements ShouldQueue
 {
@@ -66,7 +67,6 @@ class FetchNflNewsJob implements ShouldQueue
                         'team_id' => $teamID,
                     ]
                 );
-
                 Log::info('News stored', ['title' => $newsItem['title'], 'player_id' => $playerID, 'team_id' => $teamID]);
             }
         }
