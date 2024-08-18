@@ -27,7 +27,7 @@ class FetchNflNewsJob implements ShouldQueue
         }
 
         $newsItems = $response->json('articles');
-        Log::info('Fetched news items', ['newsItems' => $newsItems]);
+        // Log::info('Fetched news items', ['newsItems' => $newsItems]);
 
         foreach ($newsItems as $newsItem) {
             event(new NflNewsFetched($newsItem));

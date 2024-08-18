@@ -33,7 +33,7 @@ class ProcessNflNews
             'athlete_id' => $this->getValidAthleteId($newsItem),
         ];
 
-        Log::info('Extracted IDs', ['team_id' => $newsData['team_id'], 'athlete_id' => $newsData['athlete_id']]);
+        // Log::info('Extracted IDs', ['team_id' => $newsData['team_id'], 'athlete_id' => $newsData['athlete_id']]);
 
         $nflNews = NflEspnNews::updateOrCreate(['url' => $newsData['url']], $newsData);
 
