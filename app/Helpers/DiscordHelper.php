@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\NflTeam;
 use NotificationChannels\Discord\DiscordMessage;
 use App\Models\NflEspnTeam;
 
@@ -27,11 +28,22 @@ class DiscordHelper
         return $this;
     }
 
-    public function setColor(string $color): self
+    public function setColor(string $color = null, ?NflTeam $team = null): self
     {
+        // If color is not provided, fallback to the team's primary color if available
+        if (!$color && $team) {
+            $color = $team->primary_color;
+        }
+
+        // If still no color, use a default color
+        $color = $color ?: '#7289da';
+
+        // Convert the color to a hex value, remove the # if present
         $this->embed['color'] = hexdec(str_replace('#', '', $color));
+
         return $this;
     }
+
 
     public function setTimestamp($timestamp = null): self
     {
