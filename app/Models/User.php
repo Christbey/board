@@ -64,4 +64,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function routeNotificationForDiscord()
+    {
+        
+        return $this->discord_private_channel_id;
+    }
+
+
 }

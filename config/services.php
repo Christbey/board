@@ -51,6 +51,10 @@ return [
         'host' => 'tank01-nfl-live-in-game-real-time-statistics-nfl.p.rapidapi.com',
     ],
 
+    'discord' => [
+        'token' => env('DISCORD_API_TOKEN'),  // Replace 'your-default-token-here' with a default token if needed
+        'channel' => env('DISCORD_CHANNEL', '1226336520806465596'), // Replace 'your-default-channel-id' with a default channel ID if needed
+    ],
 
 
 ];

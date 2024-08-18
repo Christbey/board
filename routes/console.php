@@ -19,6 +19,8 @@ foreach ($sports as $sport) {
 
 // Schedule News Command to run every fifteen minutes
 Schedule::command('espn:nfl-news')->everyFiveMinutes();
-
+Schedule::command('odds:fetch nfl')->everySixHours();
+Schedule::command('scores:fetch nfl')->everyFiveMinutes();
+Schedule::command('fetch:espn-events 2024 2 1')->everyFiveMinutes();
 // Schedule Nfl Players Command to run daily
 Schedule::command('nfl:get-players')->daily();

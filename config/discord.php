@@ -14,5 +14,4 @@ return [
      * This job will send the message to Discord. You can extend this
      * job to set timeouts, retries, etc...
      */
-    'job' => Spatie\DiscordAlerts\Jobs\SendToDiscordChannelJob::class,
 ];

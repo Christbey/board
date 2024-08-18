@@ -2,10 +2,12 @@
 
 namespace App\Traits;
 
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use Spatie\DiscordAlerts\Facades\DiscordAlert;
+use App\Helpers\DiscordHelper;
+use App\Notifications\DiscordNotification;
 
 trait ProcessesOdds
 {
@@ -29,8 +31,6 @@ trait ProcessesOdds
 
                     if ($existingOdds && $this->oddsHaveChanged($existingOdds, $oddsData)) {
                         try {
-
-
                             $description = "**Odds have changed!**\n";
 
                             if (number_format($existingOdds->total_over_point, 2) !== number_format($oddsData['total_over_point'], 2)) {
@@ -55,13 +55,15 @@ trait ProcessesOdds
                             }
 
                             if (!empty(trim($description))) {
-                                DiscordAlert::to('nfl-odds')->message('', [
-                                    [
-                                        'title' => "{$homeTeam->name} {$oddsData['spread_home_point']} vs {$awayTeam->name} {$oddsData['spread_away_point']}",
-                                        'description' => $description,
-                                        'color' => '#E77625',
-                                    ]
-                                ]);
+                                // Use DiscordHelper to build the Discord message
+                                $message = (new DiscordHelper())
+                                    ->setTitle("{$homeTeam->name} {$oddsData['spread_home_point']} vs {$awayTeam->name} {$oddsData['spread_away_point']}")
+                                    ->setDescription($description)
+                                    ->setColor('#E77625')
+                                    ->build();
+
+                                // Send the notification using the built DiscordMessage
+                                $this->notifyDiscord($message);
                             }
 
                             Log::info('Notification sent to Discord successfully');
@@ -78,6 +80,11 @@ trait ProcessesOdds
         }
     }
 
+    protected function notifyDiscord($message)
+    {
+        $user = User::find(1); // Retrieve the user to send the notification
+        $user?->notify(new DiscordNotification($message));
+    }
 
     protected function getTeam($teamModel, $teamName)
     {
@@ -145,21 +152,11 @@ trait ProcessesOdds
             ->first();
 
         if ($existingOdds) {
-
             return $existingOdds;
         }
 
         return $oddsModel::create($oddsData);
     }
-
-    protected function storeOdds($oddsModel, array $oddsData)
-    {
-        $odds = $oddsModel::create($oddsData);
-
-
-        return $odds;
-    }
-
 
     protected function storeOddsHistory($oddsHistoryModel, $existingOdds, array $oddsData)
     {

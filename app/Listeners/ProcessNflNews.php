@@ -3,12 +3,14 @@
 namespace App\Listeners;
 
 use App\Events\NflNewsFetched;
+use App\Helpers\DiscordHelper;
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnNews;
 use App\Models\NflEspnTeam;
-use Carbon\Carbon;
+use App\Models\User;
+use App\Notifications\DiscordNotification;
 use Illuminate\Support\Facades\Log;
-use Spatie\DiscordAlerts\Facades\DiscordAlert;
+use Carbon\Carbon;
 
 class ProcessNflNews
 {
@@ -16,70 +18,69 @@ class ProcessNflNews
     {
         $newsItem = $event->newsItem;
 
-        $headline = $newsItem['headline'] ?? null;
-        $description = $newsItem['description'] ?? null;
-        $url = $newsItem['links']['web']['href'] ?? null;
-        $imageUrl = $newsItem['images'][0]['url'] ?? null;
-        $byline = $newsItem['byline'] ?? null;
-        $published = isset($newsItem['published']) ? Carbon::parse($newsItem['published'])->toDateTimeString() : null;
-        $lastModified = isset($newsItem['lastModified']) ? Carbon::parse($newsItem['lastModified'])->toDateTimeString() : null;
+        $teamId = $this->getValidTeamId($newsItem);
+        $teamColor = NflEspnTeam::where('team_id', $teamId)->value('color') ?? '#7289da';
 
-        $teamId = null;
-        $athleteId = null;
+        $newsData = [
+            'headline' => $newsItem['headline'] ?? null,
+            'description' => $newsItem['description'] ?? null,
+            'url' => $newsItem['links']['web']['href'] ?? null,
+            'image_url' => $newsItem['images'][0]['url'] ?? null,
+            'byline' => $newsItem['byline'] ?? null,
+            'published' => isset($newsItem['published']) ? Carbon::parse($newsItem['published'])->toDateTimeString() : null,
+            'last_modified' => isset($newsItem['lastModified']) ? Carbon::parse($newsItem['lastModified'])->toDateTimeString() : null,
+            'team_id' => $teamId,
+            'athlete_id' => $this->getValidAthleteId($newsItem),
+        ];
 
-        if (isset($newsItem['categories'])) {
-            foreach ($newsItem['categories'] as $category) {
-                if ($category['type'] === 'athlete' && isset($category['athleteId'])) {
-                    $athleteId = $category['athleteId'];
-                }
+        Log::info('Extracted IDs', ['team_id' => $newsData['team_id'], 'athlete_id' => $newsData['athlete_id']]);
 
-                if ($category['type'] === 'team' && isset($category['teamId'])) {
-                    $teamId = $category['teamId'];
-                }
+        $nflNews = NflEspnNews::updateOrCreate(['url' => $newsData['url']], $newsData);
+
+        if ($nflNews->wasRecentlyCreated) {
+            $user = $this->getNotificationUser();
+
+            if ($user) {
+                $message = (new DiscordHelper())
+                    ->presetNewsEmbed(
+                        $newsData['headline'] ?? 'News Update',
+                        $newsData['description'] ?? 'Description unavailable.',
+                        $newsData['url'] ?? '',
+                        $newsData['byline'] ?? 'Unknown Author',
+                        'Sports',
+                        $teamColor
+                    )
+                    ->build();
+
+                $user->notify(new DiscordNotification($message));
             }
         }
 
-        if ($athleteId && !NflEspnAthlete::where('athlete_id', $athleteId)->exists()) {
-            Log::warning('Athlete ID does not exist in the nfl_espn_athletes table', ['athleteId' => $athleteId]);
-            $athleteId = null;
+        Log::info('NflEspnNews record updated or created', ['nflNews' => $nflNews]);
+    }
+
+    protected function getValidTeamId(array $newsItem)
+    {
+        foreach ($newsItem['categories'] ?? [] as $category) {
+            if ($category['type'] === 'team' && isset($category['teamId']) && NflEspnTeam::where('team_id', $category['teamId'])->exists()) {
+                return $category['teamId'];
+            }
         }
+        return null;
+    }
 
-        if ($teamId && !NflEspnTeam::where('team_id', $teamId)->exists()) {
-            Log::warning('Team ID does not exist in the nfl_espn_teams table', ['teamId' => $teamId]);
-            $teamId = null;
+    protected function getValidAthleteId(array $newsItem)
+    {
+        foreach ($newsItem['categories'] ?? [] as $category) {
+            if ($category['type'] === 'athlete' && isset($category['athleteId']) && NflEspnAthlete::where('athlete_id', $category['athleteId'])->exists()) {
+                return $category['athleteId'];
+            }
         }
+        return null;
+    }
 
-        Log::info('Extracted IDs', ['teamId' => $teamId, 'athleteId' => $athleteId]);
-
-        $nflNews = NflEspnNews::updateOrCreate(
-            ['url' => $url],
-            [
-                'headline' => $headline,
-                'description' => $description,
-                'url' => $url,
-                'image_url' => $imageUrl,
-                'byline' => $byline,
-                'published' => $published,
-                'last_modified' => $lastModified,
-                'team_id' => $teamId,
-                'athlete_id' => $athleteId,
-            ]
-        );
-
-        // Send Discord notification only if the record was recently created
-        if ($nflNews->wasRecentlyCreated) {
-            DiscordAlert::to('nfl-news')->message('', [
-                [
-                    'title' => $headline,
-                    'description' => $description,
-                    'url' => $url,
-                    'published' => $published,
-                    'color' => '#7289da',
-                ]
-            ]);
-            Log::info('Sent Discord notification for new news item', ['headline' => $headline, 'url' => $url]);
-        }
-
-        Log::info('News stored', ['headline' => $headline, 'url' => $url]);
+    protected function getNotificationUser()
+    {
+        return User::find(1); // Replace with your logic to determine the user to notify
     }
 }

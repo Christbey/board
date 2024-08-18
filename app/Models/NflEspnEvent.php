@@ -17,6 +17,17 @@ class NflEspnEvent extends Model
         'status_type_name', 'status_type_state', 'status_type_completed',
         'status_type_description', 'status_type_detail', 'status_type_short_detail',
         'home_team_id', 'away_team_id', 'home_team_score', 'away_team_score', 'home_team_record', 'away_team_record',
-        
+
     ];
+
+    public function awayTeam()
+    {
+        return $this->belongsTo(NflEspnTeam::class, 'away_team_id');
+    }
+
+    public function homeTeam()
+    {
+        return $this->belongsTo(NflEspnTeam::class, 'home_team_id');
+    }
+
 }

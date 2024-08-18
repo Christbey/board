@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 
+use App\Events\NflNewsFetched;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
+use App\Listeners\ProcessNflNews;
 use App\Listeners\TaskEventListeners;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -22,8 +24,14 @@ class EventServiceProvider extends ServiceProvider
         TaskDeleted::class => [
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
+
+        NflNewsFetched::class => [
+            ProcessNflNews::class,
+        ],
+
         // other events...
     ];
+
 
     public function boot()
     {

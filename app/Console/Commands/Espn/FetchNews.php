@@ -16,7 +16,7 @@ class FetchNews extends Command
     {
         Log::info('Starting to fetch NFL news from ESPN');
 
-        $response = Http::get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=50');
+        $response = Http::get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=5');
 
         if ($response->failed()) {
             $this->error('Failed to fetch news from ESPN');
