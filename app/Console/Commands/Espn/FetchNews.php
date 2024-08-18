@@ -3,9 +3,7 @@
 namespace App\Console\Commands\Espn;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use App\Events\NflNewsFetched;
+use App\Jobs\FetchNflNewsJob;
 
 class FetchNews extends Command
 {
@@ -14,23 +12,9 @@ class FetchNews extends Command
 
     public function handle()
     {
-        Log::info('Starting to fetch NFL news from ESPN');
+        // Dispatch the job
+        FetchNflNewsJob::dispatch();
 
-        $response = Http::get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=5');
-
-        if ($response->failed()) {
-            $this->error('Failed to fetch news from ESPN');
-            Log::error('Failed to fetch news from ESPN', ['response' => $response->body()]);
-            return;
-        }
-
-        $newsItems = $response->json('articles');
-        Log::info('Fetched news items', ['newsItems' => $newsItems]);
-
-        foreach ($newsItems as $newsItem) {
-            event(new NflNewsFetched($newsItem));
-        }
-
-        Log::info('NFL news fetched and stored successfully');
+        $this->info('FetchNflNewsJob dispatched successfully');
     }
 }
