@@ -2,22 +2,22 @@
 
 namespace App\Events;
 
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use App\Models\NflTeam;
 
 class OddsChanged
 {
-    use SerializesModels;
+    use Dispatchable, SerializesModels;
 
-    public $homeTeam;
-    public $awayTeam;
-    public $existingOdds;
-    public $newOdds;
+    public NflTeam $homeTeam;
+    public NflTeam $awayTeam;
+    public $messageText;
 
-    public function __construct($homeTeam, $awayTeam, $existingOdds, $newOdds)
+    public function __construct(NflTeam $homeTeam, NflTeam $awayTeam, string $messageText)
     {
         $this->homeTeam = $homeTeam;
         $this->awayTeam = $awayTeam;
-        $this->existingOdds = $existingOdds;
-        $this->newOdds = $newOdds;
+        $this->messageText = $messageText;
     }
 }

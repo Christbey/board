@@ -6,8 +6,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use App\Helpers\DiscordHelper;
-use App\Notifications\DiscordNotification;
+use App\Events\OddsChanged;
+use Illuminate\Support\Facades\Event;
 
 trait ProcessesOdds
 {
@@ -26,31 +26,10 @@ trait ProcessesOdds
                     }
 
                     $oddsData = $this->prepareOddsData($odd, $bookmaker, $homeTeam->id, $awayTeam->id);
-
                     $existingOdds = $this->storeOrUpdateOdds($oddsModel, $oddsData);
 
                     if ($existingOdds && $this->oddsHaveChanged($existingOdds, $oddsData)) {
-                        try {
-                            // Construct the message based on the new home spread
-                            $spreadValue = $oddsData['spread_home_point'];
-                            $messageText = "Spread has changed!\n $homeTeam->name  is now favored by $spreadValue";
-
-                            // Use DiscordHelper to build the Discord message
-                            $message = (new DiscordHelper())
-                                ->setTitle("$homeTeam->name vs $awayTeam->name")
-                                ->setDescription($messageText)
-                                ->setColor(null, $homeTeam) // Pass the NflTeam model here
-                                ->build();
-
-                            // Send the notification using the built DiscordMessage
-                            $this->notifyDiscord($message);
-
-                            Log::info('Notification sent to Discord successfully');
-                        } catch (Exception $e) {
-                            Log::error('Failed to send notification to Discord', ['error' => $e->getMessage()]);
-                        }
-
-                        Log::info('Odds have changed, storing history for event ID: ' . $oddsData['event_id']);
+                        $this->handleOddsChange($existingOdds, $oddsData, $homeTeam, $awayTeam);
                         $this->storeOddsHistory($oddsHistoryModel, $existingOdds, $oddsData);
                         $existingOdds->update($oddsData);
                     }
@@ -59,10 +38,19 @@ trait ProcessesOdds
         }
     }
 
-    protected function notifyDiscord($message)
+    protected function handleOddsChange($existingOdds, $oddsData, $homeTeam, $awayTeam)
     {
-        $user = User::find(1); // Retrieve the user to send the notification
-        $user?->notify(new DiscordNotification($message));
+        try {
+            $spreadValue = $oddsData['spread_home_point'];
+            $messageText = "{$homeTeam->name} is favored by $spreadValue";
+
+            // Dispatch an event to handle sending the notification
+            Event::dispatch(new OddsChanged($homeTeam, $awayTeam, $messageText));
+
+            Log::info('Odds changed event dispatched successfully.');
+        } catch (Exception $e) {
+            Log::error('Failed to dispatch odds changed event', ['error' => $e->getMessage()]);
+        }
     }
 
     protected function getTeam($teamModel, $teamName)
@@ -155,7 +143,7 @@ trait ProcessesOdds
             'total_under_price' => $existingOdds->total_under_price,
             'commence_time' => $existingOdds->commence_time,
             'bookmaker_key' => $existingOdds->bookmaker_key,
-            'created_at' => now(), // Manually set the created_at timestamp
+            'created_at' => now(),
         ]);
     }
 }
