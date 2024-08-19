@@ -9,8 +9,8 @@ use App\Models\NflEspnNews;
 use App\Models\NflEspnTeam;
 use App\Models\User;
 use App\Notifications\DiscordNotification;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ProcessNflNews
 {
@@ -33,30 +33,32 @@ class ProcessNflNews
             'athlete_id' => $this->getValidAthleteId($newsItem),
         ];
 
-        // Log::info('Extracted IDs', ['team_id' => $newsData['team_id'], 'athlete_id' => $newsData['athlete_id']]);
+        // Check if the news item already exists
+        $exists = NflEspnNews::where('url', $newsData['url'])->exists();
 
-        $nflNews = NflEspnNews::updateOrCreate(['url' => $newsData['url']], $newsData);
+        if (!$exists) {
+            // Create a new news item
+            $nflNews = NflEspnNews::create($newsData);
+            Log::info("News item created: {$newsData['headline']}");
 
-        if ($nflNews->wasRecentlyCreated) {
             $user = $this->getNotificationUser();
 
             if ($user) {
                 $message = (new DiscordHelper())
-                    ->presetNewsEmbed(
+                    ->presetEmbed(
                         $newsData['headline'] ?? 'News Update',
                         $newsData['description'] ?? 'Description unavailable.',
                         $newsData['url'] ?? '',
-                        $newsData['byline'] ?? 'Unknown Author',
-                        'Sports',
-                        $teamColor
+                        $newsData['byline'] ?? 'Unknown',
+                        'NFL News',
+                        $teamColor,
+                        $newsData['published']
                     )
                     ->build();
 
                 $user->notify(new DiscordNotification($message));
             }
         }
-
-        Log::info('NflEspnNews record updated or created', ['nflNews' => $nflNews]);
     }
 
     protected function getValidTeamId(array $newsItem)

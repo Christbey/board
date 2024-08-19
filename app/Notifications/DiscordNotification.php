@@ -43,6 +43,8 @@ class DiscordNotification extends Notification implements ShouldQueue
      */
     public function toDiscord($notifiable)
     {
+        sleep(1); // Delay for 5 seconds
+
         return $this->discordMessage;
     }
 }

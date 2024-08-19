@@ -32,7 +32,12 @@ return [
         /*
          * Package Service Providers...
          */
-
+        Laravel\Fortify\FortifyServiceProvider::class,
+        Laravel\Jetstream\JetstreamServiceProvider::class,
+        // Your custom Jetstream Service Provider if needed
+        App\Providers\JetstreamServiceProvider::class,
+        // Your custom Fortify Service Provider if needed
+        App\Providers\FortifyServiceProvider::class,
 
         /*
          * Application Service Providers...

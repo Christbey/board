@@ -8,7 +8,13 @@ use App\Models\NflEspnTeam;
 
 class DiscordHelper
 {
-    protected $embed = [];
+    protected array $embed = [];
+
+    public function build(): DiscordMessage
+    {
+        return DiscordMessage::create('')
+            ->embed($this->embed);
+    }
 
     public function setTitle(string $title): self
     {
@@ -38,8 +44,16 @@ class DiscordHelper
         // If still no color, use a default color
         $color = $color ?: '#7289da';
 
-        // Convert the color to a hex value, remove the # if present
-        $this->embed['color'] = hexdec(str_replace('#', '', $color));
+        // Normalize color format: Ensure the color is a 6-character hex string
+        $color = ltrim($color, '#'); // Remove '#' if it's present
+
+        // Ensure color is exactly 6 characters long
+        if (strlen($color) !== 6) {
+            $color = '7289da'; // Fallback to default Discord color if invalid
+        }
+
+        // Convert the color to a decimal value
+        $this->embed['color'] = hexdec($color);
 
         return $this;
     }
@@ -61,22 +75,31 @@ class DiscordHelper
         return $this;
     }
 
-    public function presetNewsEmbed(string $headline, string $description, string $url, string $author, string $category, string $color): self
+    public function setFooter(string $text, string $iconUrl = null): self
     {
-        return $this->setTitle($headline)
+        $this->embed['footer'] = [
+            'text' => $text,
+        ];
+
+        if ($iconUrl) {
+            $this->embed['footer']['icon_url'] = $iconUrl;
+        }
+
+        return $this;
+    }
+
+
+    public function presetEmbed(string $headline, string $description, string $url, string $author, string $category, string $color, string $published): self
+    {
+        return $this->reset()
+            ->setTitle($headline)
             ->setDescription($description)
             ->setUrl($url)
             ->setColor($color)
-            ->setTimestamp(now())
-            ->addField('Author', $author, true)
-            ->addField('Category', $category, true);
+            ->setTimestamp($published)
+            ->setFooter("$author | $category");
     }
 
-    public function build(): DiscordMessage
-    {
-        return DiscordMessage::create('')
-            ->embed($this->embed);
-    }
 
     public function reset(): self
     {

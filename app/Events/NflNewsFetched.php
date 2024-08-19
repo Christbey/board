@@ -9,7 +9,7 @@ class NflNewsFetched
 {
     use Dispatchable, SerializesModels;
 
-    public $newsItem;
+    public array $newsItem;
 
     public function __construct(array $newsItem)
     {
