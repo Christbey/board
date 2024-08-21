@@ -17,7 +17,7 @@ class FetchNflNewsJob implements ShouldQueue
 
     public function handle()
     {
-        Log::info('Starting to fetch NFL news from ESPN');
+        Log::info('Hunting ESPN');
 
         $response = Http::get('https://site.api.espn.com/apis/site/v2/sports/football/nfl/news?limit=5');
 
@@ -32,6 +32,6 @@ class FetchNflNewsJob implements ShouldQueue
             event(new NflNewsFetched($newsItem));
         }
 
-        Log::info('NFL news fetched and stored successfully');
+        Log::info('Hunt Complete');
     }
 }
