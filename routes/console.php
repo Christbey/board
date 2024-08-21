@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\SendDailyGameScheduleNotification;
+use App\Models\NflTeam;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -16,6 +17,7 @@ foreach ($sports as $sport) {
     }
 }
 
+
 // Incorrect command or typo can cause issues
 
 // Schedule News Command to run every fifteen minutes
@@ -28,3 +30,4 @@ Schedule::command('notify:daily-games')->dailyAt('08:00');
 Schedule::command('espn:fetch-nfl-injuries')->hourly();
 Schedule::command('calulate:qbr')->daily();
 Schedule::command('log:predicted-scores')->daily();
+Schedule::command('fetch:nfl-team-schedule')->everySixHours();

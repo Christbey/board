@@ -25,8 +25,12 @@ class QBRService
 
     public function storeQBR($stat, $qbr, $playerId): void
     {
-        NflQbr::updateOrCreate(
-            ['player_id' => $playerId, 'game_id' => $stat->game_id],
+        // Use firstOrCreate to ensure that only new records are created
+        NflQbr::firstOrCreate(
+            [
+                'player_id' => $playerId,
+                'game_id' => $stat->game_id,
+            ],
             [
                 'team_id' => $stat->team_id,
                 'qbr' => $qbr,
@@ -35,8 +39,8 @@ class QBRService
                 'passing_yards' => $stat->pass_yards,
                 'passing_touchdowns' => $stat->pass_td,
                 'interceptions' => $stat->pass_int,
-                'updated_at' => Carbon::now(),
                 'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ]
         );
     }

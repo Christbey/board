@@ -1,44 +1,28 @@
 <?php
-// THIS FILE WORKS IT STORES TEAMS SCHEDULE
+
 namespace App\Console\Commands\Nfl\Team;
 
-use App\Services\NFLStatsService;
-use App\Services\ScheduleService;
+use App\Jobs\FetchNFLTeamScheduleJob;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class FetchNFLTeamSchedule extends Command
 {
-    protected $signature = 'fetch:nfl-team-schedule {teamAbv} {season}';
-    protected $description = 'Fetch NFL team schedule for a given team and season';
-
-    protected NFLStatsService $nflStatsService;
-    protected ScheduleService $scheduleService;
-
-    public function __construct(NFLStatsService $nflStatsService, ScheduleService $scheduleService)
-    {
-        parent::__construct();
-        $this->nflStatsService = $nflStatsService;
-        $this->scheduleService = $scheduleService;
-    }
+    protected $signature = 'fetch:nfl-team-schedule';
+    protected $description = 'Fetch NFL team schedule for the configured season';
 
     public function handle(): void
     {
-        $teamAbv = $this->argument('teamAbv');
-        $season = $this->argument('season');
+        // Get the season from the config
+        $season = config('nfl.season');
 
-        $this->info('Fetching schedule for team: ' . $teamAbv . ' for season: ' . $season);
+        $this->info('Fetching schedule for the hardcoded team for season: ' . $season);
 
-        $response = $this->nflStatsService->getNFLTeamSchedule($teamAbv, $season);
-        $scheduleData = $response['body']['schedule'] ?? [];
+        // Hardcoded team abbreviation for testing
+        $teamAbv = 'KC'; // Example: 'DAL' for Dallas Cowboys
 
-        if (empty($scheduleData)) {
-            $this->error('No schedule data found.');
-            return;
-        }
+        // Dispatch the job for the hardcoded team
+        FetchNFLTeamScheduleJob::dispatch($teamAbv, $season);
 
-        Log::info('API Response:', ['response' => $response]);
-
-        $this->scheduleService->storeTeamSchedule($scheduleData);
+        $this->info("Schedule for team {$teamAbv} is being processed.");
     }
 }

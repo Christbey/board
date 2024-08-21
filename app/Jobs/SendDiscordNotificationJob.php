@@ -2,32 +2,31 @@
 
 namespace App\Jobs;
 
-use App\Models\User;
 use App\Notifications\DiscordNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Notification;
 
 class SendDiscordNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $message;
-    protected $userId;
+    protected $channelId;
 
     /**
      * Create a new job instance.
      *
      * @param mixed $message
-     * @param int|null $userId
-     * @return void
+     * @param string|null $channelId
      */
-    public function __construct($message, int $userId = null)
+    public function __construct($message, string $channelId = null)
     {
         $this->message = $message;
-        $this->userId = $userId ?? 1; // Default to user ID 1 if not provided
+        $this->channelId = $channelId ?? config('discord.default_channel_id'); // Default to a channel ID from config
     }
 
     /**
@@ -37,12 +36,10 @@ class SendDiscordNotificationJob implements ShouldQueue
      */
     public function handle()
     {
-        // Find the user to notify
-        $user = User::find($this->userId);
+        // Build the Discord message
+        $discordMessage = $this->message;
 
-        // If user is found, send the notification
-        $user?->notify(new DiscordNotification($this->message));
-
-        // Optionally, implement rate-limiting logic if necessary, instead of sleep
+        // Send the notification to the specified Discord channel
+        Notification::route('discord', $this->channelId)->notify(new DiscordNotification($discordMessage));
     }
 }

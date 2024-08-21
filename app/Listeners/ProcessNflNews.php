@@ -4,13 +4,15 @@ namespace App\Listeners;
 
 use App\Events\NflNewsFetched;
 use App\Helpers\DiscordHelper;
+use App\Jobs\SendDiscordNotificationJob;
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnNews;
 use App\Models\NflEspnTeam;
-use App\Models\User;
 use App\Notifications\DiscordNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
+use Notification;
 
 class ProcessNflNews
 {
@@ -41,9 +43,9 @@ class ProcessNflNews
             $nflNews = NflEspnNews::create($newsData);
             Log::info("News item created: {$newsData['headline']}");
 
-            $user = $this->getNotificationUser();
+            $channelId = Config::get('discord.nfl_news_channel'); // Get the Discord channel ID from the config
 
-            if ($user) {
+            if ($channelId) {
                 $message = (new DiscordHelper())
                     ->presetEmbed(
                         $newsData['headline'] ?? 'News Update',
@@ -56,7 +58,9 @@ class ProcessNflNews
                     )
                     ->build();
 
-                $user->notify(new DiscordNotification($message));
+                // Send the notification to the specified Discord channel
+                SendDiscordNotificationJob::dispatch($message, $channelId);
+
             }
         }
     }
@@ -79,10 +83,5 @@ class ProcessNflNews
             }
         }
         return null;
-    }
-
-    protected function getNotificationUser()
-    {
-        return User::find(1); // Replace with your logic to determine the user to notify
     }
 }

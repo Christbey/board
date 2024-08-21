@@ -3,6 +3,8 @@
 // config/nfl.php
 
 return [
+    'season' => 2024, // Define the season here
+
     'powerRankingInfluence' => 0.3,
     'homePtsMax' => 28,
     'awayPtsMax' => 24,

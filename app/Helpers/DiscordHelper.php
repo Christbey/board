@@ -65,8 +65,11 @@ class DiscordHelper
         return $this;
     }
 
-    public function addField(string $name, string $value, bool $inline = false): self
+    public function addField(string $name, $value, bool $inline = false): self
     {
+        // Convert the $value to a string
+        $value = (string)$value;
+
         $this->embed['fields'][] = [
             'name' => $name,
             'value' => $value,

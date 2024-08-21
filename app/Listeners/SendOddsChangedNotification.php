@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\OddsChanged;
 use App\Helpers\DiscordHelper;
+use App\Jobs\SendDiscordNotificationJob;
 use App\Models\User;
 use App\Notifications\DiscordNotification;
 use Exception;
@@ -21,12 +22,10 @@ class SendOddsChangedNotification
                 ->setColor(null, $event->homeTeam)
                 ->build();
 
-            $user = User::find(1); // Retrieve the user to send the notification
-            $user?->notify(new DiscordNotification($message));
-
-            Log::info('Notification sent to Discord successfully.');
+            SendDiscordNotificationJob::dispatch($message, config('discord.default_channel'));
         } catch (Exception $e) {
-            Log::error('Failed to send notification to Discord', ['error' => $e->getMessage()]);
+            // Handle exception
+            $messageText = 'An error occurred while calculating the spread.';
         }
     }
 }

@@ -41,16 +41,39 @@ trait ProcessesOdds
     protected function handleOddsChange($existingOdds, $oddsData, $homeTeam, $awayTeam)
     {
         try {
+            // Convert h2h prices to implied probabilities
+            $homeProbability = $oddsData['h2h_home_price'] > 0
+                ? 100 / ($oddsData['h2h_home_price'] + 100)
+                : -$oddsData['h2h_home_price'] / (-$oddsData['h2h_home_price'] + 100);
+
+            $awayProbability = $oddsData['h2h_away_price'] > 0
+                ? 100 / ($oddsData['h2h_away_price'] + 100)
+                : -$oddsData['h2h_away_price'] / (-$oddsData['h2h_away_price'] + 100);
+
+            // Determine which team is favored
+            if ($homeProbability > $awayProbability) {
+                $favoredTeam = $homeTeam;
+                $spreadPercentage = round($homeProbability * 100, 2);
+                $messageText = "{$homeTeam->name} has a {$spreadPercentage}% chance to win.";
+            } else {
+                $favoredTeam = $awayTeam;
+                $spreadPercentage = round($awayProbability * 100, 2);
+                $messageText = "{$awayTeam->name} has a {$spreadPercentage}% chance to win.";
+            }
+
+            // Optionally: Include spread points in the message
             $spreadValue = $oddsData['spread_home_point'];
-            $messageText = "{$homeTeam->name} is favored by $spreadValue";
-
-            // Dispatch an event to handle sending the notification
-            Event::dispatch(new OddsChanged($homeTeam, $awayTeam, $messageText));
-
-            Log::info('Odds changed event dispatched successfully.');
+            $messageText .= ' The spread is ' . abs($spreadValue) . ' points.';
         } catch (Exception $e) {
-            Log::error('Failed to dispatch odds changed event', ['error' => $e->getMessage()]);
+            // Handle exception
+            $messageText = 'An error occurred while calculating the spread.';
         }
+
+
+        // Dispatch an event to handle sending the notification
+        Event::dispatch(new OddsChanged($homeTeam, $awayTeam, $messageText));
+
+        Log::info('Odds changed event dispatched successfully.');
     }
 
     protected function getTeam($teamModel, $teamName)
