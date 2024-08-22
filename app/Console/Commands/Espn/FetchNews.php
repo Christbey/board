@@ -4,6 +4,7 @@ namespace App\Console\Commands\Espn;
 
 use Illuminate\Console\Command;
 use App\Jobs\FetchNflNewsJob;
+use Exception;
 
 class FetchNews extends Command
 {
@@ -12,9 +13,12 @@ class FetchNews extends Command
 
     public function handle()
     {
-        // Dispatch the job
-        FetchNflNewsJob::dispatch();
-
-        $this->info('FetchNflNewsJob dispatched successfully');
+        try {
+            // Dispatch the job
+            FetchNflNewsJob::dispatch();
+            $this->info('FetchNflNewsJob dispatched successfully');
+        } catch (Exception $e) {
+            $this->error('Failed to dispatch FetchNflNewsJob: ' . $e->getMessage());
+        }
     }
 }

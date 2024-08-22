@@ -21,13 +21,13 @@ foreach ($sports as $sport) {
 // Incorrect command or typo can cause issues
 
 // Schedule News Command to run every fifteen minutes
-Schedule::command('espn:nfl-news')->everyMinute();
+Schedule::command('espn:nfl-news')->everyTenMinutes();
 Schedule::command('odds:fetch nfl')->everyThirtyMinutes();
 Schedule::command('fetch:espn-events 2024 3 1')->daily();
 // Schedule Nfl Players Command to run daily
 Schedule::command('nfl:get-players')->daily();
 Schedule::command('notify:daily-games')->dailyAt('08:00');
-Schedule::command('espn:fetch-nfl-injuries')->everyTwoMinutes();
+Schedule::command('espn:fetch-nfl-injuries')->everyFiveMinutes();
 Schedule::command('calulate:qbr')->daily();
 Schedule::command('log:predicted-scores')->daily();
 Schedule::command('fetch:nfl-team-schedule')->everySixHours();

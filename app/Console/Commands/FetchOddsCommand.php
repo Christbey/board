@@ -1,5 +1,4 @@
 <?php
-// app/Console/Commands/FetchOddsCommand.php
 
 namespace App\Console\Commands;
 
