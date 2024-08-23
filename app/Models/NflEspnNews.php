@@ -29,8 +29,5 @@ class NflEspnNews extends Model
      *
      * @return string
      */
-    public function routeNotificationForDiscord()
-    {
-        return $this->discord_private_channel_id;
-    }
+ 
 }

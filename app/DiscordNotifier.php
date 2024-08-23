@@ -3,21 +3,22 @@
 namespace App;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Config;
 
 class DiscordNotifier
 {
     use Notifiable;
 
-    protected $webhookKey;
+    protected $channelId;
 
-    public function __construct($webhookKey)
+    public function __construct($channelKey = null)
     {
-        $this->webhookKey = $webhookKey;
+        // If a channelKey is provided, fetch the corresponding channel ID from the config
+        $this->channelId = $channelKey ? Config::get("discord.{$channelKey}") : null;
     }
 
     public function routeNotificationForDiscord()
     {
-        return config("services.discord.{$this->webhookKey}");
+        return $this->channelId;
     }
 }
-

@@ -33,16 +33,10 @@ class NflPredictionService
             $homeOdds = $odds['home'] ?? 0.0;
             $awayOdds = $odds['away'] ?? 0.0;
 
-            if (!$odds) {
-                $this->logMessage("Missing odds information for game ID {$game->game_id} between team {$game->team_id_home} and team {$game->team_id_away}. Using default odds.");
-            } else {
-                $this->logMessage("Logging odds for game ID {$game->game_id} between team {$game->team_id_home} and team {$game->team_id_away}.");
-            }
 
             $this->logExpectedWinningPercentageAndPredictedScore($game, $homeStadium, $awayStadium, $homeOdds, $awayOdds, $expectedWins);
         }
 
-        $this->logFinalExpectedWins($expectedWins);
 
         return 'Predicted scores logged successfully.';
     }
@@ -53,7 +47,7 @@ class NflPredictionService
             ->whereNull('away_result')
             ->where('game_status', 'scheduled')
             ->whereDate('game_date', '>', $cutoffDate)
-            ->where('season_type', '<>', 'Preseason')
+            ->where('season_type', '<>', 'Regular Season')
             ->get();
     }
 
@@ -70,7 +64,6 @@ class NflPredictionService
             ];
         }
 
-        Log::warning("Missing odds information for game between team $homeTeamId and team $awayTeamId. Using default odds.");
         return [];
     }
 
@@ -118,20 +111,6 @@ class NflPredictionService
         return array_fill_keys(array_keys($teamRatings), 0);
     }
 
-    private function logFinalExpectedWins(array $expectedWins)
-    {
-
-    }
-
-    private function logMessage($message)
-    {
-
-    }
-
-    public function calculateExpectedWins()
-    {
-        // Add logic to calculate expected wins for all teams
-    }
 
     public function calculateExpectedWinsForTeam($teamId)
     {

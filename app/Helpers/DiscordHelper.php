@@ -14,6 +14,7 @@ class DiscordHelper
     {
         return DiscordMessage::create('')
             ->embed($this->embed);
+        
     }
 
     public function setTitle(string $title): self

@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/NflTeam.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +10,9 @@ class NflTeam extends Model
     use HasFactory;
 
     protected $fillable = [
+        'espn_team_id',      // Added espn_team_id
+        'uid',               // Added uid
+        'is_active',         // Added is_active
         'name',
         'abbreviation',
         'conference',

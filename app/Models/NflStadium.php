@@ -43,4 +43,25 @@ class NflStadium extends Model
     {
         return $this->hasMany(NflWeather::class, 'stadium_id');
     }
+
+    /**
+     * Calculate the distance between two points (latitude and longitude).
+     */
+    public function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c; // Distance in kilometers
+
+        return $distance;
+    }
 }

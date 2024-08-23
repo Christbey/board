@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class NflEspnAthlete extends Model
 {
+    use HasFactory;
+
     protected $table = 'nfl_espn_athletes';
 
     protected $primaryKey = 'athlete_id';

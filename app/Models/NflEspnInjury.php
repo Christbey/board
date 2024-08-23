@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
-use App\Jobs\SendDiscordNotificationJob;
+use App\DiscordNotifier;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Helpers\DiscordHelper;
+use App\Notifications\EspnInjuryDiscordNotification;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Notification;
 
 class NflEspnInjury extends Model
 {
+    use HasFactory, Notifiable;
+
     protected $table = 'nfl_espn_injuries';
 
     protected $fillable = [
@@ -21,36 +26,17 @@ class NflEspnInjury extends Model
         'description',
     ];
 
+
     protected static function booted()
     {
         static::created(function ($injury) {
-            // Determine color based on the team's primary color or default to white
-            // Determine color based on injury status
-            $color = match ($injury->status) {
-                'Active' => '#00FF00',  // Green
-                'Questionable' => '#FFFF00',  // Yellow
-                'Out', 'Injured Reserve' => '#FF0000',  // Red
-                default => '#FFFFFF',  // Default to white if status doesn't match
-            };
-            $channelId = Config::get('discord.nfl_injury_channel'); // Get the Discord channel ID from the config
+            // Create a new DiscordNotifier instance for the nfl_injury channel
+            $notifier = new DiscordNotifier('nfl_injury_channel');
 
-            // Create the footer text
-            $footerText = "{$injury->status} - {$injury->date}";
-
-            // Create the message using DiscordHelper
-            $message = (new DiscordHelper())
-                ->setTitle(":medical_symbol: {$injury->athlete->full_name} Injury Report")
-                ->setDescription($injury->description)
-                ->addField('Team', $injury->team->display_name)
-                ->setFooter($footerText)
-                ->setColor($color)
-                ->build();
-
-            // Dispatch the notification job with a delay
-            SendDiscordNotificationJob::dispatch($message, $channelId);
+            // Send the notification when a new injury is created
+            $notifier->notify(new EspnInjuryDiscordNotification($injury));
         });
     }
-
 
     public function team()
     {
@@ -62,3 +48,14 @@ class NflEspnInjury extends Model
         return $this->belongsTo(NflEspnAthlete::class, 'athlete_id', 'athlete_id');
     }
 }
+
+# Tinker command to create a new injury:
+# $injury = \App\Models\NflEspnInjury::create([
+#'team_id' => 1,
+#'athlete_id' => 4242547, // Provided athlete_id
+#'injury_id' => 1,
+#'type' => 'Leg',
+#'status' => 'Questionable',
+#'description' => 'Knee injury',
+#'date' => '2024-08-21',
+#]);

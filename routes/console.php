@@ -28,6 +28,6 @@ Schedule::command('fetch:espn-events 2024 3 1')->daily();
 Schedule::command('nfl:get-players')->daily();
 Schedule::command('notify:daily-games')->dailyAt('08:00');
 Schedule::command('espn:fetch-nfl-injuries')->everyFiveMinutes();
-Schedule::command('calulate:qbr')->daily();
+Schedule::command('calculate:qbr')->daily();
 Schedule::command('log:predicted-scores')->daily();
 Schedule::command('fetch:nfl-team-schedule')->everySixHours();

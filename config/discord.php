@@ -9,6 +9,7 @@ return [
     'nfl_score_channel' => ('1275646968559046727'),
     'nfl_news_channel' => ('1273455512586813522'),
     'nfl_injury_channel' => ('1275651916449321064'),
+    'rating_channel' => ('1276027912637648906'),
 
     'webhook_urls' => [
         'nfl-news' => ('https://discord.com/api/webhooks/1273455619122139136/81SqIWBNQl6kwswyLO4b3rJ4f6zGBZ289k_HhuHxJlsF6-vr8xFkxRxq1S0PS6JBQrSY'),

@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
 
 class EloRatingSystem
+
+
 {
     public EloCalculator $eloCalculator;
-    public TeamRatingManager $teamRatingManager;
+    #   public TeamRatingManager $teamRatingManager;
     private QBRatingManager $qbRatingManager;
     public DistanceCalculator $distanceCalculator;
     private DataStorage $dataStorage;
@@ -75,8 +77,10 @@ class EloRatingSystem
             'home_win_percentage' => $homeWinPercentage,
             'away_win_percentage' => $awayWinPercentage,
         ];
+
     }
 
+    
     private function calculatePredictedPoints(
         int   $team1,
         int   $team2,

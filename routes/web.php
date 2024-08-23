@@ -8,6 +8,7 @@ use App\Http\Controllers\MlbController;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\NcaaController;
 use App\Http\Controllers\NflController;
+use App\Http\Controllers\NflOddsController;
 use App\Http\Controllers\NFLStatsController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
@@ -99,3 +100,9 @@ Route::get('/test', function () {
     Log::info('Test route was called.');
     return 'Test route is working';
 });
+Route::get('/nfl-odds/{eventId?}', [NflOddsController::class, 'showOdds']);
+
+use App\Http\Controllers\CollegeFootballPredictionController;
+
+Route::get('/predict/game', [CollegeFootballPredictionController::class, 'predictGame']);
+Route::get('/predict/game/{gameId}', [CollegeFootballPredictionController::class, 'showPrediction']);

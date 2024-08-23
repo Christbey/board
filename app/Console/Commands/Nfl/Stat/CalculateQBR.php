@@ -1,5 +1,5 @@
 <?php
-// THIS FILE WORKS
+
 namespace App\Console\Commands\Nfl\Stat;
 
 use App\Models\NflPlayer;
@@ -22,27 +22,31 @@ class CalculateQBR extends Command
 
     public function handle(): void
     {
-        $qbStats = NflPlayerStat::whereHas('player', function ($query) {
+        $qbStats = NflPlayerStat::with('player:id,player_id') // Load player relationship with only necessary fields
+        ->whereHas('player', function ($query) {
             $query->where('pos', 'QB');
-        })->get();
+        })
+            ->chunk(1000, function ($qbStats) {
+                $playerIds = $qbStats->pluck('player.player_id')->unique();
+                $players = NflPlayer::whereIn('player_id', $playerIds)->pluck('id', 'player_id');
 
-        foreach ($qbStats as $stat) {
-            $qbr = $this->qbrService->calculateQBR(
-                $stat->pass_attempts,
-                $stat->pass_completions,
-                $stat->pass_yards,
-                $stat->pass_td,
-                $stat->pass_int
-            );
+                foreach ($qbStats as $stat) {
+                    if (!isset($players[$stat->player_id])) {
+                        $this->error("Player with player_id {$stat->player_id} not found in nfl_players table.");
+                        continue;
+                    }
 
-            $player = NflPlayer::where('player_id', $stat->player_id)->first();
+                    $qbr = $this->qbrService->calculateQBR(
+                        $stat->pass_attempts,
+                        $stat->pass_completions,
+                        $stat->pass_yards,
+                        $stat->pass_td,
+                        $stat->pass_int
+                    );
 
-            if ($player) {
-                $this->qbrService->storeQBR($stat, $qbr, $player->id);
-            } else {
-                $this->error("Player with player_id {$stat->player_id} not found in nfl_players table.");
-            }
-        }
+                    $this->qbrService->storeQBR($stat, $qbr, $players[$stat->player_id]);
+                }
+            });
 
         $this->info('QBR calculation completed and stored in nfl_qbr table.');
     }

@@ -104,6 +104,22 @@ class NflTeamSchedule extends Model
         return $this->hasOne(NflOdds::class, 'composite_key', 'composite_key');
     }
 
+    public function getMarginOfVictory()
+    {
+        return abs($this->home_pts - $this->away_pts);
+    }
+
+    public function getWinner()
+    {
+        if ($this->home_pts > $this->away_pts) {
+            return 'home';
+        } elseif ($this->away_pts > $this->home_pts) {
+            return 'away';
+        } else {
+            return 'tie'; // In case of a tie
+        }
+    }
+
     public static function calculateWins($teamId, $seasonStartDate, $seasonEndDate)
     {
         $homeWins = self::where('team_id_home', $teamId)

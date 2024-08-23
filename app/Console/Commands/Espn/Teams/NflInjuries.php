@@ -3,20 +3,39 @@
 namespace App\Console\Commands\Espn\Teams;
 
 use App\Jobs\FetchNflInjuriesJob;
+use App\Models\NflEspnTeam;
 use Illuminate\Console\Command;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class NflInjuries extends Command
 {
-    protected $signature = 'espn:fetch-nfl-injuries {team_id?}';
-    protected $description = 'Fetch NFL injuries from the ESPN API and store them in the database';
+    protected $signature = 'nfl:fetch-injuries';
+
+    protected $description = 'Fetch NFL injuries for all teams and process them in a batch.';
 
     public function handle()
     {
-        $teamId = $this->argument('team_id');
+        $teams = NflEspnTeam::all();
 
-        // Dispatch the job with the provided argument
-        FetchNflInjuriesJob::dispatch($teamId);
+        $jobs = $teams->map(function ($team) {
+            return new FetchNflInjuriesJob($team);
+        })->toArray();
 
-        $this->info('FetchNflInjuries job dispatched successfully.');
+        Bus::batch($jobs)
+            ->then(function (Batch $batch) {
+                Log::info('All NFL injuries fetched successfully.');
+            })
+            ->catch(function (Batch $batch, Throwable $e) {
+                Log::error('Fetching NFL injuries batch failed: ' . $e->getMessage());
+            })
+            ->finally(function (Batch $batch) {
+                Log::info('Batch process finished.');
+            })
+            ->dispatch();
+
+        $this->info('NFL injuries fetching jobs have been dispatched.');
     }
 }
