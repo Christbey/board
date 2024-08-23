@@ -56,26 +56,26 @@ class FetchCollegeFootballPregame extends Command
                     $homeWinProb = $game['homeWinProb'];
 
                     // Send a Discord notification
-                    DiscordAlert::to('cfb-events')->message('', [
-                        [
-                            'title' => "Pregame Updated: {$homeTeamName} vs {$awayTeamName}",
-                            'description' => "The home win probability for Game ID: {$gameId} has been updated.",
-                            'fields' => [
-                                [
-                                    'name' => 'Home Win Probability',
-                                    'value' => "{$homeWinProb}%",
-                                    'inline' => true,
-                                ],
-                                [
-                                    'name' => 'Spread',
-                                    'value' => "{$game['spread']}",
-                                    'inline' => true,
-                                ]
-                            ],
-                            'color' => '#7289da', // Discord blue color, will be converted to decimal automatically
-                            'timestamp' => now()->toIso8601String(),
-                        ]
-                    ]);
+                    /*                    DiscordAlert::to('cfb-events')->message('', [
+                                            [
+                                                'title' => "Pregame Updated: {$homeTeamName} vs {$awayTeamName}",
+                                                'description' => "The home win probability for Game ID: {$gameId} has been updated.",
+                                                'fields' => [
+                                                    [
+                                                        'name' => 'Home Win Probability',
+                                                        'value' => "{$homeWinProb}%",
+                                                        'inline' => true,
+                                                    ],
+                                                    [
+                                                        'name' => 'Spread',
+                                                        'value' => "{$game['spread']}",
+                                                        'inline' => true,
+                                                    ]
+                                                ],
+                                                'color' => '#7289da', // Discord blue color, will be converted to decimal automatically
+                                                'timestamp' => now()->toIso8601String(),
+                                            ]
+                                        ]);*/
 
                     Log::info('Sent Discord notification for pregame update', [
                         'game_id' => $gameId,

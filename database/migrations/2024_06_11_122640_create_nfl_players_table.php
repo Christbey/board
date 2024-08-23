@@ -11,7 +11,7 @@ class CreateNflPlayersTable extends Migration
      *
      *
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('nfl_players', function (Blueprint $table) {
             $table->id();

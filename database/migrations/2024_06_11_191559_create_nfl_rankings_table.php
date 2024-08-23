@@ -11,7 +11,7 @@ class CreateNflRankingsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('nfl_rankings', function (Blueprint $table) {
             $table->id();
