@@ -26,7 +26,7 @@ class FetchCollegeFootballPregame extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
+            'Authorization' => 'Bearer ' . config('collegefootball.api_key'),
         ])->get("https://api.collegefootballdata.com/metrics/wp/pregame?year={$year}&week={$week}");
 
         if ($response->successful()) {
