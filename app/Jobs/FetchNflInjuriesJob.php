@@ -21,7 +21,7 @@ class FetchNflInjuriesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    protected $team;
+    protected NflEspnTeam $team;
 
     public function __construct(NflEspnTeam $team)
     {
@@ -131,6 +131,18 @@ class FetchNflInjuriesJob implements ShouldQueue
         $description = $injury['shortComment'] ?? null;
         $description = $description && strlen($description) > 255 ? substr($description, 0, 255) : $description;
 
+        // Check if the injury already exists with the same team_id, athlete_id, and type
+        $existingInjury = NflEspnInjury::where('team_id', $team->team_id)
+            ->where('athlete_id', $athleteId)
+            ->where('type', $injury['type']['description'] ?? null)
+            ->first();
+
+        if ($existingInjury) {
+            Log::info("Injury for team {$team->display_name}, athlete {$athleteId}, and type {$injury['type']['description']} already exists. Skipping creation.");
+            return;
+        }
+
+        // If not exists, create or update the injury record
         NflEspnInjury::updateOrCreate(
             ['injury_id' => $injury['id']],
             [
