@@ -10,7 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Spatie\DiscordAlerts\Facades\DiscordAlert;
+use Carbon\Carbon;
 
 class FetchCollegeFootballGamesJob implements ShouldQueue
 {
@@ -19,22 +19,12 @@ class FetchCollegeFootballGamesJob implements ShouldQueue
     protected $year;
     protected $seasonType;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct($year, $seasonType)
     {
         $this->year = $year;
         $this->seasonType = $seasonType;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle(CollegeFootballApiService $service)
     {
         $apiBaseUrl = config('collegefootball.api_base_url');
@@ -45,50 +35,77 @@ class FetchCollegeFootballGamesJob implements ShouldQueue
         if ($response->successful()) {
             $games = $response->json();
 
-            foreach ($games as $game) {
-                $homeTeam = $service->findTeam($game['home_team']);
-                $awayTeam = $service->findTeam($game['away_team']);
-                $homeConference = $service->findConference($game['home_conference']);
-                $awayConference = $service->findConference($game['away_conference']);
+            // Filter games within 48 hours from now
+            $filteredGames = array_filter($games, function ($game) {
+                $startDate = Carbon::parse($game['start_date']);
+                $now = Carbon::now();
+                return $startDate->between($now, $now->addHours(48));
+            });
 
-                $updatedGame = $this->updateOrCreateCollegeFootballGame($game, $homeTeam, $awayTeam, $homeConference, $awayConference);
+            $filteredGames = $this->filterGamesByDate($games);
 
-                // Check if the home_line_scores field was updated and send a notification
-
-
-                if ($updatedGame->wasChanged('home_line_scores')) {
-                    $homeTeam = $updatedGame->home_team;
-                    $awayTeam = $updatedGame->away_team;
-                    $gameId = $updatedGame->id;
-                    $updatedScores = json_encode($updatedGame->home_line_scores);
-
-                    DiscordAlert::to('cfb-events')->message('', [
-                        [
-                            'title' => "{$homeTeam} vs {$awayTeam}",
-                            'description' => "The home_line_scores for Game ID: {$gameId} have been updated.",
-                            'fields' => [
-                                [
-                                    'name' => 'Updated home_line_scores',
-                                    'value' => $updatedScores,
-                                    'inline' => true,
-                                ],
-                            ],
-                            'color' => '#7289da', // Discord blue color, will be converted to decimal automatically
-                            'timestamp' => now()->toIso8601String(),
-                        ]
-                    ]);
-
-                    Log::info('Sent Discord notification for game update', [
-                        'game_id' => $gameId,
-                        'home_team' => $homeTeam,
-                        'away_team' => $awayTeam,
-                        'updated_scores' => $updatedScores,
-                    ]);
-                }
-
-            }
+            $this->processGames($filteredGames, $service);
         } else {
             Log::error('Failed to fetch data from the API.');
+        }
+        
+    }
+
+    protected function filterGamesByDate(array $games): array
+    {
+        $now = Carbon::now();
+        $end = $now->copy()->addHours(48);
+
+        return array_filter($games, function ($game) use ($now, $end) {
+            $gameStartDate = Carbon::parse($game['start_date']);
+            return $gameStartDate->between($now, $end);
+        });
+    }
+
+    protected function processGames(array $games, CollegeFootballApiService $service)
+    {
+        $teams = [];
+        $conferences = [];
+
+        foreach ($games as $game) {
+            $homeTeam = $this->findOrCacheTeam($game['home_team'], $service, $teams);
+            $awayTeam = $this->findOrCacheTeam($game['away_team'], $service, $teams);
+            $homeConference = $this->findOrCacheConference($game['home_conference'], $service, $conferences);
+            $awayConference = $this->findOrCacheConference($game['away_conference'], $service, $conferences);
+
+            $updatedGame = $this->updateOrCreateCollegeFootballGame($game, $homeTeam, $awayTeam, $homeConference, $awayConference);
+
+            $this->checkAndLogScoreUpdates($updatedGame);
+        }
+    }
+
+    protected function findOrCacheTeam($teamId, CollegeFootballApiService $service, &$teams)
+    {
+        if (!isset($teams[$teamId])) {
+            $teams[$teamId] = $service->findTeam($teamId);
+        }
+
+        return $teams[$teamId];
+    }
+
+    protected function findOrCacheConference($conferenceId, CollegeFootballApiService $service, &$conferences)
+    {
+        if (!isset($conferences[$conferenceId])) {
+            $conferences[$conferenceId] = $service->findConference($conferenceId);
+        }
+
+        return $conferences[$conferenceId];
+    }
+
+    protected function checkAndLogScoreUpdates($updatedGame)
+    {
+        if ($updatedGame->wasChanged('home_line_scores')) {
+            Log::info('Update!', [
+                'game_id' => $updatedGame->id,
+                'home_team' => $updatedGame->home_team,
+                'away_team' => $updatedGame->away_team,
+                'updated_scores' => json_encode($updatedGame->home_line_scores),
+            ]);
         }
     }
 }

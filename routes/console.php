@@ -31,3 +31,14 @@ Schedule::command('nfl:fetch-injuries')->everyFiveMinutes();
 Schedule::command('calculate:qbr')->daily();
 Schedule::command('log:predicted-scores')->daily();
 Schedule::command('fetch:nfl-team-schedule')->everySixHours();
+// Schedule College Football Games Command to run every Saturday every 30 minutes, starting from 8 AM CST
+Schedule::command('fetch:college-football-games')
+    ->saturdays()
+    ->everyThirtyMinutes()
+    ->timezone('America/Chicago')  // CST time zone
+    ->between('08:00', '23:59');   // Run between 8:00 AM and 11:59 PM CST
+// Schedule College Football Rankings Command to run every Monday at 4:00 PM CST
+Schedule::command('fetch:college-football-rankings')
+    ->mondays()
+    ->timezone('America/Chicago')
+    ->at('16:00');
