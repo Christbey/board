@@ -23,7 +23,7 @@ class FetchCollegeFootballSpConferenceRatings extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
+            'Authorization' => 'Bearer ' . config('collegefootball.api_key'),
         ])->get("https://api.collegefootballdata.com/ratings/sp/conferences?year={$year}");
 
         if ($response->successful()) {
