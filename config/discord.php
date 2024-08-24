@@ -11,6 +11,7 @@ return [
     'nfl_injury_channel' => ('1275651916449321064'),
     'rating_channel' => ('1276027912637648906'),
     'nfl_odds_channel' => ('1273829151568166912'),
+    'cfb_odds_channel' => ('1276780576468238348'),
 
     'webhook_urls' => [
         'nfl-news' => ('https://discord.com/api/webhooks/1273455619122139136/81SqIWBNQl6kwswyLO4b3rJ4f6zGBZ289k_HhuHxJlsF6-vr8xFkxRxq1S0PS6JBQrSY'),
