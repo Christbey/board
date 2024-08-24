@@ -1,33 +1,27 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services\CfbPrediction;
 
 use App\Models\CollegeFootballFpiRating;
 use App\Models\CollegeFootballGame;
 use App\Models\CollegeFootballPregame;
-use Illuminate\Http\Request;
 
-class CollegeFootballPredictionController extends Controller
+class PredictionService
 {
-    public function showPrediction($gameId)
+    public function generatePrediction(CollegeFootballGame $game): array
     {
-        $game = CollegeFootballGame::findOrFail($gameId);
         $homeFpi = CollegeFootballFpiRating::where('team_id', $game->home_team_id)
             ->where('year', $game->season)
             ->first();
         $awayFpi = CollegeFootballFpiRating::where('team_id', $game->away_team_id)
             ->where('year', $game->season)
             ->first();
-
-        $pregameData = CollegeFootballPregame::where('game_id', $gameId)->first();
+        $pregameData = CollegeFootballPregame::where('game_id', $game->id)->first();
 
         if (!$homeFpi || !$awayFpi || !$pregameData) {
-            return view('predict.game', [
-                'error' => 'FPI ratings or pregame data not found for one or both teams'
-            ]);
+            return [];
         }
 
-        // Calculate prediction with Elo and Pregame adjustments
         $homeAdvantage = $this->calculateHomeAdvantage($game);
         $eloImpact = $this->calculateEloImpact($game);
         $spreadImpact = $this->calculateSpreadImpact($pregameData);
@@ -37,7 +31,7 @@ class CollegeFootballPredictionController extends Controller
 
         $predictedWinner = $homeScore > $awayScore ? $game->home_team : $game->away_team;
 
-        $prediction = [
+        return [
             'predicted_winner' => $predictedWinner,
             'home_team' => $game->home_team,
             'away_team' => $game->away_team,
@@ -51,21 +45,17 @@ class CollegeFootballPredictionController extends Controller
             'spread' => $pregameData->spread,
             'home_win_prob' => $pregameData->home_win_prob,
         ];
-
-        return view('predict.game', compact('prediction'));
     }
 
     private function calculateHomeAdvantage(CollegeFootballGame $game): float
     {
-        // Example: add 2.5 points for the home team if not a neutral site
         return $game->neutral_site ? 0 : 2.5;
     }
 
     private function calculateEloImpact(CollegeFootballGame $game): array
     {
-        // Scale down the Elo impact to prevent overwhelming the FPI score
         $eloDifference = $game->home_pregame_elo - $game->away_pregame_elo;
-        $scalingFactor = 0.01;  // Adjust this factor as necessary
+        $scalingFactor = 0.01;
 
         return [
             'home' => $eloDifference * $scalingFactor,
@@ -75,8 +65,7 @@ class CollegeFootballPredictionController extends Controller
 
     private function calculateSpreadImpact(CollegeFootballPregame $pregameData): array
     {
-        // Adjust based on the spread
-        $spreadScalingFactor = 0.5;  // Adjust this factor as necessary
+        $spreadScalingFactor = 0.5;
 
         return [
             'home' => $pregameData->spread * $spreadScalingFactor,
