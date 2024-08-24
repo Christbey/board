@@ -4,6 +4,7 @@
 
 namespace App\Traits;
 
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 trait FetchOddsTrait
@@ -16,7 +17,8 @@ trait FetchOddsTrait
         $historyModel,
         $oddsService,
         $oddsProcessingService
-    ) {
+    ): void
+    {
         Log::info("Starting to fetch odds for {$sportKey}");
 
         try {
@@ -27,7 +29,7 @@ trait FetchOddsTrait
             } else {
                 Log::warning("No {$description} fetched.");
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("Error fetching {$description}: " . $e->getMessage());
         }
     }

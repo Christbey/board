@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\DiscordNotifier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Notifications\NflOddsUpdateNotification;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Notification;
 
 class NflOdds extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'event_id',
@@ -33,29 +38,26 @@ class NflOdds extends Model
 
     protected $dates = ['commence_time'];
 
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
-
-        static::saving(function ($model) {
-            $model->composite_key = static::generateCompositeKey($model);
+        static::updated(function ($odds) {
+            // Send the notification when the odds are updated
+            $notifier = new DiscordNotifier('nfl_odds_channel');
+            $notifier->notify(new NflOddsUpdateNotification($odds));
         });
     }
 
     public static function generateCompositeKey($model): string
     {
         $year = Carbon::parse($model->commence_time)->format('Y');
-
-        // Fetch team abbreviations using the team IDs
         $homeTeam = NflTeam::find($model->home_team_id);
         $awayTeam = NflTeam::find($model->away_team_id);
 
-        $homeTeamAbv = $homeTeam ? $homeTeam->abbreviation : 'UNK'; // 'UNK' for unknown abbreviation
+        $homeTeamAbv = $homeTeam ? $homeTeam->abbreviation : 'UNK';
         $awayTeamAbv = $awayTeam ? $awayTeam->abbreviation : 'UNK';
 
         return "{$year}_{$homeTeamAbv}_{$awayTeamAbv}";
     }
-
 
     public function homeTeam()
     {
@@ -77,10 +79,8 @@ class NflOdds extends Model
         return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
     }
 
-
     public function schedule()
     {
         return $this->belongsTo(NflTeamSchedule::class, 'composite_key', 'composite_key');
     }
 }
-

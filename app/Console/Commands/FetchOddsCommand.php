@@ -12,21 +12,10 @@ class FetchOddsCommand extends Command
     protected $signature = 'odds:fetch {sport}';
     protected $description = 'Fetch the latest odds from the API for a given sport';
 
-    protected OddsService $oddsService;
-    protected OddsProcessingService $oddsProcessingService;
-
-    public function __construct(OddsService $oddsService, OddsProcessingService $oddsProcessingService)
-    {
-        parent::__construct();
-        $this->oddsService = $oddsService;
-        $this->oddsProcessingService = $oddsProcessingService;
-    }
-
-    public function handle(): void
+    public function handle(OddsService $oddsService, OddsProcessingService $oddsProcessingService): void
     {
         $sport = $this->argument('sport');
-        FetchOddsJob::dispatch($sport, $this->oddsService, $this->oddsProcessingService);
+        FetchOddsJob::dispatch($sport, $oddsService, $oddsProcessingService);
         $this->info("FetchOddsJob for {$sport} dispatched.");
     }
 }
-
