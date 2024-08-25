@@ -54,14 +54,18 @@ class EspnNewsDiscordNotification extends Notification implements ShouldQueue
 
         $color = $news->team ? $news->team->color : '#7289da'; // Default to Discord's blurple color
 
+        // Ensure description is a string
+        $description = $news->description ?? 'No description available';
+
         $discordHelper = new DiscordHelper();
         return $discordHelper
             ->setTitle(":newspaper: {$news->headline}")
-            ->setDescription($news->description)
+            ->setDescription($description) // Ensure this is a string
             ->setUrl($news->url)
             ->addField('Byline', $news->byline ?? 'Unknown')
             ->setFooter("Published: {$news->published}")
             ->setColor($color)
+            ->sleep(1)
             ->build();
     }
 }

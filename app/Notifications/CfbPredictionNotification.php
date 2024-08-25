@@ -53,6 +53,7 @@ class CfbPredictionNotification extends Notification implements ShouldQueue
             ->addField($predictedWinner . ' Win Probability', '**' . $predictedWinnerProb . '%**', true)
             ->addfield('Total', $total, true)
             ->setFooter('Commence Time: ' . $commenceTime) // Add commence time to the footer
+            ->sleep()
             ->build();
     }
 }

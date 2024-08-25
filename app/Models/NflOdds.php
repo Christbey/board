@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\DiscordNotifier;
+use App\Notifications\NflOddsUpdateNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Notifications\NflOddsUpdateNotification;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
@@ -43,9 +43,10 @@ class NflOdds extends Model
         static::updated(function ($odds) {
             // Send the notification when the odds are updated
             $notifier = new DiscordNotifier('nfl_odds_channel');
-            $notifier->notify(new NflOddsUpdateNotification($odds));
+            $notifier->notify($odds, new NflOddsUpdateNotification($odds));
         });
     }
+
 
     public static function generateCompositeKey($model): string
     {

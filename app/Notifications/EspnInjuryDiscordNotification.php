@@ -61,6 +61,7 @@ class EspnInjuryDiscordNotification extends Notification implements ShouldQueue
             ->addField('Team', $this->injury->team->display_name)
             ->setFooter($footerText)
             ->setColor($color)
+            ->sleep(1) // Sleep for 1 second before sending the notification
             ->build();
     }
 

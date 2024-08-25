@@ -3,12 +3,14 @@
 namespace App\Notifications;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Discord\DiscordChannel;
 use NotificationChannels\Discord\DiscordMessage;
 use App\Helpers\DiscordHelper;
+use Illuminate\Support\Facades\Log;
 
 class NflOddsUpdateNotification extends Notification implements ShouldQueue
 {
@@ -26,51 +28,54 @@ class NflOddsUpdateNotification extends Notification implements ShouldQueue
         return [DiscordChannel::class];
     }
 
-    public function toDiscord(mixed $notifiable): DiscordMessage
+    public function toDiscord(mixed $notifiable): ?DiscordMessage
     {
-        $homeImpliedWinningPercentage = round($this->calculateImpliedWinningPercentage($this->odds->h2h_home_price), 2);
-        $awayImpliedWinningPercentage = round($this->calculateImpliedWinningPercentage($this->odds->h2h_away_price), 2);
-        $impliedTotal = $this->calculateImpliedTotal();
+        try {
+            $homeImpliedWinningPercentage = round($this->calculateImpliedWinningPercentage($this->odds->h2h_home_price), 2);
+            $awayImpliedWinningPercentage = round($this->calculateImpliedWinningPercentage($this->odds->h2h_away_price), 2);
+            $impliedTotal = $this->calculateImpliedTotal();
 
-        $favoriteTeam = $this->odds->h2h_home_price < $this->odds->h2h_away_price ? $this->odds->homeTeam : $this->odds->awayTeam;
-        $favoriteSpread = $this->odds->h2h_home_price < $this->odds->h2h_away_price ? $this->odds->spread_home_point : $this->odds->spread_away_point;
+            $favoriteTeam = $this->odds->h2h_home_price < $this->odds->h2h_away_price ? $this->odds->homeTeam : $this->odds->awayTeam;
+            $favoriteSpread = $this->odds->h2h_home_price < $this->odds->h2h_away_price ? $this->odds->spread_home_point : $this->odds->spread_away_point;
 
-        $description = ":star2: **{$favoriteTeam->name}** is favored by **{$favoriteSpread}**\n";
+            $description = ":star2: **{$favoriteTeam->name}** is favored by **{$favoriteSpread}**\n";
 
-        // Handle 0 values
-        $homeWP = $homeImpliedWinningPercentage ?: 'N/A';
-        $awayWP = $awayImpliedWinningPercentage ?: 'N/A';
-        $total = $impliedTotal ?: 'N/A';
+            // Handle 0 values
+            $homeWP = $homeImpliedWinningPercentage ?: 'N/A';
+            $awayWP = $awayImpliedWinningPercentage ?: 'N/A';
+            $total = $impliedTotal ?: 'N/A';
 
-        $discordHelper = new DiscordHelper();
+            $discordHelper = new DiscordHelper();
+            $discordHelper = $discordHelper
+                ->setTitle(':football: **NFL Odds Update**')
+                ->setDescription($description);
 
-        // Start building the Discord message
-        $discordHelper = new DiscordHelper();
+            if ($homeWP !== 'N/A') {
+                $discordHelper = $discordHelper->addField(":house: **{$this->odds->homeTeam->name}**", "Implied WP: **{$homeWP}%**\n", true);
+            }
 
-        $discordHelper = $discordHelper
-            ->setTitle(':football: **NFL Odds Update**')
-            ->setDescription($description);
+            if ($awayWP !== 'N/A') {
+                $discordHelper = $discordHelper->addField(":airplane: **{$this->odds->awayTeam->name}**", "Implied WP: **{$awayWP}%**\n", true);
+            }
 
-        if ($homeWP !== 'N/A') {
-            $discordHelper = $discordHelper->addField(":house: **{$this->odds->homeTeam->name}**", "Implied WP: **{$homeWP}%**\n", true);
+            if ($total !== 'N/A') {
+                $discordHelper = $discordHelper->addField(':scales: **Implied Total**', "**{$total}**\n", false);
+            }
+
+            // Ensure commence_time is treated as a Carbon instance
+            $commenceTime = Carbon::parse($this->odds->commence_time);
+            $footerText = "Odds provided by {$this->odds->bookmaker_key} | " . $commenceTime->format('Y-m-d H:i:s');
+
+            return $discordHelper
+                ->setFooter($footerText)
+                ->setColor($favoriteTeam->primary_color) // Use the favorite team's primary color
+                ->sleep()
+                ->build();
+
+        } catch (Exception $e) {
+            Log::error('Failed to send Discord notification: ' . $e->getMessage());
+            return null;
         }
-
-        if ($awayWP !== 'N/A') {
-            $discordHelper = $discordHelper->addField(":airplane: **{$this->odds->awayTeam->name}**", "Implied WP: **{$awayWP}%**\n", true);
-        }
-
-        if ($total !== 'N/A') {
-            $discordHelper = $discordHelper->addField(':scales: **Implied Total**', "**{$total}**\n", false);
-        }
-
-        // Ensure commence_time is treated as a Carbon instance
-        $commenceTime = Carbon::parse($this->odds->commence_time);
-        $footerText = "Odds provided by {$this->odds->bookmaker_key} | " . $commenceTime->format('Y-m-d H:i:s');
-
-        return $discordHelper
-            ->setFooter($footerText)
-            ->setColor($favoriteTeam->primary_color) // Use the favorite team's primary color
-            ->build();
     }
 
     protected function calculateImpliedWinningPercentage($price)

@@ -2,23 +2,21 @@
 
 namespace App;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Notification;
 
 class DiscordNotifier
 {
-    use Notifiable;
+    protected $channel;
 
-    protected $channelId;
-
-    public function __construct($channelKey = null)
+    public function __construct($channel)
     {
-        // If a channelKey is provided, fetch the corresponding channel ID from the config
-        $this->channelId = $channelKey ? Config::get("discord.{$channelKey}") : null;
+        $this->channel = $channel;
     }
 
-    public function routeNotificationForDiscord()
+    public function notify($notifiable, $notification)
     {
-        return $this->channelId;
+        // Ensure the Notification facade is used to send the notification
+        Notification::route('discord', config("discord.{$this->channel}"))
+            ->notify($notification);
     }
 }

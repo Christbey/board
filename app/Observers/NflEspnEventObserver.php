@@ -6,6 +6,7 @@ use App\Models\NflEspnEvent;
 use App\Helpers\DiscordHelper;
 use App\Models\User;
 use App\Notifications\DiscordNotification;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 class NflEspnEventObserver

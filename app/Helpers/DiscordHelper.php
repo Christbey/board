@@ -12,9 +12,11 @@ class DiscordHelper
 
     public function build(): DiscordMessage
     {
+        // Optionally add a sleep here before building the message
+        $this->sleep();
+
         return DiscordMessage::create('')
             ->embed($this->embed);
-        
     }
 
     public function setTitle(string $title): self
@@ -37,28 +39,21 @@ class DiscordHelper
 
     public function setColor(string $color = null, ?NflTeam $team = null): self
     {
-        // If color is not provided, fallback to the team's primary color if available
         if (!$color && $team) {
             $color = $team->primary_color;
         }
 
-        // If still no color, use a default color
         $color = $color ?: '#7289da';
+        $color = ltrim($color, '#');
 
-        // Normalize color format: Ensure the color is a 6-character hex string
-        $color = ltrim($color, '#'); // Remove '#' if it's present
-
-        // Ensure color is exactly 6 characters long
         if (strlen($color) !== 6) {
-            $color = '7289da'; // Fallback to default Discord color if invalid
+            $color = '7289da';
         }
 
-        // Convert the color to a decimal value
         $this->embed['color'] = hexdec($color);
 
         return $this;
     }
-
 
     public function setTimestamp($timestamp = null): self
     {
@@ -68,7 +63,6 @@ class DiscordHelper
 
     public function addField(string $name, $value, bool $inline = false): self
     {
-        // Convert the $value to a string
         $value = (string)$value;
 
         $this->embed['fields'][] = [
@@ -92,7 +86,6 @@ class DiscordHelper
         return $this;
     }
 
-
     public function presetEmbed(string $headline, string $description, string $url, string $author, string $category, string $color, string $published): self
     {
         return $this->reset()
@@ -104,10 +97,16 @@ class DiscordHelper
             ->setFooter("$author | $category");
     }
 
-
     public function reset(): self
     {
         $this->embed = [];
+        return $this;
+    }
+
+    // Add the sleep function
+    public function sleep(int $seconds = 1): self
+    {
+        sleep($seconds); // Sleep for the specified number of seconds
         return $this;
     }
 }
