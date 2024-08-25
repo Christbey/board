@@ -1,22 +1,20 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl\News;
 
-use App\Events\NflNewsFetched;
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnNews;
 use App\Models\NflEspnTeam;
+use App\Notifications\EspnNewsDiscordNotification;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
-
-use App\Notifications\EspnNewsDiscordNotification;
 use Illuminate\Support\Facades\Notification;
 
 class FetchNflNewsJob implements ShouldQueue

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands\Espn;
 
-use Illuminate\Console\Command;
-use App\Jobs\FetchNflNewsJob;
+use App\Jobs\Nfl\News\FetchNflNewsJob;
 use Exception;
+use Illuminate\Console\Command;
 
 class FetchNews extends Command
 {
