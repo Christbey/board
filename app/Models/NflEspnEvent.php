@@ -17,8 +17,34 @@ class NflEspnEvent extends Model
         'status_type_name', 'status_type_state', 'status_type_completed',
         'status_type_description', 'status_type_detail', 'status_type_short_detail',
         'home_team_id', 'away_team_id', 'home_team_score', 'away_team_score', 'home_team_record', 'away_team_record',
+        // Weather data fields
+        'weather_type', 'weather_display_value', 'weather_zip_code', 'weather_last_updated',
+        'weather_wind_speed', 'weather_wind_direction', 'weather_temperature',
+        'weather_high_temperature', 'weather_low_temperature', 'weather_condition_id',
+        'weather_gust', 'weather_precipitation', 'weather_link',
+    ];
+
+    protected $casts = [
+        'attendance' => 'integer',
+        'neutral_site' => 'boolean',
+        'conference_competition' => 'boolean',
+        'play_by_play_available' => 'boolean',
+        'venue_indoor' => 'boolean',
+        'home_team_score' => 'integer',
+        'away_team_score' => 'integer',
+        'status_type_completed' => 'boolean',
+        'weather_wind_speed' => 'integer',
+        'weather_temperature' => 'integer',
+        'weather_high_temperature' => 'integer',
+        'weather_low_temperature' => 'integer',
+        'weather_condition_id' => 'integer',
+        'weather_gust' => 'integer',
+        'weather_precipitation' => 'integer',
+        'date' => 'datetime',
+        'weather_last_updated' => 'datetime',
 
     ];
+
 
     public function awayTeam()
     {

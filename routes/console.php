@@ -77,11 +77,17 @@ Schedule::command('log:predicted-scores')
     ->daily()
     ->withoutOverlapping();  // Prevent overlapping
 
-Schedule::command('fetch:espn-events 2024 4 1')
-    ->daily()
+Schedule::command('fetch:espn-events 2024 1 4')
+    ->sundays()
+    ->between('10:30', '19:30')
     ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Ncaa Odds Command to run hourly
 Schedule::command('fetch:ncaa-odds')
     ->hourly()
+    ->withoutOverlapping();  // Prevent overlapping
+
+Schedule::command('espn:futures 2024')
+    ->daily()
+    ->at('14:00')
     ->withoutOverlapping();  // Prevent overlapping

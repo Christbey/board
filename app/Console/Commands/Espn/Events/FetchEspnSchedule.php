@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands\Espn\Events;
 
-use App\Jobs\FetchEspnEventsJob;
+use App\Jobs\FetchEspnScheduleJob;
 
 use Illuminate\Console\Command;
 
 
-class FetchEspnEvents extends Command
+class FetchEspnSchedule extends Command
 {
     protected $signature = 'fetch:espn-events {season_year} {season_type} {week_number}';
     protected $description = 'Fetch ESPN NFL events and store them in the database';
@@ -19,7 +19,7 @@ class FetchEspnEvents extends Command
         $weekNumber = $this->argument('week_number');
 
         // Dispatch the job with the provided arguments
-        FetchEspnEventsJob::dispatch($seasonYear, $seasonType, $weekNumber);
+        FetchEspnScheduleJob::dispatch($seasonYear, $seasonType, $weekNumber);
 
         $this->info('FetchEspnEvents job dispatched successfully.');
     }
