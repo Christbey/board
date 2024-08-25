@@ -7,20 +7,17 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Discord\DiscordChannel;
-use App\Models\CollegeFootballGame;
-use App\Models\CollegeFootballFpiRating;
-use App\Models\CollegeFootballPregame;
-use Carbon\Carbon;
+use App\Models\NcaaOdds;
 
 class CfbPredictionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $game;
+    protected $odds;
 
-    public function __construct(CollegeFootballGame $game)
+    public function __construct(NcaaOdds $odds)
     {
-        $this->game = $game;
+        $this->odds = $odds;
     }
 
     public function via($notifiable)
@@ -30,67 +27,28 @@ class CfbPredictionNotification extends Notification implements ShouldQueue
 
     public function toDiscord($notifiable)
     {
-        $homeFpi = CollegeFootballFpiRating::where('team_id', $this->game->home_team_id)
-            ->where('year', $this->game->season)
-            ->first();
-        $awayFpi = CollegeFootballFpiRating::where('team_id', $this->game->away_team_id)
-            ->where('year', $this->game->season)
-            ->first();
-        $pregameData = CollegeFootballPregame::where('game_id', $this->game->id)->first();
+        // Calculate home win probability from odds
+        $homeWinProb = $this->odds->h2h_home_price > 0
+            ? 100 / ($this->odds->h2h_home_price + 100)
+            : -$this->odds->h2h_home_price / (-$this->odds->h2h_home_price + 100);
+        $homeWinProb = round($homeWinProb * 100, 2); // Convert to percentage
 
-        if (!$homeFpi || !$awayFpi || !$pregameData) {
-            $discordHelper = new DiscordHelper();
-            return $discordHelper
-                ->setTitle(':football: **College Football Prediction**')
-                ->setDescription('FPI ratings or pregame data not found for one or both teams')
-                ->build();
-        }
+        // Calculate away win probability (100% - home win probability)
+        $awayWinProb = 100 - $homeWinProb;
 
-        // Calculate the prediction with Elo and Pregame adjustments
-        $homeAdvantage = $this->calculateHomeAdvantage($this->game);
-        $eloImpact = $this->calculateEloImpact($this->game);
-        $spreadImpact = $this->calculateSpreadImpact($pregameData);
+        // Fetch the associated team names
+        $homeTeamName = $this->odds->homeTeam->name;
+        $awayTeamName = $this->odds->awayTeam->name;
+        $total = $this->odds->total_over_point;
+        // Determine the predicted winner and the corresponding win probability
+        $predictedWinner = $homeWinProb > 50 ? $homeTeamName : $awayTeamName;
+        $predictedWinnerProb = $homeWinProb > 50 ? $homeWinProb : $awayWinProb;
 
-        $homeScore = $homeFpi->fpi + $homeAdvantage + $eloImpact['home'] + $spreadImpact['home'];
-        $awayScore = $awayFpi->fpi + $eloImpact['away'] + $spreadImpact['away'];
-
-        $predictedWinner = $homeScore > $awayScore ? $this->game->homeTeam->school : $this->game->awayTeam->school;
-
-        $discordHelper = new DiscordHelper();
-
-        $discordHelper = $discordHelper
+        // Prepare and send the Discord notification
+        return (new DiscordHelper())
             ->setTitle(':football: **College Football Prediction**')
-            ->addField(':house: **' . $this->game->homeTeam->school . '**', 'Predicted Score: **' . round($homeScore, 2) . '**', true)
-            ->addField(':airplane: **' . $this->game->awayTeam->school . '**', 'Predicted Score: **' . round($awayScore, 2) . '**', true)
-            ->addField(':trophy: **Predicted Winner**', '**' . $predictedWinner . '**', false)
-            ->setFooter('Game scheduled for ' . Carbon::parse($this->game->commence_time)->format('l, F j, Y \a\t g:i A'));
-
-        return $discordHelper->build();
-    }
-
-    private function calculateHomeAdvantage(CollegeFootballGame $game): float
-    {
-        return $game->neutral_site ? 0 : 2.5;
-    }
-
-    private function calculateEloImpact(CollegeFootballGame $game): array
-    {
-        $eloDifference = $game->home_pregame_elo - $game->away_pregame_elo;
-        $scalingFactor = 0.01;
-
-        return [
-            'home' => $eloDifference * $scalingFactor,
-            'away' => -$eloDifference * $scalingFactor,
-        ];
-    }
-
-    private function calculateSpreadImpact(CollegeFootballPregame $pregameData): array
-    {
-        $spreadScalingFactor = 0.5;
-
-        return [
-            'home' => $pregameData->spread * $spreadScalingFactor,
-            'away' => -$pregameData->spread * $spreadScalingFactor,
-        ];
+            ->addField($predictedWinner . ' Win Probability', '**' . $predictedWinnerProb . '%**', true)
+            ->addfield('Total', $total, true)
+            ->build();
     }
 }

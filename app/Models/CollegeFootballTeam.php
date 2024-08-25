@@ -42,4 +42,11 @@ class CollegeFootballTeam extends Model
     {
         return $this->belongsTo(CollegeFootballConference::class, 'conference_id');
     }
+
+    // CollegeFootballTeam.php
+    public function ncaaTeam()
+    {
+        return $this->belongsTo(NcaaTeam::class, 'ncaa_team_id');
+    }
+
 }

@@ -7,6 +7,7 @@ use App\Models\CollegeFootballPlayWP;
 use App\Models\CollegeFootballTeam;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchCollegeFootballPlayWP extends Command
 {
@@ -24,13 +25,16 @@ class FetchCollegeFootballPlayWP extends Command
 
         $response = Http::withHeaders([
             'accept' => 'application/json',
-            'Authorization' => 'Bearer ' . env('COLLEGE_FOOTBALL_DATA_API_KEY'),
+            'Authorization' => 'Bearer ' . config('collegefootball.api_key'),
         ])->get("https://api.collegefootballdata.com/metrics/wp?gameId={$gameId}");
 
         if ($response->successful()) {
             $plays = $response->json();
+            Log::info('Number of plays fetched: ' . count($plays));
 
             foreach ($plays as $play) {
+                Log::info('Processing play ID: ' . $play['playId']);
+
                 // Find or create the home and away teams
                 $homeTeam = CollegeFootballTeam::firstOrCreate(
                     ['school' => $play['home']],

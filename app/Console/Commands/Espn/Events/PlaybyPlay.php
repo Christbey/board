@@ -27,7 +27,7 @@ class PlaybyPlay extends Command
                 Log::info('Play data:', $play);
 
                 $playData = [
-                    'game_id' => '401249063', // Example game ID, this would be dynamic in real scenario
+                    'game_id' => '401635525', // Example game ID, this would be dynamic in real scenario
                     'sequenceNumber' => $play['sequenceNumber'],
                     'type_id' => $play['type']['id'],
                     'type_text' => $play['type']['text'],

@@ -39,7 +39,7 @@ class FetchCollegeFootballGamesJob implements ShouldQueue
             $filteredGames = array_filter($games, function ($game) {
                 $startDate = Carbon::parse($game['start_date']);
                 $now = Carbon::now();
-                return $startDate->between($now, $now->addHours(48));
+                return $startDate->between($now, $now->addHours(72));
             });
 
             $filteredGames = $this->filterGamesByDate($games);
@@ -48,13 +48,13 @@ class FetchCollegeFootballGamesJob implements ShouldQueue
         } else {
             Log::error('Failed to fetch data from the API.');
         }
-        
+
     }
 
     protected function filterGamesByDate(array $games): array
     {
         $now = Carbon::now();
-        $end = $now->copy()->addHours(48);
+        $end = $now->copy()->addHours(72);
 
         return array_filter($games, function ($game) use ($now, $end) {
             $gameStartDate = Carbon::parse($game['start_date']);
