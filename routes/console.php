@@ -5,7 +5,6 @@ use App\Models\NflTeam;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-
 $sports = ['mlb', 'nba', 'nfl', 'ncaa'];
 $types = ['scores', 'odds'];
 
@@ -18,46 +17,71 @@ foreach ($sports as $sport) {
     }
 }
 
-
 // Schedule News Command to run every fifteen minutes
-Schedule::command('espn:nfl-news')->everyTenMinutes();
+Schedule::command('espn:nfl-news')
+    ->everyTenMinutes()
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Nfl Odds Command to run every thirty minutes
-Schedule::command('odds:fetch nfl')->everyFiveMinutes();
+Schedule::command('odds:fetch nfl')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Nfl Players Command to run daily
-Schedule::command('nfl:get-players')->dailyAt('23:30');
+Schedule::command('nfl:get-players')
+    ->dailyAt('23:30')
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Nfl Games Command to run daily
-Schedule::command('notify:daily-games')->dailyAt('08:00');
+Schedule::command('notify:daily-games')
+    ->dailyAt('08:00')
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Nfl Injuries Command to run every five minutes
-Schedule::command('nfl:fetch-injuries')->everyThirtyMinutes();
+Schedule::command('nfl:fetch-injuries')
+    ->everyThirtyMinutes()
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Calculate QBR Command to run daily
-Schedule::command('calculate:qbr')->dailyAt('13:00');
+Schedule::command('calculate:qbr')
+    ->dailyAt('13:00')
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Nfl Team Schedule Command to run every six hours
-Schedule::command('fetch:nfl-team-schedule')->everySixHours();
+Schedule::command('fetch:nfl-team-schedule')
+    ->everySixHours()
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule College Football Games Command to run every Saturday every 30 minutes, starting from 8 AM CST.
 Schedule::command('fetch:college-football-games')
     ->saturdays()
     ->everyThirtyMinutes()
     ->timezone('America/Chicago')  // CST time zone
-    ->between('08:00', '23:59');   // Run between 8:00 AM and 11:59 PM CST
+    ->between('08:00', '23:59')    // Run between 8:00 AM and 11:59 PM CST
+    ->withoutOverlapping();        // Prevent overlapping
 
 // Schedule College Football FPI Ratings Command to run every Monday at 3:00 PM CST.
-Schedule::command('fetch:college-football-fpi-ratings')->daily()->at('15:00');
+Schedule::command('fetch:college-football-fpi-ratings')
+    ->daily()
+    ->at('15:00')
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule College Football Rankings Command to run every Monday at 4:00 PM CST.
 Schedule::command('fetch:college-football-rankings')
     ->mondays()
     ->timezone('America/Chicago')
-    ->at('16:00');
+    ->at('16:00')
+    ->withoutOverlapping();  // Prevent overlapping
 
-Schedule::command('log:predicted-scores')->daily();
-Schedule::command('fetch:espn-events 2024 4 1')->daily();
+Schedule::command('log:predicted-scores')
+    ->daily()
+    ->withoutOverlapping();  // Prevent overlapping
+
+Schedule::command('fetch:espn-events 2024 4 1')
+    ->daily()
+    ->withoutOverlapping();  // Prevent overlapping
 
 // Schedule Ncaa Odds Command to run hourly
-Schedule::command('fetch:ncaa-odds')->hourly();
+Schedule::command('fetch:ncaa-odds')
+    ->hourly()
+    ->withoutOverlapping();  // Prevent overlapping
