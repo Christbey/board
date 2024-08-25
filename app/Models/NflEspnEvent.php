@@ -30,4 +30,22 @@ class NflEspnEvent extends Model
         return $this->belongsTo(NflEspnTeam::class, 'home_team_id');
     }
 
+
+    public function week()
+    {
+        return $this->belongsTo(NflEspnWeek::class, 'week_id');
+    }
+
+//    public function showWeekEvents($week_id = null)
+//    {
+//        $weeks = NflEspnWeek::all(); // Load all weeks for the dropdown
+//
+//        // Load events for the selected week, or all events if no week is selected
+//        $events = NflEspnEvent::when($week_id, function ($query) use ($week_id) {
+//            return $query->where('week_id', $week_id);
+//        })->with(['awayTeam', 'homeTeam', 'week'])->get();
+//
+//        return view('nfl.picks.week', compact('events', 'weeks', 'week_id'));
+//    }
+
 }

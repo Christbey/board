@@ -4,6 +4,7 @@ use App\Http\Controllers\CollegeFootballController;
 use App\Http\Controllers\DataPreparationController;
 use App\Http\Controllers\DynamicNFLController;
 use App\Http\Controllers\EspnController;
+use App\Http\Controllers\EspnEventController;
 use App\Http\Controllers\MlbController;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\NcaaController;
@@ -106,3 +107,7 @@ use App\Http\Controllers\CollegeFootballPredictionController;
 
 Route::get('/predict/game', [CollegeFootballPredictionController::class, 'predictGame']);
 Route::get('/predict/game/{gameId}', [CollegeFootballPredictionController::class, 'showPrediction']);
+
+Route::get('/nfl/picks/{week_id}', [EspnEventController::class, 'showWeekEvents'])->name('nfl.picks.week');
+Route::post('/nfl/pick-winner', [EspnEventController::class, 'pickWinner'])->name('nfl.pickWinner');
+

@@ -58,3 +58,6 @@ Schedule::command('fetch:college-football-rankings')
 
 Schedule::command('log:predicted-scores')->daily();
 Schedule::command('fetch:espn-events 2024 4 1')->daily();
+
+// Schedule Ncaa Odds Command to run hourly
+Schedule::command('fetch:ncaa-odds')->hourly();

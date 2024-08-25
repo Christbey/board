@@ -13,7 +13,7 @@ class CfbPredictionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $odds;
+    protected NcaaOdds $odds;
 
     public function __construct(NcaaOdds $odds)
     {
@@ -40,15 +40,19 @@ class CfbPredictionNotification extends Notification implements ShouldQueue
         $homeTeamName = $this->odds->homeTeam->name;
         $awayTeamName = $this->odds->awayTeam->name;
         $total = $this->odds->total_over_point;
+
         // Determine the predicted winner and the corresponding win probability
         $predictedWinner = $homeWinProb > 50 ? $homeTeamName : $awayTeamName;
         $predictedWinnerProb = $homeWinProb > 50 ? $homeWinProb : $awayWinProb;
+        $title = ":football: **$awayTeamName vs. $homeTeamName**";
+        $commenceTime = $this->odds->commence_time;
 
         // Prepare and send the Discord notification
         return (new DiscordHelper())
-            ->setTitle(':football: **College Football Prediction**')
+            ->setTitle($title)
             ->addField($predictedWinner . ' Win Probability', '**' . $predictedWinnerProb . '%**', true)
             ->addfield('Total', $total, true)
+            ->setFooter('Commence Time: ' . $commenceTime) // Add commence time to the footer
             ->build();
     }
 }

@@ -10,10 +10,12 @@ use App\Events\NflNewsFetched;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
+use App\Events\UserMadePick;
 use App\Listeners\CalculateEloRatingListener;
 use App\Listeners\HandleDistanceCalculation;
 use App\Listeners\HandleExpectedScoreCalculation;
 use App\Listeners\ProcessNflNews;
+use App\Listeners\ProcessUserPick;
 use App\Listeners\TaskEventListeners;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -31,7 +33,6 @@ class EventServiceProvider extends ServiceProvider
             [TaskEventListeners::class, 'handleTaskDeleted'],
         ],
 
-
         CalculateExpectedScores::class => [
             HandleExpectedScoreCalculation::class,
         ],
@@ -41,7 +42,9 @@ class EventServiceProvider extends ServiceProvider
         CalculateEloRating::class => [
             CalculateEloRatingListener::class,
         ],
-
+        UserMadePick::class => [
+            ProcessUserPick::class,
+        ],
 
         // other events...
     ];
