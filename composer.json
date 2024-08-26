@@ -14,7 +14,7 @@
     "laravel/jetstream": "^5.1",
     "laravel/sanctum": "^4.0",
     "laravel/tinker": "^2.9",
-    "livewire/livewire": "^3.0",
+    "livewire/livewire": "^3.5",
     "php-ai/php-ml": "^0.10.0",
     "symfony/css-selector": "^7.1",
     "symfony/dom-crawler": "^7.1"

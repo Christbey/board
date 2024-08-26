@@ -111,3 +111,11 @@ Route::get('/predict/game/{gameId}', [CollegeFootballPredictionController::class
 Route::get('/nfl/picks/{week_id}', [EspnEventController::class, 'showWeekEvents'])->name('nfl.picks.week');
 Route::post('/nfl/pick-winner', [EspnEventController::class, 'pickWinner'])->name('nfl.pickWinner');
 
+Route::get('/send-email', function () {
+    Mail::raw('This is a test email.', function ($message) {
+        $message->to('jcbeypeterson@icloud.com')
+            ->subject('Test Email');
+    });
+
+    return 'Email sent';
+});
