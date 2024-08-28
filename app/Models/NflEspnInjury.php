@@ -30,13 +30,11 @@ class NflEspnInjury extends Model
     protected static function booted()
     {
         static::created(function ($injury) {
-            // Create a new DiscordNotifier instance for the nfl_injury channel
-            $notifier = new DiscordNotifier('nfl_injury_channel');
-
-            // Send the notification when a new injury is created
-            $notifier->notify(new EspnInjuryDiscordNotification($injury));
+            // Send the notification directly when a new injury is created
+            Notification::send($injury, new EspnInjuryDiscordNotification($injury));
         });
     }
+
 
     public function team()
     {
