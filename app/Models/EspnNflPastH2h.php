@@ -32,4 +32,14 @@ class EspnNflPastH2h extends Model
         'moneyline_winner',
         'spread_winner',
     ];
+
+    public function homeTeam()
+    {
+        return $this->belongsTo(NflTeam::class, 'home_team_id', 'espn_team_id');
+    }
+
+    public function awayTeam()
+    {
+        return $this->belongsTo(NflTeam::class, 'away_team_id', 'espn_team_id');
+    }
 }

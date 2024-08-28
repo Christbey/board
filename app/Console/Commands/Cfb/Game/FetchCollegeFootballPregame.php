@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class FetchCollegeFootballPregame extends Command
 {
-    protected $signature = 'fetch:college-football-pregame {year=2024} {week=1}';
+    protected $signature = 'fetch:college-football-pregame {year=2024} {week=2}';
     protected $description = 'Fetch college football pregame win probability data from the API and save to database';
 
     public function __construct()

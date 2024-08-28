@@ -11,6 +11,7 @@ use App\Actions\Jetstream\RemoveTeamMember;
 use App\Actions\Jetstream\UpdateTeamName;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
+use Spatie\Permission\Models\Role;
 
 class JetstreamServiceProvider extends ServiceProvider
 {
@@ -45,6 +46,9 @@ class JetstreamServiceProvider extends ServiceProvider
     {
         Jetstream::defaultApiTokenPermissions(['read']);
 
+        // Synchronize roles with database
+        $this->syncRolesWithDatabase();
+
         Jetstream::role('admin', 'Administrator', [
             'create',
             'read',
@@ -61,5 +65,19 @@ class JetstreamServiceProvider extends ServiceProvider
         Jetstream::role('viewer', 'Viewer', [
             'read',
         ])->description('Viewer users can only read content.');
+    }
+
+    protected function syncRolesWithDatabase()
+    {
+        $roles = [
+            'admin' => ['create', 'read', 'update', 'delete'],
+            'editor' => ['read', 'create', 'update'],
+            'viewer' => ['read'],
+        ];
+
+        foreach ($roles as $roleName => $permissions) {
+            $role = Role::firstOrCreate(['name' => $roleName]);
+            $role->syncPermissions($permissions);
+        }
     }
 }

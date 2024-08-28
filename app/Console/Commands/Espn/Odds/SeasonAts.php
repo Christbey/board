@@ -34,6 +34,7 @@ class SeasonAts extends Command
 
     protected function fetchAndStoreAtsRecords($teamId, $season)
     {
+        // https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2023/types/2/teams/16/ats
         $url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{$season}/types/2/teams/{$teamId}/ats";
         $response = Http::get($url);
 

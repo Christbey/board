@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballSpConferenceRatings extends Command
 {
-    protected $signature = 'fetch:college-football-sp-conference-ratings {year=2023}';
+    protected $signature = 'fetch:college-football-sp-conference-ratings {year=2024}';
     protected $description = 'Fetch college football SP+ conference ratings from the API and save to database';
 
     public function __construct()

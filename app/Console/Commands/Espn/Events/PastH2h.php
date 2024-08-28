@@ -32,6 +32,7 @@ class PastH2h extends Command
 
     private function fetchAndProcessData($teamId)
     {
+        // https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/teams/12/odds/1002/past-performances?limit=1000
         $url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/teams/{$teamId}/odds/1002/past-performances?limit=1000";
         $response = Http::get($url);
 

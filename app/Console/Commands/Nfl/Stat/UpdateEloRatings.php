@@ -22,11 +22,25 @@ class UpdateEloRatings extends Command
     {
         $this->info('Starting Elo ratings update...');
 
+        // Log expected winning percentages and predicted scores
+        $this->info('Logging expected winning percentages and predicted scores for future games...');
+        $result = $this->nflPredictionService->logPredictedScores();
+        $this->info($result);
+
         // Get updated Elo ratings
         $this->info('Displaying updated Elo ratings...');
+        $this->displayUpdatedRatings();
 
         $this->info('Elo ratings update completed.');
     }
 
+    private function displayUpdatedRatings()
+    {
+        $ratings = $this->nflPredictionService->eloRatingSystem->getRatings();
 
+        $this->info('Updated Elo ratings:');
+        foreach ($ratings as $team => $rating) {
+            $this->line("Team ID {$team}: {$rating}");
+        }
+    }
 }

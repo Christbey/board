@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 class FetchCollegeFootballTalent extends Command
 {
-    protected $signature = 'fetch:college-football-talent {year=2023}';
+    protected $signature = 'fetch:college-football-talent {year=2024}';
     protected $description = 'Fetch college football talent data from the API and save to database';
 
     public function __construct()

@@ -13,122 +13,148 @@
         </div>
         <nav class="flex-1">
             <ul>
-                <li>
-                    <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                </li>
-                <li>
-                    <x-nav-link href="{{ route('tasks.index') }}" :active="request()->routeIs('tasks.index')">
-                        {{ __('Tasks') }}
-                    </x-nav-link>
-                </li>
-
-                <!-- CFB Dropdown -->
-                <x-nav-dropdown label="CFB" id="dropdown-cfb">
-                    <x-nav-link href="{{ route('cfb.teams.index') }}" :active="request()->routeIs('cfb.teams.index')">
-                        {{ __('Teams') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('cfb.events.index') }}" :active="request()->routeIs('cfb.events.index')">
-                        {{ __('Events') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('cfb.rankings.index') }}"
-                                :active="request()->routeIs('cfb.rankings.index')">
-                        {{ __('Rankings') }}
-                    </x-nav-link>
-                </x-nav-dropdown>
-
-                <!-- ESPN Dropdown -->
-                <x-nav-dropdown label="ESPN" id="dropdown-espn">
-                    <x-nav-link href="{{ route('espn.nfl.teams.index') }}" :active="request()->routeIs('nfl.teams')">
-                        {{ __('ESPN Teams') }}
-                    </x-nav-link>
-
-                </x-nav-dropdown>
-
-                <!-- NFL Dropdown -->
-                <x-nav-dropdown label="NFL" id="dropdown-nfl">
-                    <x-nav-link href="{{ route('nfl.teams') }}" :active="request()->routeIs('nfl.teams')">
-                        {{ __('Teams') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('nfl.event') }}" :active="request()->routeIs('nfl.event')">
-                        {{ __('Events') }}
-                    </x-nav-link>
-                </x-nav-dropdown>
-                <!-- MLB Dropdown -->
-                <x-nav-dropdown label="MLB" id="dropdown-mlb">
-                    <x-nav-link href="{{ route('mlb.teams') }}" :active="request()->routeIs('mlb.teams')">
-                        {{ __('Teams') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('mlb.event') }}" :active="request()->routeIs('mlb.event')">
-                        {{ __('Events') }}
-                    </x-nav-link>
-                </x-nav-dropdown>
-                <!-- NBA Dropdown -->
-                <x-nav-dropdown label="NBA" id="dropdown-nba">
-                    <x-nav-link href="{{ route('nba.teams') }}" :active="request()->routeIs('nba.teams')">
-                        {{ __('Teams') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('nba.event') }}" :active="request()->routeIs('nba.event')">
-                        {{ __('Events') }}
-                    </x-nav-link>
-                </x-nav-dropdown>
-                <!-- NCAAF Dropdown -->
-                <x-nav-dropdown label="NCAAF" id="dropdown-ncaaf">
-                    <x-nav-link href="{{ route('cfb.teams.index') }}"
-                                :active="request()->routeIs('cfb.teams.index')">
-                        {{ __('Teams') }}
-                    </x-nav-link>
-                    <x-nav-link href="{{ route('cfb.events.index') }}" :active="request()->routeIs('cfb.events.index')">
-                        {{ __('Events') }}
-                    </x-nav-link>
-                </x-nav-dropdown>
-                <!-- Management Dropdown -->
-                <x-nav-dropdown label="Management" id="dropdown-management">
-                    <!-- Team Management -->
-                    <div class="block px-4 py-2 text-xs text-gray-400">
-                        {{ __('Manage Team') }}
-                    </div>
-                    <x-nav-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
-                        {{ __('Team Settings') }}
-                    </x-nav-link>
-                    @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                        <x-nav-link href="{{ route('teams.create') }}">
-                            {{ __('Create New Team') }}
+                @auth
+                    <!-- Dashboard -->
+                    <li>
+                        <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
+                            {{ __('Home') }}
                         </x-nav-link>
-                    @endcan
-                    @if (Auth::user()->allTeams()->count() > 1)
-                        <div class="border-t border-gray-200"></div>
-                        <div class="block px-4 py-2 text-xs text-gray-400">
-                            {{ __('Switch Teams') }}
-                        </div>
-                        @foreach (Auth::user()->allTeams() as $team)
-                            <x-switchable-team :team="$team"/>
-                        @endforeach
-                    @endif
-                    <!-- Account Management -->
-                    <div class="block px-4 py-2 text-xs text-gray-400">
-                        {{ __('Manage Account') }}
-                    </div>
-                    <x-nav-link href="{{ route('profile.show') }}">
-                        {{ __('Profile') }}
-                    </x-nav-link>
-                    @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                        @if (auth()->user()->email === 'josh@picksports.app')
-                            <x-nav-link href="{{ route('api-tokens.index') }}">
-                                {{ __('API Tokens') }}
+                    </li>
+                    @if (auth()->user()->id === 1)
+                        <!-- Tasks -->
+                        <li>
+                            <x-nav-link href="{{ route('tasks.index') }}" :active="request()->routeIs('tasks.index')">
+                                {{ __('Tasks') }}
                             </x-nav-link>
-                        @endif
+                        </li>
+
+                        <!-- CFB Dropdown -->
+                        <x-nav-dropdown label="CFB" id="dropdown-cfb">
+                            <x-nav-link href="{{ route('cfb.teams.index') }}"
+                                        :active="request()->routeIs('cfb.teams.index')">
+                                {{ __('Teams') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('cfb.events.index') }}"
+                                        :active="request()->routeIs('cfb.events.index')">
+                                {{ __('Events') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('cfb.rankings.index') }}"
+                                        :active="request()->routeIs('cfb.rankings.index')">
+                                {{ __('Rankings') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- ESPN Dropdown -->
+                        <x-nav-dropdown label="ESPN" id="dropdown-espn">
+                            <x-nav-link href="{{ route('espn.nfl.teams.index') }}"
+                                        :active="request()->routeIs('nfl.teams')">
+                                {{ __('ESPN Teams') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- NFL Dropdown -->
+                        <x-nav-dropdown label="NFL" id="dropdown-nfl">
+                            <x-nav-link href="{{ route('nfl.teams') }}" :active="request()->routeIs('nfl.teams')">
+                                {{ __('Teams') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('nfl.event') }}" :active="request()->routeIs('nfl.event')">
+                                {{ __('Events') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- MLB Dropdown -->
+                        <x-nav-dropdown label="MLB" id="dropdown-mlb">
+                            <x-nav-link href="{{ route('mlb.teams') }}" :active="request()->routeIs('mlb.teams')">
+                                {{ __('Teams') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('mlb.event') }}" :active="request()->routeIs('mlb.event')">
+                                {{ __('Events') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- NBA Dropdown -->
+                        <x-nav-dropdown label="NBA" id="dropdown-nba">
+                            <x-nav-link href="{{ route('nba.teams') }}" :active="request()->routeIs('nba.teams')">
+                                {{ __('Teams') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('nba.event') }}" :active="request()->routeIs('nba.event')">
+                                {{ __('Events') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- NCAAF Dropdown -->
+                        <x-nav-dropdown label="NCAAF" id="dropdown-ncaaf">
+                            <x-nav-link href="{{ route('cfb.teams.index') }}"
+                                        :active="request()->routeIs('cfb.teams.index')">
+                                {{ __('Teams') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{ route('cfb.events.index') }}"
+                                        :active="request()->routeIs('cfb.events.index')">
+                                {{ __('Events') }}
+                            </x-nav-link>
+                        </x-nav-dropdown>
+
+                        <!-- Management Dropdown -->
+                        <x-nav-dropdown label="Management" id="dropdown-management">
+                            <!-- Team Management -->
+                            <div class="block px-4 py-2 text-xs text-gray-400">
+                                {{ __('Manage Team') }}
+                            </div>
+                            <x-nav-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
+                                {{ __('Team Settings') }}
+                            </x-nav-link>
+                            @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
+                                <x-nav-link href="{{ route('teams.create') }}">
+                                    {{ __('Create New Team') }}
+                                </x-nav-link>
+                            @endcan
+                            @if (Auth::user()->allTeams()->count() > 1)
+                                <div class="border-t border-gray-200"></div>
+                                <div class="block px-4 py-2 text-xs text-gray-400">
+                                    {{ __('Switch Teams') }}
+                                </div>
+                                @foreach (Auth::user()->allTeams() as $team)
+                                    <x-switchable-team :team="$team"/>
+                                @endforeach
+                            @endif
+                            <!-- Account Management -->
+                            <div class="block px-4 py-2 text-xs text-gray-400">
+                                {{ __('Manage Account') }}
+                            </div>
+                            <x-nav-link href="{{ route('profile.show') }}">
+                                {{ __('Profile') }}
+                            </x-nav-link>
+                            @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
+                                @if (auth()->user()->email === 'josh@picksports.app')
+                                    <x-nav-link href="{{ route('api-tokens.index') }}">
+                                        {{ __('API Tokens') }}
+                                    </x-nav-link>
+                                @endif
+                            @endif
+                        </x-nav-dropdown>
                     @endif
-                </x-nav-dropdown>
+                    <!-- Logout -->
+                    <form method="POST" action="{{ route('logout') }}" x-data>
+                        @csrf
+                        <x-nav-link href="{{ route('logout') }}" @click.prevent="$root.submit();">
+                            {{ __('Log Out') }}
+                        </x-nav-link>
+                    </form>
+                @else
+                    <li>
+                        <x-nav-link href="{{ route('login') }}">
+                            {{ __('Log in') }}
+                        </x-nav-link>
+                    </li>
+                    @if (Route::has('register'))
+                        <li>
+                            <x-nav-link href="{{ route('register') }}">
+                                {{ __('Register') }}
+                            </x-nav-link>
+                        </li>
+                    @endif
+                @endauth
             </ul>
-            <!-- Logout -->
-            <form method="POST" action="{{ route('logout') }}" x-data>
-                @csrf
-                <x-nav-link href="{{ route('logout') }}" @click.prevent="$root.submit();">
-                    {{ __('Log Out') }}
-                </x-nav-link>
-            </form>
         </nav>
     </div>
 </aside>

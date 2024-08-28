@@ -16,6 +16,7 @@
     "laravel/tinker": "^2.9",
     "livewire/livewire": "^3.5",
     "php-ai/php-ml": "^0.10.0",
+    "spatie/laravel-permission": "^6.9",
     "symfony/css-selector": "^7.1",
     "symfony/dom-crawler": "^7.1"
   },
