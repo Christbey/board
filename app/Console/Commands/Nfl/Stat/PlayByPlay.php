@@ -6,7 +6,7 @@ use App\Models\NflPlayByPlay;
 use App\Models\NflPlayer;
 use App\Models\NflTeam;
 use App\Services\Elo\EloRatingSystem;
-use App\Services\NFLStatsService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use App\Services\ParsingService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;

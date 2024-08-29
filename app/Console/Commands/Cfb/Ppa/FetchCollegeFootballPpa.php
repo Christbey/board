@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Cfb\Ppa;
 
-use App\Services\CollegeFootballApiService;
+use App\Services\CollegeFootball\CollegeFootballApiService;
 use App\Traits\CollegeFootball\CollegeFootballPpaTrait;
 use Illuminate\Console\Command;
 

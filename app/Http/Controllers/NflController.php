@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FormatHelper;
+use App\Helpers\NflHelper;
 use App\Models\NflPrediction;
 use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
-use App\Services\NflPredictionService;
-use App\Helpers\FormatHelper;
+use App\Services\Nfl\Stats\NflPredictionService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use App\Helpers\NflHelper;
 
 class NflController extends Controller
 {

@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands\Espn\Teams;
 
-use App\Jobs\FetchNflInjuriesJob;
+use App\Jobs\Nfl\FetchNflInjuriesJob;
 use App\Models\NflEspnTeam;
-use Illuminate\Console\Command;
 use Illuminate\Bus\Batch;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Throwable;

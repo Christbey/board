@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl\Player;
 
 use App\Models\NflQbr;
 use Carbon\Carbon;

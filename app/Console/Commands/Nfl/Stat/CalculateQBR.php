@@ -4,7 +4,7 @@ namespace App\Console\Commands\Nfl\Stat;
 
 use App\Models\NflPlayer;
 use App\Models\NflPlayerStat;
-use App\Services\QBRService;
+use App\Services\Nfl\Player\QBRService;
 use Illuminate\Console\Command;
 
 class CalculateQBR extends Command

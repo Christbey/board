@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Nfl\Average;
 
-use App\Services\NflPlayerStatsService;
+use App\Services\Nfl\Player\NflPlayerStatsService;
 use Illuminate\Console\Command;
 
 class PlayerAverageStats extends Command

@@ -3,7 +3,7 @@
 
 namespace App\Console\Commands\Espn\Odds;
 
-use App\Jobs\FetchNflFuturesJob;
+use App\Jobs\Nfl\FetchNflFuturesJob;
 use Illuminate\Console\Command;
 
 class Futures extends Command

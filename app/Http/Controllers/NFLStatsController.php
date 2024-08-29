@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\NflPlayByPlay;
 use App\Models\NflPlayer;
-use App\Services\NFLStatsService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 

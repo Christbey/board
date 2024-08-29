@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl\Calculation;
 
 use Illuminate\Support\Facades\DB;
 

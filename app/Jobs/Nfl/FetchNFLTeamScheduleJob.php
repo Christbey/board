@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
-use App\Services\NFLStatsService;
-use App\Services\ScheduleService;
+use App\Services\Nfl\ScheduleService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

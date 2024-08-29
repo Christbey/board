@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\EspnService;
+use App\Services\Nfl\EspnService;
 use Illuminate\Http\Request;
 
 class DynamicNFLController extends Controller

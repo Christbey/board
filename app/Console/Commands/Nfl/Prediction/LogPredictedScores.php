@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Nfl\Prediction;
 
-use App\Services\NflPredictionService;
+use App\Services\Nfl\Stats\NflPredictionService;
 use Illuminate\Console\Command;
 
 class LogPredictedScores extends Command

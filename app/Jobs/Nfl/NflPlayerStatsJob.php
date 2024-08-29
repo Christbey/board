@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
+use App\Models\NflPlayerStat;
+use App\Models\NFLTeam;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\NFLTeam;
-use App\Models\NflPlayerStat;
 use Illuminate\Support\Facades\Log;
 
 class NflPlayerStatsJob implements ShouldQueue

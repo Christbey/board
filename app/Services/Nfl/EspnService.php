@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl;
 
+use App\Models\NflEspnTeam;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Config;
-use App\Models\NflEspnTeam;
 use Log;
 
 class EspnService
 {
-    protected $client;
+    protected Client $client;
     protected $baseUri;
     protected $alternateBaseUris;
     protected $endpoints;

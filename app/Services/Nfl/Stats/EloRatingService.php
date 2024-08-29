@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl\Stats;
 
 use Illuminate\Support\Facades\DB;
 

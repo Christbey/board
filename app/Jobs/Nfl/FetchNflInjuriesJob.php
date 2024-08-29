@@ -1,21 +1,21 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
+use App\Models\NflEspnAthlete;
 use App\Models\NflEspnInjury;
 use App\Models\NflEspnTeam;
-use App\Models\NflEspnAthlete;
+use Exception;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Exception;
-use Illuminate\Http\Client\RequestException;
 
 class FetchNflInjuriesJob implements ShouldQueue
 {

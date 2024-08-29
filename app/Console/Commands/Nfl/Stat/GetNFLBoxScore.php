@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Nfl\Stat;
 
-use App\Jobs\FetchNFLBoxScore;
+use App\Jobs\Nfl\FetchNFLBoxScore;
 use App\Models\NflTeamSchedule;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
@@ -20,12 +20,17 @@ class GetNFLBoxScore extends Command
         if ($gameID) {
             $this->dispatchJob($gameID);
         } else {
-            $gameIDs = NflTeamSchedule::where('game_date', today())
+            // Find game_ids not present in nfl_player_stats and game_date is within the last 2 weeks
+            $gameIDs = NflTeamSchedule::where('game_date', '>=', now()->subWeeks(2))
+                ->where('game_date', '<=', today())
                 ->where('game_status', '!=', 'Completed')
+                ->whereNotIn('game_id', function ($query) {
+                    $query->select('game_id')->from('nfl_player_stats');
+                })
                 ->pluck('game_id');
 
             if ($gameIDs->isEmpty()) {
-                $this->info('No games scheduled for today or all games have been completed.');
+                $this->info('No games found without existing stats for the last two weeks.');
                 return;
             }
 
@@ -41,7 +46,7 @@ class GetNFLBoxScore extends Command
 
     private function dispatchBatch(array $gameIDs): void
     {
-        $this->info("Dispatching batch job to fetch box scores for today's games.");
+        $this->info('Dispatching batch job to fetch box scores for games.');
 
         Bus::batch(
             array_map(fn($gameID) => new FetchNFLBoxScore($gameID), $gameIDs)
@@ -53,4 +58,5 @@ class GetNFLBoxScore extends Command
             Log::info('The NFL box score job batch has completed.');
         })->dispatch();
     }
+
 }

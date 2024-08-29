@@ -2,17 +2,17 @@
 
 // app/Jobs/FetchNflFuturesJob.php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
 use App\Models\NflEspnAthlete;
 use App\Models\NflEspnFuture;
 use App\Models\NflEspnTeam;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FetchNflFuturesJob implements ShouldQueue

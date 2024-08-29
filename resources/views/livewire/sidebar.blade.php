@@ -16,10 +16,12 @@
                 @auth
                     <!-- Dashboard -->
                     <li>
-                        <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
-                            {{ __('Home') }}
+                        <x-nav-link href="{{ route('nfl.picks.week', ['week_id' => $week_id ?? 1]) }}"
+                                    :active="request()->routeIs('nfl.picks.week')">
+                            {{ __('Pick EM') }}
                         </x-nav-link>
                     </li>
+
                     @if (auth()->user()->id === 1)
                         <!-- Tasks -->
                         <li>
@@ -41,6 +43,10 @@
                             <x-nav-link href="{{ route('cfb.rankings.index') }}"
                                         :active="request()->routeIs('cfb.rankings.index')">
                                 {{ __('Rankings') }}
+                            </x-nav-link>
+                            <x-nav-link href="{{route('predict.index')}}"
+                                        :active="request()->routeIs('predict.index')">
+                                {{ __('Predictions') }}
                             </x-nav-link>
                         </x-nav-dropdown>
 

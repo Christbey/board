@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\CollegeFootball;
 
 use App\Models\CollegeFootballConference;
 use App\Models\CollegeFootballRanking;

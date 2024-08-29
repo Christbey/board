@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Cfb\Game;
 
-use App\Jobs\FetchCollegeFootballGamesJob;
+use App\Jobs\CollegeFootball\FetchCollegeFootballGamesJob;
 use Illuminate\Console\Command;
 
 class FetchCollegeFootballGames extends Command

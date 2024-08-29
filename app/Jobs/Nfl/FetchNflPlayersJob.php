@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
-use App\Services\NFLStatsService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use App\Traits\StoresPlayerData;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Log;
 
 class FetchNflPlayersJob implements ShouldQueue
 {
@@ -25,7 +26,7 @@ class FetchNflPlayersJob implements ShouldQueue
         $playerList = $response['body'] ?? [];
 
         if (empty($playerList)) {
-            \Log::error('No player data found.');
+            Log::error('No player data found.');
             return;
         }
 
@@ -37,6 +38,6 @@ class FetchNflPlayersJob implements ShouldQueue
         foreach ($playerList as $player) {
             $this->storePlayerData($player);
         }
-        \Log::info('Player data has been saved.');
+        Log::info('Player data has been saved.');
     }
 }

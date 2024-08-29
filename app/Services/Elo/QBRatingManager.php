@@ -22,6 +22,8 @@ class QBRatingManager
     public function setQbRating($team, $rating): void
     {
         $this->qbRatings[$team] = $rating;
+
+
     }
 
     public function calculateQbValue($stats): float

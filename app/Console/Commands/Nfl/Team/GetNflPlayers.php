@@ -2,7 +2,7 @@
 // KEEP THIS FILE IT WORKS
 namespace App\Console\Commands\Nfl\Team;
 
-use App\Jobs\FetchNflPlayersJob;
+use App\Jobs\Nfl\FetchNflPlayersJob;
 use Illuminate\Console\Command;
 
 class GetNflPlayers extends Command

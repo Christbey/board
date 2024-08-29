@@ -3,8 +3,8 @@
 namespace App\Console\Commands\Nfl\Team;
 
 use App\Models\NflTeam;
-use App\Services\NFLStatsService;
-use App\Services\RosterService;
+use App\Services\Nfl\Player\RosterService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use Illuminate\Console\Command;
 
 class GetNFLTeamRoster extends Command

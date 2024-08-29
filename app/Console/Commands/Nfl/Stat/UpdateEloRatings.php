@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Nfl\Stat;
 
-use App\Services\NflPredictionService;
+use App\Services\Nfl\Stats\NflPredictionService;
 use Illuminate\Console\Command;
 
 class UpdateEloRatings extends Command

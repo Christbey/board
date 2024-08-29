@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl\Stats;
 
+use App\Models\NflTeam;
 use App\Models\NflTeamSchedule;
 use Illuminate\Support\Collection;
 

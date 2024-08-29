@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl\Stats;
 
+use App\Models\NflOdds;
 use App\Models\NflPrediction;
 use App\Models\NflTeamSchedule;
-use App\Models\NflOdds;
 use App\Services\Elo\EloRatingSystem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 
 class NflPredictionService
 {

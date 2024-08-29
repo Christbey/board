@@ -4,7 +4,7 @@ namespace App\Jobs\Nfl\News;
 
 use App\Models\NflEspnNews;
 use App\Notifications\EspnNewsDiscordNotification;
-use App\Services\NFLStatsService;
+use App\Services\Nfl\Stats\NFLStatsService;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

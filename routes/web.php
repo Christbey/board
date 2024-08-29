@@ -94,7 +94,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     // College Football Prediction routes
     Route::get('/predict/game', [CollegeFootballPredictionController::class, 'index'])->name('predict.index');
-    Route::get('predict/game/{gameId}', [CollegeFootballPredictionController::class, 'showPrediction'])->name('predict.game');
+    Route::get('predict/game/{gameId}', [CollegeFootballPredictionController::class, 'show'])->name('predict.game');
 
     Route::get('/nfl/picks/{week_id}', [EspnEventController::class, 'showWeekEvents'])->name('nfl.picks.week');
     Route::post('/nfl/pick-winner', [EspnEventController::class, 'pickWinner'])->name('nfl.pickWinner');

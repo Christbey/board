@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\CollegeFootball;
 
+use App\Models\CollegeFootballConference;
 use App\Models\CollegeFootballGame;
 use App\Models\CollegeFootballTeam;
-use App\Models\CollegeFootballConference;
 use Illuminate\Support\Facades\Http;
 
 class CollegeFootballApiService

@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\DiscordNotifier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Notifications\EspnInjuryDiscordNotification;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Notification;
 
 class NflEspnInjury extends Model

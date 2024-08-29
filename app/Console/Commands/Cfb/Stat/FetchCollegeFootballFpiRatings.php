@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Cfb\Stat;
 
-use App\Jobs\FetchCollegeFootballFpiRatingsJob;
+use App\Jobs\CollegeFootball\FetchCollegeFootballFpiRatingsJob;
 use Illuminate\Console\Command;
 
 class FetchCollegeFootballFpiRatings extends Command

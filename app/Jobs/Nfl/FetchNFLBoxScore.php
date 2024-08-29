@@ -1,21 +1,21 @@
 <?php
 
 
-namespace App\Jobs;
+namespace App\Jobs\Nfl;
 
-use App\Models\NflTeamSchedule;
-use App\Models\NflPlayerStat;
 use App\Models\NflPlayer;
-use Carbon\Carbon;
-use App\Services\NFLStatsService;
+use App\Models\NflPlayerStat;
+use App\Models\NflTeamSchedule;
+use App\Services\Nfl\Stats\NFLStatsService;
 use App\Traits\FormatsPlayerStats;
+use Carbon\Carbon;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Bus\Batchable;
 
 class FetchNFLBoxScore implements ShouldQueue
 {
@@ -45,11 +45,6 @@ class FetchNFLBoxScore implements ShouldQueue
 
         if ($gameSchedule->game_status === 'Completed' && $gameDate->isBefore(today())) {
             Log::info("Skipping completed game {$this->gameID} with a past date.");
-            return;
-        }
-
-        if (!$gameDate->isToday()) {
-            Log::info("Skipping game {$this->gameID} as it's not scheduled for today.");
             return;
         }
 

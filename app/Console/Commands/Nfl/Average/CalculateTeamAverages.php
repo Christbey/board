@@ -3,7 +3,7 @@
 namespace App\Console\Commands\Nfl\Average;
 
 use App\Helpers\NflHelper;
-use App\Services\TeamAverageService;
+use App\Services\Nfl\Stats\TeamAverageService;
 use Illuminate\Console\Command;
 
 class CalculateTeamAverages extends Command

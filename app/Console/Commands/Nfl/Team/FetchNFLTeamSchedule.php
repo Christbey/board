@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Nfl\Team;
 
-use App\Jobs\FetchNFLTeamScheduleJob;
+use App\Jobs\Nfl\FetchNFLTeamScheduleJob;
 use Illuminate\Console\Command;
 
 class FetchNFLTeamSchedule extends Command

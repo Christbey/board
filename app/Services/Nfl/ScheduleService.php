@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Nfl;
 
 use App\Models\NflTeamSchedule;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleService
 {
