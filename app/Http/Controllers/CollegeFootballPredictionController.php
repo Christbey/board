@@ -34,4 +34,44 @@ class CollegeFootballPredictionController extends Controller
 
         return view('predict.game', compact('prediction'));
     }
+
+    public function sos()
+    {
+        function calculateSOS($teamId)
+        {
+            // Step 1: Fetch all games where the team played either home or away
+            $games = DB::table('college_football_games')
+                ->where('home_team_id', $teamId)
+                ->orWhere('away_team_id', $teamId)
+                ->get();
+
+            // Step 2: Get opponent team IDs and their SP ratings
+            $opponentRatings = [];
+            foreach ($games as $game) {
+                $opponentTeamId =
+                    $game->home_team_id == $teamId
+                        ? $game->away_team_id
+                        : $game->home_team_id;
+
+                $opponentRating = DB::table('college_football_sp_ratings')
+                    ->where('team_id', $opponentTeamId)
+                    ->value('rating');
+
+                if ($opponentRating) {
+                    $opponentRatings[] = $opponentRating;
+                }
+            }
+
+            // Step 3: Calculate the average SP rating of the opponents (this is a basic SOS)
+            $sos = collect($opponentRatings)->avg();
+
+            return $sos;
+        }
+
+// Example usage:
+        $teamId = 333; // replace with actual team ID
+        $sos = calculateSOS($teamId);
+        echo "Strength of Schedule (SOS) for team $teamId: $sos";
+
+    }
 }

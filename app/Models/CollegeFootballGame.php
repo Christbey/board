@@ -57,6 +57,7 @@ class CollegeFootballGame extends Model
         'home_post_win_prob' => 'decimal:2',
         'away_post_win_prob' => 'decimal:2',
         'excitement_index' => 'decimal:2',
+        'start_date' => 'datetime',
     ];
 
     // CollegeFootballGame.php
@@ -69,7 +70,7 @@ class CollegeFootballGame extends Model
     {
         return $this->belongsTo(CollegeFootballTeam::class, 'away_id');
     }
-    
+
 
 }
 

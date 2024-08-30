@@ -99,6 +99,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/nfl/picks/{week_id}', [EspnEventController::class, 'showWeekEvents'])->name('nfl.picks.week');
     Route::post('/nfl/pick-winner', [EspnEventController::class, 'pickWinner'])->name('nfl.pickWinner');
 
+
     // Test route
     Route::get('/test', function () {
         Log::info('Test route was called.');

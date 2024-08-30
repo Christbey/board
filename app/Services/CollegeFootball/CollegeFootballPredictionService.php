@@ -28,6 +28,7 @@ class CollegeFootballPredictionService
                 return $this->hasRatings($game);
             });
     }
+    
 
     protected function hasRatings($game)
     {
