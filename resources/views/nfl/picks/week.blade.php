@@ -1,8 +1,14 @@
-@php use Carbon\Carbon; @endphp
 <x-app-layout>
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="max-w-3xl lg:mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow-sm sm:rounded-lg p-6">
             <h2 class="text-2xl font-semibold mb-6">Select Week</h2>
+
+            @if(session('error') && session('submitted_event_id'))
+                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <form id="weekForm" method="GET" action="{{ url('/nfl/picks') }}" class="mb-8">
                 <div class="mb-4">
                     <label for="week_id" class="block text-sm font-medium text-gray-700">Week:</label>
@@ -17,37 +23,44 @@
                         @endforeach
                     </select>
                 </div>
+                @if($week_id)
+                    <a href="{{ route('espn.picks.submissions', ['weekId' => $week_id]) }}"
+                       class="mt-4 inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        View Submissions
+                    </a>
+                @endif
             </form>
 
             <h2 class="text-2xl font-semibold mb-6">Week {{ $events->first()->week->week_number ?? 'All' }}
                 Matchups</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 @if($events->isEmpty())
                     <p class="text-gray-500">No events found for this week.</p>
                 @else
                     @foreach($events as $event)
                         <div class="bg-white shadow-md rounded-lg overflow-hidden relative">
-                            <div class="p-6">
-                                @if(session('submitted_event_id') == $event->id && session('success'))
+                            <div class="p-4 sm:p-6">
+                                @if(session('submitted_event_id') == $event->id && session('error'))
+                                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                                        {{ session('error') }}
+                                    </div>
+                                @elseif(session('submitted_event_id') == $event->id && session('success'))
                                     <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
                                         {{ session('success') }}
                                     </div>
                                 @endif
 
-                                {{--                                <h5 class="text-xl font-bold mb-4">{{ $event->name }}</h5>--}}
-                                <p class="text-xl text-gray-700 mb-2">
-                                    <strong>{{ $event->homeTeam->name }}</strong> vs
-                                    <strong>{{ $event->awayTeam->name }}</strong>
-                                </p>
-
-
                                 @if(isset($userSubmissions[$event->id]))
                                     @php
                                         $selectedTeam = $userSubmissions[$event->id];
-                                        $selectedTeamName = $event->homeTeam->team_id == $selectedTeam ? $event->homeTeam->name : $event->awayTeam->name;
+                                        $selectedTeamName = $event->home_team_id == $selectedTeam ? $event->homeTeam->name : $event->awayTeam->name;
                                     @endphp
 
-                                            <!-- Edit Submission Button -->
+                                    <div id="submission-info-{{ $event->id }}" class="submission-info">
+                                        <p class="text-green-600 italic">Your submission: {{ $selectedTeamName }}.</p>
+                                    </div>
+
                                     <button onclick="toggleSubmissionForm({{ $event->id }})"
                                             class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
@@ -57,13 +70,6 @@
                                         </svg>
                                     </button>
 
-                                    <!-- Message and Submission Form -->
-                                    <div id="submission-info-{{ $event->id }}" class="submission-info">
-                                        <p class="text-green-600 italic">Your
-                                            submission: {{ $selectedTeamName }}
-                                            .</p>
-                                    </div>
-
                                     <form id="submission-form-{{ $event->id }}" action="{{ route('nfl.pickWinner') }}"
                                           method="POST" class="submission-form hidden">
                                         @csrf
@@ -72,7 +78,8 @@
                                             <div class="flex items-center mb-2">
                                                 <input id="home_team_{{ $event->id }}" name="team_id" type="radio"
                                                        value="{{ $event->home_team_id }}"
-                                                       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" {{ $selectedTeam == $event->home_team_id ? 'checked' : '' }}>
+                                                       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                                                        {{ $selectedTeam == $event->home_team_id ? 'checked' : '' }}>
                                                 <label for="home_team_{{ $event->id }}"
                                                        class="ml-3 block text-sm font-medium text-gray-700">
                                                     {{ $event->homeTeam->name }} (Home)
@@ -81,7 +88,8 @@
                                             <div class="flex items-center">
                                                 <input id="away_team_{{ $event->id }}" name="team_id" type="radio"
                                                        value="{{ $event->away_team_id }}"
-                                                       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" {{ $selectedTeam == $event->away_team_id ? 'checked' : '' }}>
+                                                       class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                                                        {{ $selectedTeam == $event->away_team_id ? 'checked' : '' }}>
                                                 <label for="away_team_{{ $event->id }}"
                                                        class="ml-3 block text-sm font-medium text-gray-700">
                                                     {{ $event->awayTeam->name }} (Away)
@@ -94,7 +102,6 @@
                                         </button>
                                     </form>
                                 @else
-                                    <!-- New Submission Form -->
                                     <form action="{{ route('nfl.pickWinner') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="event_id" value="{{ $event->id }}">
@@ -128,7 +135,6 @@
                                     {{$event->date}}
                                 </p>
                             </div>
-
                         </div>
                     @endforeach
                 @endif

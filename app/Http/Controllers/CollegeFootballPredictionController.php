@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\CollegeFootball\CollegeFootballPredictionService;
+use DB;
 use Illuminate\Http\Request;
 
 class CollegeFootballPredictionController extends Controller

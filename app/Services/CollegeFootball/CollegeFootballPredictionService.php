@@ -9,6 +9,7 @@ use App\Models\CollegeFootballPregame;
 use App\Models\NcaaOdds;
 use App\Models\NcaaScore;
 use App\Models\NcaaTeam;
+use DB;
 
 class CollegeFootballPredictionService
 {
@@ -19,16 +20,17 @@ class CollegeFootballPredictionService
             ->get();
     }
 
-    public function getGamesByWeek(int $week, int $season)
+    public function getGamesByWeek($week, $year)
     {
-        return CollegeFootballGame::where('week', $week)
-            ->where('season', $season)
-            ->get()
-            ->filter(function ($game) {
-                return $this->hasRatings($game);
-            });
+        // Assuming you're fetching games from a database
+        return DB::table('college_football_games')
+            ->where('week', $week)
+            ->where('season', $year)
+            ->where('start_date', '>=', now()) // Exclude past games
+            ->orderBy('start_date', 'asc')
+            ->get();
     }
-    
+
 
     protected function hasRatings($game)
     {
@@ -225,9 +227,9 @@ class CollegeFootballPredictionService
 
         // Combine the spreads to form a final hypothetical spread
         if ($fpiSpread && $eloSpread) {
-            $combinedSpread = ($fpiSpread + $eloSpread) / 2;
+            $combinedSpread = ($fpiSpread + $eloSpread) / 1.2;
         } elseif ($fpiSpread) {
-            $combinedSpread = $fpiSpread;
+            $combinedSpread = $fpiSpread / .5;
         } elseif ($eloSpread) {
             $combinedSpread = $eloSpread;
         } else {

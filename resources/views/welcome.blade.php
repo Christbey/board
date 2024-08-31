@@ -1,3 +1,19 @@
+@php
+    // Ensure Carbon is fully qualified
+    use Carbon\Carbon;$currentDate = Carbon::now();
+
+    // Define the NFL weeks with their start and end dates
+    $weeks = config('nfl.weeks');
+
+    // Determine the current week number
+    $currentWeek = null;
+    foreach ($weeks as $weekNumber => $dates) {
+        if ($currentDate->between(Carbon::parse($dates['start']), Carbon::parse($dates['end']))) {
+            $currentWeek = $weekNumber;
+            break;
+        }
+    }
+@endphp
 <x-app-layout>
     <div class="relative flex items-center justify-center min-h-screen bg-gradient-to-tr from-pink-300/50 to-indigo-400/50">
         <div class="relative mx-auto max-w-2xl p-6 bg-white shadow-lg rounded-lg">
@@ -24,16 +40,15 @@
                     </li>
                 </ul>
 
+
                 <div class="mt-8 flex justify-center gap-x-6">
-                    <a href='{{ url('/nfl/picks/1') }}'
+                    <a href="{{ url('/nfl/picks/' . $currentWeek) }}"
                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow
-                       hover:bg-indigo-500">
-                        Get started
-                    </a>
-                    <a href="#" class="text-sm font-semibold text-gray-900">
-                        Learn more <span>&rarr;</span>
+       hover:bg-indigo-500">
+                        Submit Weekly Picks
                     </a>
                 </div>
+
             </div>
         </div>
     </div>

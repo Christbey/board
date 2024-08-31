@@ -77,6 +77,8 @@ class JetstreamServiceProvider extends ServiceProvider
 
         foreach ($roles as $roleName => $permissions) {
             $role = Role::firstOrCreate(['name' => $roleName]);
+
+            // Sync the permissions without causing duplicates
             $role->syncPermissions($permissions);
         }
     }

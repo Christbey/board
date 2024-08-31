@@ -98,6 +98,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/nfl/picks/{week_id}', [EspnEventController::class, 'showWeekEvents'])->name('nfl.picks.week');
     Route::post('/nfl/pick-winner', [EspnEventController::class, 'pickWinner'])->name('nfl.pickWinner');
+    Route::get('/espn/picks/submissions/{weekId}', [EspnEventController::class, 'showSubmissions'])->name('espn.picks.submissions');
 
 
     // Test route
@@ -115,4 +116,5 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
         return 'Email sent';
     });
+
 });

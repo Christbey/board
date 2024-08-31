@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 
 class NflEspnEvent extends Model
@@ -61,6 +62,8 @@ class NflEspnEvent extends Model
     {
         return $this->belongsTo(NflEspnWeek::class, 'week_id');
     }
+
+
 
 //    public function showWeekEvents($week_id = null)
 //    {
