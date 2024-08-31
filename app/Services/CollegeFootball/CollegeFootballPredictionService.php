@@ -26,7 +26,7 @@ class CollegeFootballPredictionService
         return DB::table('college_football_games')
             ->where('week', $week)
             ->where('season', $year)
-            ->where('start_date', '>=', now()) // Exclude past games
+            ->where('start_date', '>=', now()->subDay()) // Get games from the last 24 hours
             ->orderBy('start_date', 'asc')
             ->get();
     }
