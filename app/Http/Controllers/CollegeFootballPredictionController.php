@@ -17,13 +17,18 @@ class CollegeFootballPredictionController extends Controller
 
     public function index(Request $request)
     {
+        // Fetch weeks from the prediction service for the year 2024
         $weeks = $this->predictionService->getWeeks(2024);
+
+        // If a week is selected in the request, fetch games for that week
         $games = $request->has('week') && $request->week
             ? $this->predictionService->getGamesByWeek($request->week, 2024)
             : [];
 
+        // Return the view with weeks and games data
         return view('predict.index', compact('weeks', 'games'));
     }
+
 
     public function show($gameId)
     {

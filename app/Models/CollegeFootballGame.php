@@ -63,14 +63,12 @@ class CollegeFootballGame extends Model
     // CollegeFootballGame.php
     public function homeTeam()
     {
-        return $this->belongsTo(CollegeFootballTeam::class, 'home_id');
+        return $this->belongsTo(CollegeFootballTeam::class, 'home_team_id');
     }
 
     public function awayTeam()
     {
-        return $this->belongsTo(CollegeFootballTeam::class, 'away_id');
+        return $this->belongsTo(CollegeFootballTeam::class, 'away_team_id');
     }
-
-
 }
 

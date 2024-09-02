@@ -60,12 +60,12 @@ class FetchCollegeFootballEloRatings extends Command
         }
     }
 
-    private function findOrCreateTeam($school)
+    private function findOrCreateTeam($school): CollegeFootballTeam
     {
         return CollegeFootballTeam::firstOrCreate(['school' => $school]);
     }
 
-    private function findOrCreateConference($conference)
+    private function findOrCreateConference($conference): ?CollegeFootballConference
     {
         if ($conference) {
             return CollegeFootballConference::firstOrCreate(['abbreviation' => $conference]);

@@ -21,12 +21,12 @@
     @livewireStyles
 </head>
 <body class="font-sans antialiased bg-gray-50" x-data="{ isSidebarOpen: false }">
-<div class="flex">
+<div class="flex min-h-screen">
     <!-- Sidebar -->
     @livewire('sidebar')
 
     <!-- Main Content -->
-    <div id="mainContent" :class="{'closed': !isSidebarOpen}" class="flex-1 flex flex-col overflow-y-auto">
+    <div id="mainContent" :class="{'closed': !isSidebarOpen}" class="flex-1 flex flex-col">
         <header class="border-b p-4 flex items-center justify-between">
             <button @click="isSidebarOpen = !isSidebarOpen" class="text-gray-500 cursor-pointer">
                 <svg x-show="!isSidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,12 +40,14 @@
             </button>
         </header>
 
-        {{ $slot }}
+        <main class="flex-grow">
+            {{ $slot }}
+        </main>
+
         <footer class="py-3 text-center text-sm text-gray-700">
-            Bey v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }})
+            1571 Sports v. 1.0.1
         </footer>
     </div>
-
 </div>
 
 @stack('modals')

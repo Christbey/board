@@ -1,6 +1,6 @@
 @php use Carbon\Carbon; @endphp
 <x-app-layout>
-    <div class="flex items-center justify-center min-h-screen bg-gray-100 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center pt-24 justify-center px-4 sm:px-6 lg:px-8">
         <div class="p-8 rounded-3xl bg-white max-w-lg w-full shadow-xl">
             @if(isset($error))
                 <div class="flex items-center space-x-2 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"
@@ -32,49 +32,63 @@
                 </div>
 
                 <div aria-label="content" class="space-y-4">
-                    <div class="p-4 rounded-2xl bg-gray-50">
-                        <h3 class="text-sm font-medium text-gray-800 mb-2">Prediction Details</h3>
-                        <p class="text-gray-700 text-sm">
-                            {{ $prediction['home_team'] }} has a <span class="font-bold text-indigo-600">{{ $prediction['home_win_prob'] }}%</span>
-                            chance to win.
-                            The Over/Under is <span
-                                    class="font-bold text-indigo-600">{{ $prediction['odds']['total']['over']['points'] }}</span>.
-                            @if(isset($prediction['odds']['home_spread']['points']) && isset($prediction['odds']['home_spread']['price']))
-                                The spread is <span
-                                        class="font-bold text-indigo-600">{{ $prediction['odds']['home_spread']['points'] }}</span>
-                                ({{ $prediction['odds']['home_spread']['price'] }}).
-                            @endif
-                            Kickoff is scheduled for
-                            <span class="font-bold">
-                                @if(Carbon::parse($prediction['odds']['commence_time'])->isToday())
-                                    {{ Carbon::parse($prediction['odds']['commence_time'])->format('g:i A') }}
-                                @else
-                                    {{ Carbon::parse($prediction['odds']['commence_time'])->format('Y-m-d H:i') }}
+                    @if(!$prediction['game_completed'])
+                        <div class="p-4 rounded-2xl bg-gray-50">
+                            <h3 class="text-sm font-medium text-gray-800 mb-2">Analysis</h3>
+                            <p class="text-gray-700 text-sm">
+                                {{ $prediction['home_team'] }} has a <span class="font-bold text-indigo-600">{{ $prediction['home_win_prob'] }}%</span>
+                                chance to win.
+                                The Over/Under is <span
+                                        class="font-bold text-indigo-600">{{ $prediction['odds']['total']['under']['points'] ?? 'NA' }}</span>.
+                                @if(isset($prediction['odds']['home_spread']['points']) && isset($prediction['odds']['home_spread']['price']))
+                                    The spread is <span
+                                            class="font-bold text-indigo-600">{{ $prediction['odds']['home_spread']['points'] }}</span>
+                                    ({{ $prediction['odds']['home_spread']['price'] }}).
                                 @endif
-                            </span>.
-                        </p>
-                    </div>
+                                Kickoff is scheduled for
+                                <span class="font-bold">
+                                @if(Carbon::parse($prediction['odds']['commence_time'])->isToday())
+                                        {{ Carbon::parse($prediction['odds']['commence_time'])->format('g:i A') }}
+                                    @else
+                                        {{ Carbon::parse($prediction['odds']['commence_time'])->format('Y-m-d H:i') }}
+                                    @endif
+                </span>.
+                            </p>
+                        </div>
 
-                    @if(isset($prediction['actual_home_score']))
-                        <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
-                            <p class="text-sm font-medium text-gray-800">Actual Home Score:</p>
-                            <p class="text-sm text-gray-600">{{ $prediction['actual_home_score'] }}</p>
+                        <div class="flex space-x-4">
+                            @if(isset($prediction['actual_away_score']))
+                                <div class="flex w-full items-center justify-between bg-gray-100 p-3 rounded-lg">
+                                    <p class="text-sm font-medium" style="color: {{$prediction['away_team_color']}};">
+                                        {{$prediction['away_team']}} Score:
+                                    </p>
+                                    <p class="text-sm" style="color: {{$prediction['away_team_color']}};">
+                                        {{ $prediction['actual_away_score'] }}
+                                    </p>
+                                </div>
+                            @endif
+
+                            @if(isset($prediction['actual_home_score']))
+                                <div class="flex items-center w-full justify-between bg-gray-100 p-3 rounded-lg">
+                                    <p class="text-sm font-medium" style="color: {{$prediction['home_team_color']}};">
+                                        {{$prediction['home_team']}} Score:
+                                    </p>
+                                    <p class="text-sm" style="color: {{$prediction['home_team_color']}};">
+                                        {{ $prediction['actual_home_score'] }}
+                                    </p>
+                                </div>
+                            @endif
                         </div>
                     @endif
 
-                    @if(isset($prediction['actual_away_score']))
+                    @if($prediction['game_completed'])
                         <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
-                            <p class="text-sm font-medium text-gray-800">Actual Away Score:</p>
-                            <p class="text-sm text-gray-600">{{ $prediction['actual_away_score'] }}</p>
+                            <p class="text-sm font-medium text-gray-800">Game Completed:</p>
+                            <p class="text-sm text-green-600">
+                                Yes
+                            </p>
                         </div>
                     @endif
-
-                    <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
-                        <p class="text-sm font-medium text-gray-800">Game Completed:</p>
-                        <p class="text-sm {{ $prediction['game_completed'] ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $prediction['game_completed'] ? 'Yes' : 'No' }}
-                        </p>
-                    </div>
                 </div>
             @endif
 
